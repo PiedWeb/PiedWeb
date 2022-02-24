@@ -207,9 +207,9 @@ class ExtendedClient extends Client
     /**
      * Execute the request.
      */
-    public function request(?string $url = null): Response
+    public function request(?string $target = null): Response
     {
-        $response = parent::request($url);
+        $response = parent::request($target);
 
         // Permits to transform HEAD request in GET request
         if (1 === $this->optChangeDuringRequest) {

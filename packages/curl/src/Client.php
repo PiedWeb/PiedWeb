@@ -12,29 +12,29 @@ class Client
 
     protected string $errorMessage = '';
 
-    protected string $url;
+    protected string $target;
 
-    public function __construct(?string $url = null)
+    public function __construct(?string $target = null)
     {
-        if (null !== $url) {
-            $this->setUrl($url);
+        if (null !== $target) {
+            $this->setTarget($target);
         }
     }
 
-    public function getUrl(): string
+    public function getTarget(): string
     {
-        return $this->url;
+        return $this->target;
     }
 
     /**
      * Change the URL to cURL.
      *
-     * @param string $url to request
+     * @param string $target to request
      */
-    public function setUrl(string $url): self
+    public function setTarget(string $target): self
     {
-        $this->url = $url;
-        $this->setOpt(\CURLOPT_URL, $url);
+        $this->target = $target;
+        $this->setOpt(\CURLOPT_URL, $target);
 
         return $this;
     }
@@ -132,10 +132,10 @@ class Client
         $this->errorMessage = '';
     }
 
-    public function request(?string $url = null): Response
+    public function request(?string $target = null): Response
     {
-        if (null !== $url) {
-            $this->setUrl($url);
+        if (null !== $target) {
+            $this->setTarget($target);
         }
 
         return Response::createFromClient($this, curl_exec($this->getHandle()));

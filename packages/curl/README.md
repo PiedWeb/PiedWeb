@@ -1,11 +1,11 @@
 # Curl OOP Wrapper
 
-[![Latest Version](https://img.shields.io/github/tag/PiedWeb/Curl.svg?style=flat&label=release)](https://github.com/PiedWeb/Curl/tags)
+[![Latest Version](https://img.shields.io/github/tag/PiedWeb/PiedWeb.svg?style=flat&label=release)](https://github.com/PiedWeb/PiedWeb/tags)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](LICENSE)
-[![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/PiedWeb/Curl/Tests?label=tests)](https://github.com/PiedWeb/Curl/actions)
-[![Quality Score](https://img.shields.io/scrutinizer/g/PiedWeb/Curl.svg?style=flat)](https://scrutinizer-ci.com/g/PiedWeb/Curl)
-[![Code Coverage](https://codecov.io/gh/PiedWeb/Curl/branch/master/graph/badge.svg)](https://codecov.io/gh/PiedWeb/Curl/branch/master)
-[![Type Coverage](https://shepherd.dev/github/PiedWeb/Curl/coverage.svg)](https://shepherd.dev/github/PiedWeb/Curl)
+[![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/PiedWeb/PiedWeb/Tests?label=tests)](https://github.com/PiedWeb/PiedWeb/actions)
+[![Quality Score](https://img.shields.io/scrutinizer/g/PiedWeb/PiedWeb.svg?style=flat)](https://scrutinizer-ci.com/g/PiedWeb/PiedWeb)
+[![Code Coverage](https://codecov.io/gh/PiedWeb/PiedWeb/branch/main/graph/badge.svg)](https://codecov.io/gh/PiedWeb/PiedWeb/branch/main)
+[![Type Coverage](https://shepherd.dev/github/PiedWeb/PiedWeb/coverage.svg)](https://shepherd.dev/github/PiedWeb/PiedWeb)
 [![Total Downloads](https://img.shields.io/packagist/dt/piedweb/curl.svg?style=flat)](https://packagist.org/packages/piedweb/curl)
 
 Simple PHP Curl OOP wrapper for efficient request.
@@ -83,8 +83,8 @@ $r
 
     ->setProxy(string '[scheme]proxy-host:port[:username:passwrd]') // Scheme, username and passwrd are facultatives. Default Scheme is http://
 
-    ->setUrl($url)
-        ->getUrl()
+    ->setTarget($url)
+        ->getTarget()
 
 $response = $r->request(); // @return PiedWeb\Curl\Response or int corresponding to the curl error
 

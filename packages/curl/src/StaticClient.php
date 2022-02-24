@@ -21,7 +21,7 @@ class StaticClient
         self::$client = self::$client ?? new ExtendedClient();
 
         self::$client
-            ->setUrl($url);
+            ->setTarget($url);
         self::$client->setDefaultGetOptions()
             ->setDefaultSpeedOptions()
             ->setNoFollowRedirection()
