@@ -1,3 +1,6 @@
+# WiP
+/packages/google
+
 # composer
 /vendor
 composer.lock
@@ -19,6 +22,7 @@ coverage.xml
 /debug-container
 /drivers
 .vs-code
+test.php
 
 # Future packages
 related-pages

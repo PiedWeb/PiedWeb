@@ -18,6 +18,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Setup NPM
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+        run: npm install
+
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -39,7 +45,6 @@ jobs:
 
       - name: Execute tests
         run: vendor/bin/phpunit --coverage-clover coverage.xml
-
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2

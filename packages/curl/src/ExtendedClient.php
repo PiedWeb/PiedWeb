@@ -8,8 +8,20 @@ class ExtendedClient extends Client
 {
     use UserAgentTrait;
 
-    /** @var string contains current UA */
-    private string $userAgent;
+    private ?string $userAgent;
+
+    /**
+     * @var string
+     */
+    public const DEFAULT_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.104 Safari/537.36';
+
+    private bool  $fakeBrowserHeader = false;
+
+    private ?string $referer;
+
+    private ?string $cookie;
+
+    private string $language = 'fr-FR,fr;q=0.9';
 
     /**
      * @var callable
@@ -42,8 +54,7 @@ class ExtendedClient extends Client
     }
 
     /**
-     * A short way to set some classic options to cURL a web page quickly
-     * (but loosing some data like header, cookie...).
+     * A short way to set some classic options to cURL a web page quickly.
      */
     public function setDefaultSpeedOptions(): self
     {
@@ -53,6 +64,33 @@ class ExtendedClient extends Client
         $this->setEncodingGzip();
 
         return $this;
+    }
+
+    /**
+     * Use it in last once.
+     */
+    public function fakeBrowserHeader(bool $doIt = true): self
+    {
+        $this->fakeBrowserHeader = $doIt;
+
+        return $this;
+    }
+
+    private function setBrowserHeader(): void
+    {
+        $this->setOpt(\CURLOPT_HTTPHEADER, array_filter([
+            'Upgrade-Insecure-Requests: 1',
+            (null !== $this->getUserAgent() ? 'User-Agent: '.$this->getUserAgent() : self::DEFAULT_USER_AGENT),
+            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+            'Sec-Fetch-Site: same-origin',
+            'Sec-Fetch-Mode: navigate',
+            'Sec-Fetch-User: ?1',
+            'Sec-Fetch-Dest: document',
+            (null !== $this->referer ? 'Referer: '.$this->referer : ''),
+            'Accept-Encoding: gzip, deflate, br',
+            'Accept-Language: '.$this->language,
+            (null !== $this->cookie ? 'Cookie: '.$this->cookie : ''),
+        ]));
     }
 
     /**
@@ -78,6 +116,7 @@ class ExtendedClient extends Client
      */
     public function setCookie(?string $cookie): self
     {
+        $this->cookie = $cookie;
         $this->setOpt(\CURLOPT_COOKIE, $cookie);
 
         return $this;
@@ -88,6 +127,7 @@ class ExtendedClient extends Client
      */
     public function setReferer(string $referer): self
     {
+        $this->referer = $referer;
         $this->setOpt(\CURLOPT_REFERER, $referer);
 
         return $this;
@@ -105,7 +145,7 @@ class ExtendedClient extends Client
         return $this;
     }
 
-    public function getUserAgent(): string
+    public function getUserAgent(): ?string
     {
         return $this->userAgent;
     }
@@ -209,6 +249,10 @@ class ExtendedClient extends Client
      */
     public function request(?string $target = null): Response
     {
+        if ($this->fakeBrowserHeader) {
+            $this->setBrowserHeader();
+        }
+
         $response = parent::request($target);
 
         // Permits to transform HEAD request in GET request
@@ -227,5 +271,20 @@ class ExtendedClient extends Client
         }
 
         return $response;
+    }
+
+    public function getReferer(): ?string
+    {
+        return $this->referer;
+    }
+
+    /**
+     * Set the value of language.
+     */
+    public function setLanguage(string $language): self
+    {
+        $this->language = $language;
+
+        return $this;
     }
 }

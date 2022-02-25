@@ -61,12 +61,10 @@ $r
     ->setDefaultGetOptions($connectTimeOut = 5, $timeOut = 10, $dnsCacheTimeOut = 600, $followLocation = true, $maxRedirs = 5)
     ->setDefaultSpeedOptions() // no header except if setted, 1 redir max, no ssl check
     ->setNoFollowRedirection()
-
-    ->setReturnHeader($only = false)
-        ->mustReturnHeaders() // @return int corresponding to Request::RETURN_HEADER_ONLY or Request::RETURN_HEADER or NULL
+    ->setReturnOnlyHeader()
     ->setCookie(string $cookie)
     ->setReferer(string $url)
-
+    ->fakeBrowserHeader(bool $doIt = true)
     ->setUserAgent(string $ua)
     ->setDesktopUserAgent()
     ->setMobileUserAgent()

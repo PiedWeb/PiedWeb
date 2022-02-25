@@ -104,19 +104,21 @@ class RequestTest extends \PHPUnit\Framework\TestCase
     {
         $checkHeaders = new MultipleCheckInHeaders();
 
-        $url = 'https://piedweb.com';
+        $url = 'https://test.piedweb.com/headers.php';
         $request = new Client($url);
         $request
+            ->fakeBrowserHeader()
             ->setDefaultGetOptions()
             ->setDefaultSpeedOptions()
-            ->setCookie('hello=1')
-            ->setReferer('https://piedweb.com')
+            ->setCookie('CONSENT=YES+')
+            ->setReferer('https://test.piedweb.com/')
             ->setUserAgent('Hello :)')
             ->setDesktopUserAgent()
             ->setMobileUserAgent()
             ->setLessJsUserAgent()
             ->setTarget($url)
             ->setDownloadOnlyIf([$checkHeaders, 'check'])
+            ->setLanguage('en-US,en;q=0.9')
         ;
 
         $result = $request->request();
@@ -133,6 +135,19 @@ class RequestTest extends \PHPUnit\Framework\TestCase
         $this->assertSame('text/html; charset=UTF-8', $result->getContentType());
 
         $this->assertTrue(\strlen($result->getContent()) > 100);
+        $this->assertSame('Upgrade-Insecure-Requests: 1
+User-Agent: '.$request->lessJsUserAgent.'
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Referer: https://test.piedweb.com/
+Accept-Encoding: gzip, deflate, br
+Accept-Language: en-US,en;q=0.9
+Cookie: CONSENT=YES+
+Host: test.piedweb.com
+Content-Length: 0', trim(strip_tags($result->getBody())));
     }
 
     public function testMultipleCheckInHeaders()
