@@ -14,6 +14,8 @@ class Client
 
     protected string $target;
 
+    protected Response $response;
+
     public function __construct(?string $target = null)
     {
         if (null !== $target) {
@@ -90,7 +92,7 @@ class Client
      */
     public function getCurlInfos(): array
     {
-        return curl_getinfo($this->getHandle()); // @phpstan-ignore-line
+        return curl_getinfo($this->getHandle());
     }
 
     /**
@@ -132,12 +134,19 @@ class Client
         $this->errorMessage = '';
     }
 
-    public function request(?string $target = null): Response
+    public function request(?string $target = null): bool
     {
         if (null !== $target) {
             $this->setTarget($target);
         }
 
-        return Response::createFromClient($this, curl_exec($this->getHandle()));
+        $this->response = Response::createFromClient($this, curl_exec($this->getHandle()));
+
+        return 0 === $this->getError();
+    }
+
+    public function getResponse(): Response
+    {
+        return $this->response;
     }
 }

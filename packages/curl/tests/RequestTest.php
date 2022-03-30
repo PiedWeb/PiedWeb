@@ -23,19 +23,19 @@ class RequestTest extends \PHPUnit\Framework\TestCase
             ->setDesktopUserAgent()
             ->setEncodingGzip()
         ;
-        $result = $request->request();
+        $request->request();
 
-        $this->assertSame(200, $result->getStatusCode());
+        $this->assertSame(200, $request->getResponse()->getStatusCode());
 
-        $headers = $result->getHeaders();
+        $headers = $request->getResponse()->getHeaders();
         $this->assertTrue(\is_array($headers));
 
-        $this->assertSame('text/html; charset=UTF-8', $result->getContentType());
-        $this->assertTrue(\strlen($result->getContent()) > 10);
-        $this->assertStringContainsString('200', $result->getHeaders()[0]);
-        $this->assertStringContainsString('200', $result->getHeaderLine('0'));
-        $this->assertStringContainsString('200', $result->getHeader('0'));
-        $this->assertNull($result->getCookies());
+        $this->assertSame('text/html; charset=UTF-8', $request->getResponse()->getContentType());
+        $this->assertTrue(\strlen($request->getResponse()->getContent()) > 10);
+        $this->assertStringContainsString('200', $request->getResponse()->getHeaders()[0]);
+        $this->assertStringContainsString('200', $request->getResponse()->getHeaderLine('0'));
+        $this->assertStringContainsString('200', $request->getResponse()->getHeader('0'));
+        $this->assertNull($request->getResponse()->getCookies());
     }
 
     public function testNotDownload()
@@ -48,10 +48,10 @@ class RequestTest extends \PHPUnit\Framework\TestCase
             ->setDesktopUserAgent()
             ->setEncodingGzip()
         ;
-        $result = $request->request();
+        $request->request();
 
-        $this->assertSame(200, $result->getStatusCode());
-        $this->assertSame('', $result->getContent());
+        $this->assertSame(200, $request->getResponse()->getStatusCode());
+        $this->assertSame('', $request->getResponse()->getContent());
     }
 
     public function testEffectiveUrl()
@@ -64,11 +64,11 @@ class RequestTest extends \PHPUnit\Framework\TestCase
             ->setDesktopUserAgent()
             ->setEncodingGzip()
         ;
-        $result = $request->request();
+        $request->request();
 
-        $this->assertSame('https://piedweb.com/', $result->getUrl());
+        $this->assertSame('https://piedweb.com/', $request->getResponse()->getUrl());
         $this->assertSame($url, $request->getTarget());
-        $this->assertTrue(\strlen($result->getContent()) > 10);
+        $this->assertTrue(\strlen($request->getResponse()->getContent()) > 10);
     }
 
     public function testCurlError()
@@ -80,9 +80,9 @@ class RequestTest extends \PHPUnit\Framework\TestCase
             ->setDesktopUserAgent()
             ->setEncodingGzip()
         ;
-        $result = $request->request();
+        $request->request();
 
-        $this->assertSame(6, $result->getError());
+        $this->assertSame(6, $request->getResponse()->getError());
     }
 
     public function test404()
@@ -95,9 +95,9 @@ class RequestTest extends \PHPUnit\Framework\TestCase
             ->setDesktopUserAgent()
             ->setEncodingGzip()
         ;
-        $result = $request->request();
+        $request->request();
 
-        $this->assertSame(404, $result->getStatusCode());
+        $this->assertSame(404, $request->getResponse()->getStatusCode());
     }
 
     public function testAllMethods()
@@ -121,20 +121,20 @@ class RequestTest extends \PHPUnit\Framework\TestCase
             ->setLanguage('en-US,en;q=0.9')
         ;
 
-        $result = $request->request();
+        $request->request();
 
         $this->assertSame($request->getTarget(), $url);
         $this->assertSame($request->getUserAgent(), $request->lessJsUserAgent);
 
-        $this->assertSame(200, $result->getStatusCode());
-        $this->assertSame('text/html', $result->getMimeType());
+        $this->assertSame(200, $request->getResponse()->getStatusCode());
+        $this->assertSame('text/html', $request->getResponse()->getMimeType());
 
-        $headers = $result->getHeaders();
+        $headers = $request->getResponse()->getHeaders();
         $this->assertTrue(\is_array($headers));
 
-        $this->assertSame('text/html; charset=UTF-8', $result->getContentType());
+        $this->assertSame('text/html; charset=UTF-8', $request->getResponse()->getContentType());
 
-        $this->assertTrue(\strlen($result->getContent()) > 100);
+        $this->assertTrue(\strlen($request->getResponse()->getContent()) > 100);
         $this->assertSame('Upgrade-Insecure-Requests: 1
 User-Agent: '.$request->lessJsUserAgent.'
 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
@@ -147,7 +147,7 @@ Accept-Encoding: gzip, deflate, br
 Accept-Language: en-US,en;q=0.9
 Cookie: CONSENT=YES+
 Host: test.piedweb.com
-Content-Length: 0', trim(strip_tags($result->getBody())));
+Content-Length: 0', trim(strip_tags($request->getResponse()->getBody())));
     }
 
     public function testMultipleCheckInHeaders()
@@ -164,10 +164,10 @@ Content-Length: 0', trim(strip_tags($result->getBody())));
             ->setPost('testpost')
         ;
 
-        $result = $request->request();
+        $request->request();
 
-        $this->assertSame(92832, $result->getError());
-        $this->assertSame(404, $result->getInfo('http_code'));
+        $this->assertSame(92832, $request->getResponse()->getError());
+        $this->assertSame(404, $request->getResponse()->getInfo('http_code'));
     }
 
     public function testProxy()
@@ -181,10 +181,10 @@ Content-Length: 0', trim(strip_tags($result->getBody())));
             ->setOpt(\CURLOPT_TIMEOUT, 1)
         ;
 
-        $result = $request->request();
+        $request->request();
 
-        $this->assertTrue($result->getError() > 0);
-        $this->assertStringContainsString('timed out', $result->getErrorMessage());
+        $this->assertTrue($request->getResponse()->getError() > 0);
+        $this->assertStringContainsString('timed out', $request->getResponse()->getErrorMessage());
     }
 
     public function testAbortIfTooBig()
@@ -192,9 +192,8 @@ Content-Length: 0', trim(strip_tags($result->getBody())));
         $url = 'https://piedweb.com';
         $request = new Client($url);
         $request->setMaximumResponseSize(1);
-
-        $result = $request->request();
-        $this->assertSame($result->getError(), 42);
+        $request->request();
+        $this->assertSame($request->getResponse()->getError(), 42);
     }
 
     public function testDownloadOnlyFirstBytes()
@@ -202,10 +201,9 @@ Content-Length: 0', trim(strip_tags($result->getBody())));
         $url = 'https://piedweb.com';
         $request = new Client($url);
         $request->setDownloadOnly('0-199');
+        $request->request();
 
-        $result = $request->request();
-
-        $this->assertTrue(\strlen($result->getContent()) < 300);
+        $this->assertTrue(\strlen($request->getResponse()->getContent()) < 300);
     }
 
     public function testResponseFromCache()

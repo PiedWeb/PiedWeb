@@ -2,3 +2,5 @@ parameters:
     level: max
     paths:
         - packages/curl/src
+        - packages/google/src
+        - packages/google-spreadsheet-seo-scraper/src

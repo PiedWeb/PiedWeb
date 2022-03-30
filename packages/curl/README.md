@@ -84,7 +84,9 @@ $r
     ->setTarget($url)
         ->getTarget()
 
-$response = $r->request(); // @return PiedWeb\Curl\Response or int corresponding to the curl error
+    $r->request(); // @return true if request succeed else false (see getError)
+
+$response = $r->getResponse(); // @return PiedWeb\Curl\Response or int corresponding to the curl error
 
 $response->getUrl(); // @return string
 $response->getContentType(); // @return string

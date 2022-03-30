@@ -8,7 +8,7 @@ class ExtendedClient extends Client
 {
     use UserAgentTrait;
 
-    private ?string $userAgent;
+    private ?string $userAgent = null;
 
     /**
      * @var string
@@ -17,9 +17,9 @@ class ExtendedClient extends Client
 
     private bool  $fakeBrowserHeader = false;
 
-    private ?string $referer;
+    private ?string $referer = null;
 
-    private ?string $cookie;
+    private ?string $cookie = null;
 
     private string $language = 'fr-FR,fr;q=0.9';
 
@@ -212,7 +212,7 @@ class ExtendedClient extends Client
      */
     public function setMaximumResponseSize(int $maxBytes = 2000000): self
     {
-        //$this->setOpt(CURLOPT_BUFFERSIZE, 128); // more progress info
+        // $this->setOpt(CURLOPT_BUFFERSIZE, 128); // more progress info
         $this->setOpt(\CURLOPT_NOPROGRESS, false);
         $this->setOpt(\CURLOPT_PROGRESSFUNCTION, function ($handle, $totalBytes, $receivedBytes) use ($maxBytes) {
             if ($totalBytes > $maxBytes || $receivedBytes > $maxBytes) {
@@ -247,13 +247,13 @@ class ExtendedClient extends Client
     /**
      * Execute the request.
      */
-    public function request(?string $target = null): Response
+    public function request(?string $target = null): bool
     {
         if ($this->fakeBrowserHeader) {
             $this->setBrowserHeader();
         }
 
-        $response = parent::request($target);
+        $request = parent::request($target);
 
         // Permits to transform HEAD request in GET request
         if (1 === $this->optChangeDuringRequest) {
@@ -262,15 +262,15 @@ class ExtendedClient extends Client
 
         $this->optChangeDuringRequest = 0;
 
-        if (($effectiveUrl = $response->getUrl()) !== null) {
+        if (($effectiveUrl = $this->getResponse()->getUrl()) !== null) {
             $this->setReferer($effectiveUrl);
         }
 
-        if (($cookies = $response->getCookies()) !== null) {
+        if (($cookies = $this->getResponse()->getCookies()) !== null) {
             $this->setCookie($cookies);
         }
 
-        return $response;
+        return $request;
     }
 
     public function getReferer(): ?string

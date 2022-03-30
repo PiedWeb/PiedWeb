@@ -7,7 +7,12 @@
   "license": "MIT",
   "require": {
     "php": ">=8.0",
+    "league/csv": "^9.8",
     "nesk/puphpeteer": "^2.0",
+    "symfony/cache": "^6.0",
+    "symfony/console": "^6.0",
+    "symfony/css-selector": "^6.0",
+    "symfony/dom-crawler": "^6.0",
     "thecodingmachine/safe": "^2.1"
   },
   "require-dev": {
@@ -29,7 +34,8 @@
   "autoload": {
     "psr-4": {
       "PiedWeb\\Curl\\": "packages/curl/src",
-      "PiedWeb\\Google\\": "packages/google/src"
+      "PiedWeb\\Google\\": "packages/google/src",
+      "PiedWeb\\GoogleSpreadsheetSeoScraper\\": "packages/google-spreadsheet-seo-scraper/src"
     }
   },
   "autoload-dev": {

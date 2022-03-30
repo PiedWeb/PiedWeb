@@ -27,7 +27,11 @@ class StaticClient
             ->setNoFollowRedirection()
             ->setDesktopUserAgent();
 
-        return self::$client->request()
+        if (! self::$client->request()) {
+            return '';
+        }
+
+        return self::$client->getResponse()
             ->getBody();
     }
 }
