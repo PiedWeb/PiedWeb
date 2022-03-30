@@ -18,20 +18,12 @@
   "require": {
     "php": ">=8.0",
     "piedweb/google": "^0",
-    "symfony/console": "^5",
-    "league/csv": "^9.4"
+    "symfony/console": "^6.0",
+    "league/csv": "^9.8"
   },
   "autoload": {
     "psr-4": {
       "PiedWeb\\GoogleSpreadsheetSeoScraper\\": "src"
     }
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "PiedWeb\\GoogleSpreadsheetSeoScraper\\": "tests"
-    }
-  },
-  "scripts": {
-    "format": "./vendor/bin/php-cs-fixer fix src"
   }
 }
