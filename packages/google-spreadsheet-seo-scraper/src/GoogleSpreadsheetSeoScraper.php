@@ -157,7 +157,7 @@ class GoogleSpreadsheetSeoScraper
     {
         $kwsNbr = \count($this->kws);
 
-        $this->csvToReturn = 'kw,tld,hl,importance,pos,url'.\chr(10);
+        $this->csvToReturn = 'kw,tld,hl,pos,url'.\chr(10);
 
         foreach ($this->kws as $i => $kw) {
             if ($this->failed || '' === $kw['kw']) {
@@ -197,11 +197,11 @@ class GoogleSpreadsheetSeoScraper
     {
         $result = ['pos' => '-1', 'url' => ''];
 
-        foreach ($results as $k => $r) {
+        foreach ($results as $r) {
             $host = parse_url($r->url, \PHP_URL_HOST);
-            if ($kw['domain'] == $host || \in_array($host, $this->domain)) {
+            if (('' !== $kw['domain'] && $kw['domain'] == $host) || \in_array($host, $this->domain)) {
                 $result = [
-                    'pos' => $k + 1,
+                    'pos' => $r->pos,
                     'url' => $r->url,
                 ];
 
@@ -237,6 +237,23 @@ class GoogleSpreadsheetSeoScraper
         return $this->client;
     }
 
+    private function requestGoogleWithCurl(GoogleSERPManager $Google): string
+    {
+        $this->messageForCli('Requesting Google with Curl');
+        $this->getClient()->setLanguage($Google->language.';q=0.9');
+
+        if (\is_string($proxy = $this->args->getParameterOption('--proxy'))) {
+            $this->getClient()->setProxy($proxy);
+        }
+
+        $this->getClient()->request($Google->generateGoogleSearchUrl());
+        if (0 !== $this->getClient()->getError()) {
+            throw new Exception($this->getClient()->getErrorMessage());
+        }
+
+        return $this->getClient()->getResponse()->getBody();
+    }
+
     /**
      * @param array{'kw': string, 'tld': string, 'hl': string, 'pos':string, 'url':string, 'domain': string} $kw
      *
@@ -256,19 +273,7 @@ class GoogleSpreadsheetSeoScraper
 
         $this->previousRequestUsedCache = true;
         if (($rawHtml = $Google->getCache()) === null) {
-            $this->messageForCli('Requesting Google');
-            $this->getClient()->setLanguage($Google->language.';q=0.9');
-
-            if (\is_string($proxy = $this->args->getParameterOption('--proxy'))) {
-                $this->getClient()->setProxy($proxy);
-            }
-
-            $this->getClient()->request($Google->generateGoogleSearchUrl());
-            if (0 !== $this->getClient()->getError()) {
-                throw new Exception($this->getClient()->getErrorMessage());
-            }
-
-            $rawHtml = $this->getClient()->getResponse()->getBody();
+            $rawHtml = $this->requestGoogleWithCurl($Google);
             $Google->setCache($rawHtml);
             $this->previousRequestUsedCache = false;
         }
