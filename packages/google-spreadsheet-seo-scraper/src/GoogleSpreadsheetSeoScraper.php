@@ -38,6 +38,9 @@ class GoogleSpreadsheetSeoScraper
 
     protected string $prevError;
 
+    /** @var string[] */
+    private array $proxies = [];
+
     /**
      * @param array<mixed> $argv
      */
@@ -74,6 +77,10 @@ class GoogleSpreadsheetSeoScraper
 
         if (\is_string($domain)) {
             $this->domain = explode(',', $domain);
+        }
+
+        if (\is_string($proxy = $this->args->getParameterOption('--proxy'))) {
+            $this->proxies = explode(',', $proxy);
         }
     }
 
@@ -241,10 +248,7 @@ class GoogleSpreadsheetSeoScraper
     {
         $this->messageForCli('Requesting Google with Curl');
         $this->getClient()->setLanguage($Google->language.';q=0.9');
-
-        if (\is_string($proxy = $this->args->getParameterOption('--proxy'))) {
-            $this->getClient()->setProxy($proxy);
-        }
+        $this->manageProxy();
 
         $this->getClient()->request($Google->generateGoogleSearchUrl());
         if (0 !== $this->getClient()->getError()) {
@@ -252,6 +256,20 @@ class GoogleSpreadsheetSeoScraper
         }
 
         return $this->getClient()->getResponse()->getBody();
+    }
+
+    private function manageProxy(): void
+    {
+        if ($this->args->hasParameterOption('--proxy')) {
+            shuffle($this->proxies);
+            $proxy = $this->proxies[0] ?? null;
+            if (null === $proxy) {
+                throw new Exception('Proxies are running out of stock');
+            }
+
+            $this->messageForCli('Using proxy '.$proxy.'');
+            $this->getClient()->setProxy($proxy);
+        }
     }
 
     /**
@@ -283,8 +301,14 @@ class GoogleSpreadsheetSeoScraper
 
         if ([] === $result) {
             $Google->deleteCache();
+            if ($this->args->getParameterOption('--proxy')) {
+                $this->messageForCli('Proxy `'.$this->proxies[0].'` looks like dead');
+                unset($this->proxies[0]);
 
-            throw new Exception('no google result');
+                return $this->getGoogleResults($kw, $num);
+            }
+
+            throw new Exception('no google result, try using a proxy or check the keyword');
         }
 
         return $result;
