@@ -6,6 +6,8 @@ build
 tmp.csv
 var
 tmp/*
+debug.html
+debug.png
 
 # composer
 /vendor
