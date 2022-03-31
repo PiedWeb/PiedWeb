@@ -4,6 +4,7 @@ namespace PiedWeb\Google\Extractor;
 
 use DOMElement;
 use Exception;
+use PiedWeb\Extractor\Helper;
 use PiedWeb\Google\Result\OrganicResult;
 use Symfony\Component\DomCrawler\Crawler;
 
@@ -32,7 +33,7 @@ class SERPExtractor
             return 0;
         }
 
-        return (int) (preg_replace('/[^0-9]/', '', $node->nodeValue));
+        return (int) (Helper::preg_replace_str('/[^0-9]/', '', $node->nodeValue));
     }
 
     /**

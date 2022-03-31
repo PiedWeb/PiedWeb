@@ -4,3 +4,6 @@ parameters:
         - packages/curl/src
         - packages/google/src
         - packages/google-spreadsheet-seo-scraper/src
+        - packages/extractor/src
+        - packages/text-analyzer/src
+        - packages/seo-pocket-crawler/src
