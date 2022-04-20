@@ -53,6 +53,11 @@ final class Link
      */
     public const LINK_EXTERNAL = 4;
 
+    public function __toString(): string
+    {
+        return '['.$this->anchor.']('.$this->url->get().')';
+    }
+
     /**
      * Add trailing slash for domain. Eg: https://piedweb.com => https://piedweb.com/ and '/test ' = '/test'.
      */

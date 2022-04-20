@@ -7,6 +7,7 @@
   "license": "MIT",
   "require": {
     "php": ">=8.0",
+    "danielstjules/stringy": "^3.1",
     "jeremykendall/php-domain-parser": "^6.1",
     "league/csv": "^9.8",
     "league/uri": "^6.5",
@@ -17,6 +18,7 @@
     "symfony/console": "^6.0",
     "symfony/css-selector": "^6.0",
     "symfony/dom-crawler": "^6.0",
+    "symfony/serializer": "^6.0",
     "thecodingmachine/safe": "^2.1"
   },
   "require-dev": {

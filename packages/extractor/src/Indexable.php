@@ -49,22 +49,7 @@ class Indexable
     /**
      * @var int
      */
-    private const NOT_INDEXABLE_3XX = 8;
-
-    /**
-     * @var int
-     */
-    public const NOT_INDEXABLE_NETWORK_ERROR = 7;
-
-    /**
-     * @var int
-     */
-    public const NOT_INDEXABLE_TOO_BIG = 10;
-
-    /**
-     * @var int
-     */
-    public const NOT_INDEXABLE_NOT_HTML = 9;
+    public const NOT_INDEXABLE_REDIR = 9;
 
     public function __construct(
         private Url $url,
@@ -99,6 +84,11 @@ class Indexable
     public function isIndexable(): bool
     {
         return 0 === $this->indexable;
+    }
+
+    public function getIndexableStatus(): int
+    {
+        return $this->indexable;
     }
 
     public function getErrorMessage(): string
@@ -140,7 +130,7 @@ class Indexable
 
         // status 3XX
         if ($this->statusCode < 400 && $this->statusCode > 299) {
-            return self::NOT_INDEXABLE_3XX;
+            return self::NOT_INDEXABLE_REDIR;
         }
 
         return self::INDEXABLE;

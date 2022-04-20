@@ -57,9 +57,51 @@ class SERPExtractor
             ++$i;
             $toReturn[$k]->pixelPos = 0;
             $toReturn[$k]->url = $node->getAttribute('href');
-            $toReturn[$k]->title = $node->nodeValue;
+            $toReturn[$k]->title = $this->getTitlteFromTitleLinkNode($node);
+            $toReturn[$k]->description = $this->getDescriptionFromTitleLinkNode($node);
         }
 
         return $toReturn;
+    }
+
+    private function getTitlteFromTitleLinkNode(DOMElement $node): string
+    {
+        $crawler = (new Crawler($node));
+
+        if ($this->isMobileSerp()) {
+            $node = $crawler->filter('div')->getNode(0);
+        } else {
+            $node = $crawler->filter('h3')->getNode(0);
+        }
+
+        return $node instanceof \DOMNode ? $node->textContent : '';
+    }
+
+    private function getDescriptionFromTitleLinkNode(DOMElement $node): string
+    {
+        $wrapper = $this->getParentNode($node, 5);
+        if (null === $wrapper) {
+            return '';
+        }
+
+        $crawler = new Crawler($wrapper);
+        $description = $crawler->filter('div[data-content-feature]')->getNode(0);
+
+        return null === $description ? '' : strip_tags($description->textContent);
+    }
+
+    private function getParentNode(DOMElement $node, int $level, int $currentLevel = 0): ?DOMElement
+    {
+        $parentNode = $node->parentNode;
+        ++$currentLevel;
+        if ($currentLevel == $level) {
+            return $parentNode;
+        }
+
+        if (null === $parentNode) {
+            return null;
+        }
+
+        return $this->getParentNode($parentNode, $level, $currentLevel);
     }
 }

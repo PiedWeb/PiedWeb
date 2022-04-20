@@ -60,7 +60,7 @@ final class GoogleSERPManager
 
     private function getCacheFilePath(): string
     {
-        return $this->cacheFolder.'/'.sha1(\Safe\json_encode($this)).'.html';
+        return $this->cacheFolder.'/gsc_'.sha1(\Safe\json_encode($this)).'.html';
     }
 
     public function deleteCache(): void

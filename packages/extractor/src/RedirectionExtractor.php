@@ -5,7 +5,7 @@ namespace PiedWeb\Extractor;
 final class RedirectionExtractor
 {
     /**
-     * @param array<mixed> $headers
+     * @param array<int|string, string|string[]> $headers
      */
     public function __construct(
         private Url $url,
@@ -30,11 +30,8 @@ final class RedirectionExtractor
     {
         $redirection = $this->getRedirection();
 
-        if (null !== $redirection) {
-            return Link::createRedirection($redirection, $this->url);
-        }
-
-        return null;
+        return null !== $redirection ? Link::createRedirection($redirection, $this->url)
+                : null;
     }
 
     public function isRedirectToHttps(): bool

@@ -30,6 +30,7 @@ class LinksExtractor
         private string $selector = self::SELECT_A
     ) {
         $this->links = $this->extract();
+        $this->classifyLinks();
     }
 
     /**
@@ -38,12 +39,18 @@ class LinksExtractor
     public function get(int $type = null): array
     {
         if (null !== $type) {
-            $this->classifyLinks();
-
             return $this->linksPerType[$type] ?? [];
         }
 
         return $this->links;
+    }
+
+    /**
+     * @return array<int, array<Link>>
+     */
+    public function getLinksPerType(): array
+    {
+        return $this->linksPerType;
     }
 
     /**
@@ -61,15 +68,9 @@ class LinksExtractor
         return \count($links) - \count($u);
     }
 
-    public function classifyLinks(): void
+    private function classifyLinks(): void
     {
-        if ([] !== $this->linksPerType) {
-            return;
-        }
-
-        $links = $this->get();
-
-        foreach ($links as $link) {
+        foreach ($this->links as $link) {
             $this->linksPerType[$link->getType()][] = $link;
         }
     }

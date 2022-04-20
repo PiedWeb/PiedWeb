@@ -7,7 +7,8 @@ $finder = Symfony\Component\Finder\Finder::create()
     ])
     ->name('*.php')
     ->ignoreDotFiles(true)
-    ->ignoreVCS(true);
+    //->ignoreVCS(true)
+    ;
 
 return (new PhpCsFixer\Config())
     ->setRules([

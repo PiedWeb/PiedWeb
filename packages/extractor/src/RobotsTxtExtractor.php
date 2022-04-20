@@ -7,7 +7,18 @@ use Spatie\Robots\RobotsTxt;
 
 final class RobotsTxtExtractor
 {
+    /**
+     * @var array<string, RobotsTxt>
+     */
+    private static array $cache = [];
+
     public function get(Url $url): RobotsTxt
+    {
+        return self::$cache[$url->getOrigin()] = self::$cache[$url->getOrigin()]
+            ?? $this->directGet($url);
+    }
+
+    public function directGet(Url $url): RobotsTxt
     {
         $url = $url->getOrigin().'/robots.txt';
 

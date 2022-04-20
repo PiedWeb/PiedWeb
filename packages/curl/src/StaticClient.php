@@ -25,7 +25,8 @@ class StaticClient
         self::$client->setDefaultGetOptions()
             ->setDefaultSpeedOptions()
             ->setNoFollowRedirection()
-            ->setDesktopUserAgent();
+            ->setDesktopUserAgent()
+            ->fakeBrowserHeader();
 
         if (! self::$client->request()) {
             return '';

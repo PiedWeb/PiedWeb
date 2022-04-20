@@ -183,6 +183,12 @@ class ExtendedClient extends Client
      */
     public function setProxy(string $proxy): self
     {
+        if ('' === $proxy) {
+            $this->setOpt(\CURLOPT_PROXY, '');
+
+            return $this;
+        }
+
         $scheme = Helper::getSchemeFrom($proxy);
         $proxy = explode(':', $proxy);
         $this->setOpt(\CURLOPT_HTTPPROXYTUNNEL, 1);

@@ -33,7 +33,7 @@ class Client
      *
      * @param string $target to request
      */
-    public function setTarget(string $target): self
+    public function setTarget(string $target): static
     {
         $this->target = $target;
         $this->setOpt(\CURLOPT_URL, $target);
@@ -60,7 +60,7 @@ class Client
      * @param mixed $value
      * @psalm-suppress InvalidArgument (for $handle)
      */
-    public function setOpt(int $option, $value): self
+    public function setOpt(int $option, $value): static
     {
         if (\CURLOPT_HEADER === $option) {
             throw new \Exception('can\'t change CURLOPT_HEADER (always true)');
