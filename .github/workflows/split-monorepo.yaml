@@ -1,11 +1,6 @@
 name: Split Monorepo
 
-on:
-    push:
-        branches:
-            - main
-        tags:
-            - '*'
+on: push
 
 jobs:
     provide_packages_json:
@@ -74,7 +69,7 @@ jobs:
                     tag: ${GITHUB_REF#refs/tags/}
 
                     package-directory: 'packages/${{ matrix.package }}'
-                    split-repository-organization: 'symplify'
+                    split-repository-organization: 'piedweb'
                     split-repository-name: '${{ matrix.package }}'
                     user-name: "GitHub Action"
                     user-email: "action@github.com"
