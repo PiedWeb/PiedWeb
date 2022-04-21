@@ -35,7 +35,7 @@ class Response
             return $self;
         }
 
-        $self->headers = substr($content, 0, $sHeaders = (int) $client->getCurlInfo(\CURLINFO_HEADER_SIZE));
+        $self->headers = substr($content, 0, $sHeaders = \intval($client->getCurlInfo(\CURLINFO_HEADER_SIZE)));
         $self->content = substr($content, $sHeaders);
 
         return $self;
