@@ -15,7 +15,7 @@ class CleanText
 
     // '/([^\n\.\!\?]{10,}[\.\!\?…])*/';
     /**
-     * @var string[]&mixed[]
+     * @var string[]
      */
     public const STOP_WORDS = [
         // English stop words

@@ -102,6 +102,9 @@ class Puphpeteer
         $this->close();
     }
 
+    /**
+     * @psalm-suppress UndefinedMagicMethod
+     */
     public function load(string $html, string $from = ''): string
     {
         if ('' !== $from) {
@@ -114,6 +117,9 @@ class Puphpeteer
         return self::$pageContent;
     }
 
+    /**
+     * @psalm-suppress UndefinedMagicMethod
+     */
     public function setCookie(string $name, string $value, string $domain): void
     {
         $cookie = \Safe\json_decode(\Safe\json_encode([
@@ -122,6 +128,9 @@ class Puphpeteer
         $this->getBrowserPage()->setCookie($cookie[0]); // @phpstan-ignore-line
     }
 
+    /**
+     * @psalm-suppress UndefinedMagicMethod
+     */
     public function get(string $url): string
     {
         $this->getBrowserPage()->goto($url, ['waitUntil' => 'domcontentloaded']); // @phpstan-ignore-line
@@ -134,6 +143,9 @@ class Puphpeteer
         return self::$pageContent;
     }
 
+    /**
+     * @psalm-suppress UndefinedMagicMethod
+     */
     private function manageMetaRefresh(string $base = ''): void
     {
         if ($this->elementExists('[http-equiv=refresh]')) {
