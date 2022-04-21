@@ -78,10 +78,11 @@ class Client
      *                 http://php.net/manual/en/function.curl-getinfo.php
      *
      * @psalm-suppress InvalidArgument (for $handle)
+     * @noRector
      */
-    public function getCurlInfo(int $opt): int|string
+    public function getCurlInfo(int $opt): mixed
     {
-        return curl_getinfo($this->getHandle(), $opt); // @phpstan-ignore-line
+        return curl_getinfo($this->getHandle(), $opt);
     }
 
     /**

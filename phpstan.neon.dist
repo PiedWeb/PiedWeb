@@ -1,7 +1,7 @@
 parameters:
     level: max
     paths:
-    #    - packages/perso
+  #      - packages/perso
         - packages/curl/src
         - packages/google/src
         - packages/google-spreadsheet-seo-scraper/src

@@ -3,7 +3,8 @@
 $finder = Symfony\Component\Finder\Finder::create()
     ->in([
         __DIR__ . '/packages/*/src',
-        __DIR__ . '/packages/*/tests'
+        __DIR__ . '/packages/*/tests',
+        __DIR__ . '/packages/perso/'
     ])
     ->name('*.php')
     ->ignoreDotFiles(true)

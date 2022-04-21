@@ -3,6 +3,7 @@
 namespace PiedWeb\Google\Extractor;
 
 use DOMElement;
+use DOMNode;
 use Exception;
 use PiedWeb\Extractor\Helper;
 use PiedWeb\Google\Result\OrganicResult;
@@ -33,7 +34,7 @@ class SERPExtractor
             return 0;
         }
 
-        return (int) (Helper::preg_replace_str('/[^0-9]/', '', $node->nodeValue));
+        return (int) (Helper::preg_replace_str('/[^0-9]/', '', $node->nodeValue ?? ''));
     }
 
     /**
@@ -90,7 +91,7 @@ class SERPExtractor
         return null === $description ? '' : strip_tags($description->textContent);
     }
 
-    private function getParentNode(DOMElement $node, int $level, int $currentLevel = 0): ?DOMElement
+    private function getParentNode(DOMNode $node, int $level, int $currentLevel = 0): ?DOMNode
     {
         $parentNode = $node->parentNode;
         ++$currentLevel;
