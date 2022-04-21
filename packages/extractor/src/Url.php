@@ -18,7 +18,7 @@ final class Url
 
     private string $origin = '';
 
-    private string $registrableDomain = '';
+    private ?string $registrableDomain = null;
 
     public function __construct(string $url)
     {
@@ -53,13 +53,12 @@ final class Url
 
     public function getOrigin(): string
     {
-        return $this->origin ?? ($this->origin = UriInfo::getOrigin($this->http) ?? '');
+        return '' !== $this->origin ? $this->origin : ($this->origin = UriInfo::getOrigin($this->http) ?? '');
     }
 
     public function getRegistrableDomain(): string
     {
-        return $this->registrableDomain
-            ?? ($this->registrableDomain = RegistrableDomain::get($this->http->getHost()));
+        return $this->registrableDomain ?? ($this->registrableDomain = RegistrableDomain::get($this->http->getHost()));
     }
 
     public function getDocumentUrl(): Http

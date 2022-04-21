@@ -13,9 +13,13 @@ final class BaseExtractor
 
     public function get(): ?Url
     {
-        $base = $this->crawler->filter('base')->attr('href');
-        if ($base && filter_var($base, \FILTER_VALIDATE_URL)) {
-            return new Url($base);
+        if (($base = $this->crawler->filter('base')->getNode(0)) === null) {
+            return null;
+        }
+
+        $baseHref = (new Crawler($base))->attr('href');
+        if ($baseHref && filter_var($baseHref, \FILTER_VALIDATE_URL)) {
+            return new Url($baseHref);
         }
 
         return null;
