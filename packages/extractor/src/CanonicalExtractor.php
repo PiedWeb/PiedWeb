@@ -31,8 +31,9 @@ final class CanonicalExtractor
             return true;
         }
 
+        $pregMatch = preg_match('/^.+?[^\/:](?=[?\/]|$)/', $this->urlRequested->__toString(), $match);
         // check for http://example.tld or http://example.tld/
-        return false !== preg_match('/^.+?[^\/:](?=[?\/]|$)/', $this->urlRequested->__toString(), $match)
+        return false !== $pregMatch
                 && $match[0] === ltrim($this->urlRequested->__toString(), '/')
                 && ($match[0] == $canonical || $match[0].'/' == $canonical);
     }

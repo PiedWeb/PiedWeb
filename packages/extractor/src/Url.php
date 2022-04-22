@@ -69,7 +69,7 @@ final class Url
     public function getAbsoluteUri(): string
     {
         // return substr($this->get(), \strlen($this->getOrigin()));
-        return substr($this->http->withFragment(''), \strlen($this->getOrigin()));
+        return substr($this->http->withFragment('')->__toString(), \strlen($this->getOrigin()));
     }
 
     public function get(): string

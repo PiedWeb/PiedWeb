@@ -57,6 +57,8 @@ class Puphpeteer
 
     /**
      * @param array<string, mixed> $emulateOptions array{ viewport: mixed, userAgent: string }
+     *
+     * @psalm-suppress UndefinedMagicMethod
      */
     public function instantiate(array $emulateOptions = [], string $language = ''): self
     {
@@ -83,6 +85,9 @@ class Puphpeteer
         return self::$browserPage;
     }
 
+    /**
+     * @psalm-suppress UndefinedMagicMethod
+     */
     public function close(): void
     {
         if (null === self::$browser) {
