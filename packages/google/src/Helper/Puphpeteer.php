@@ -94,11 +94,11 @@ class Puphpeteer
             $this->instantiate();
         }
 
-        if ($new) {
-            self::$browserPage = self::$browser->newPage(); // @phpstan-ignore-line
+        if ($new || null === self::$browserPage) {
+            self::$browserPage = (self::$browser ?? throw new LogicException())->newPage();
         }
 
-        return self::$browserPage; // @phpstan-ignore-line
+        return self::$browserPage;
     }
 
     public function close(): void

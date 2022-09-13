@@ -41,7 +41,12 @@ class SERPExtractorJsExtended extends SERPExtractor
 
         $element = $this->getBrowserPage()->querySelectorXPath($element);
         if (isset($element[0]) && null !== $element[0]->boundingBox()) {
-            return $element[0]->boundingBox()['y']; // @phpstan-ignore-line
+            $boundingBox = $element[0]->boundingBox();
+            if (! \is_array($boundingBox) || ! isset($boundingBox['y']) || ! \is_int($boundingBox['y'])) {
+                throw new LogicException();
+            }
+
+            return $boundingBox['y'];
         }
 
         return 0;
