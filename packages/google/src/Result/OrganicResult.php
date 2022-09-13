@@ -12,5 +12,5 @@ final class OrganicResult
 
     public string $title;
 
-    public string $description;
+    public string $description = '';
 }
