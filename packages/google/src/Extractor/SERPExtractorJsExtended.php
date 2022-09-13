@@ -43,7 +43,7 @@ class SERPExtractorJsExtended extends SERPExtractor
         if (isset($element[0]) && null !== $element[0]->boundingBox()) {
             $boundingBox = $element[0]->boundingBox();
             if (! \is_array($boundingBox) || ! isset($boundingBox['y']) || ! \is_int($boundingBox['y'])) {
-                throw new LogicException();
+                return 0;
             }
 
             return $boundingBox['y'];

@@ -25,6 +25,16 @@ class SERPExtractor
     ];
 
     /**
+     * @var string[]
+     */
+    public const RELATED = ["//a[@data-xbu][starts-with(@href, '/search')]/div/div/span"];
+
+    /**
+     * @var string[]
+     */
+    public const RELATED_DESKTOP = ["//a[@data-xbu][starts-with(@href, '/search')]/div"];
+
+    /**
      * @var string
      */
     public const RESULT_SELECTOR = '//a[@role="presentation"]/parent::div/parent::div/parent::div';
@@ -148,6 +158,25 @@ class SERPExtractor
         // $toReturn->node =$blockPositionZero;
 
         return $toReturn;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getRelatedSearches(): array
+    {
+        $kw = [];
+        $xpaths = $this->isMobileSerp() ? self::RELATED : self::RELATED_DESKTOP;
+        foreach ($xpaths as $xpath) {
+            $nodes = $this->domCrawler->filterXPath($xpath);
+            foreach ($nodes as $node) {
+                if ('' !== $node->textContent) {
+                    $kw[] = $node->textContent;
+                }
+            }
+        }
+
+        return $kw;
     }
 
     /**

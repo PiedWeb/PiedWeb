@@ -153,6 +153,7 @@ class GoogleSpreadsheetSeoScraper
                 'serpFeature' => $kw['serpFeature'] ?? '',
                 'firstPixelPos' => $kw['firstPixelPos'] ?? '',
                 'firstUrl' => $kw['firstUrl'] ?? '',
+                'related' => $kw['related'] ?? '',
             ];
         }
     }
@@ -171,7 +172,8 @@ class GoogleSpreadsheetSeoScraper
             .'"'.($result['firstPixelPos'] ?? '').'",'
             .'"'.($result['pos'] ?? '').'",'
             .'"'.($result['pixelPos'] ?? '').'",'
-            .'"'.($result['url'] ?? '').'"'
+            .'"'.($result['url'] ?? '').'",'
+            .'"'.($result['related'] ?? '').'"'
             .\chr(10);
 
         return $this;
@@ -181,7 +183,7 @@ class GoogleSpreadsheetSeoScraper
     {
         $kwsNbr = \count($this->kws);
 
-        $this->csvToReturn = 'kw,tld,hl,serpFeature,firstUrl,firstPixelPos,pos,pixelPos,url'.\chr(10);
+        $this->csvToReturn = 'kw,tld,hl,serpFeature,firstUrl,firstPixelPos,pos,pixelPos,url,related'.\chr(10);
 
         foreach ($this->kws as $i => $kw) {
             if ($this->failed || '' === $kw['kw']) {
@@ -237,6 +239,7 @@ class GoogleSpreadsheetSeoScraper
             'serpFeature' => $this->getSerpFeatures(),
             'firstPixelPos' => array_values($results)[0]->pixelPos,
             'firstUrl' => array_values($results)[0]->url,
+            'related' => implode(', ', $this->extractor->getRelatedSearches()),
         ];
 
         foreach ($results as $r) {
