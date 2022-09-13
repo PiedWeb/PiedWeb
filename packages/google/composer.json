@@ -17,11 +17,22 @@
   ],
   "require": {
     "php": ">=8.0",
-    "piedweb/curl": "^0"
+    "piedweb/curl": "^0",
+    "nesk/puphpeteer": "dev-zoon"
   },
   "autoload": {
     "psr-4": {
       "PiedWeb\\Google\\": "src"
     }
-  }
+  },
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/zoonru/puphpeteer.git"
+    },
+    {
+      "type": "vcs",
+      "url": "https://github.com/zoonru/rialto.git"
+    }
+  ]
 }
