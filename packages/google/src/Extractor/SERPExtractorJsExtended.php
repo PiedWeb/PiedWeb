@@ -2,6 +2,8 @@
 
 namespace PiedWeb\Google\Extractor;
 
+use DOMNode;
+use LogicException;
 use Nesk\Puphpeteer\Resources\Page;
 use PiedWeb\Google\Helper\Puphpeteer;
 
@@ -31,9 +33,13 @@ class SERPExtractorJsExtended extends SERPExtractor
         return $this->browserPage;
     }
 
-    protected function getPixelPosFor(string $elementXpath): int
+    protected function getPixelPosFor(string|DOMNode $element): int
     {
-        $element = $this->getBrowserPage()->querySelectorXPath($elementXpath);
+        if ($element instanceof DOMNode) {
+            $element = $element->getNodePath() ?? throw new LogicException();
+        }
+
+        $element = $this->getBrowserPage()->querySelectorXPath($element);
         if (isset($element[0]) && null !== $element[0]->boundingBox()) {
             return $element[0]->boundingBox()['y']; // @phpstan-ignore-line
         }

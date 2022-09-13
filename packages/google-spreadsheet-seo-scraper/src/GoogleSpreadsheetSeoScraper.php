@@ -216,40 +216,11 @@ class GoogleSpreadsheetSeoScraper
     private function getSerpFeatures(): string
     {
         $return = '';
-        if ($this->extractor->containsAds()) {
-            $return .= 'Ads, ';
-        }
-
-        if ($this->extractor->containsPositionZero()) {
-            $return .= 'PositionZero, ';
-        }
-
-        if ($this->extractor->containsKnowledgePanel()) {
-            $return .= 'KnowledgePanel, ';
-        }
-
-        if ($this->extractor->containsMapsBlock()) {
-            $return .= 'Maps, ';
-        }
-
-        if ($this->extractor->containsImageBlock()) {
-            $return .= 'Image, ';
-        }
-
-        if ($this->extractor->containsPeopleAlsoAsked()) {
-            $return .= 'PAA, ';
-        }
-
-        if ($this->extractor->containsNews()) {
-            $return .= 'News, ';
-        }
-
-        if ($this->extractor->containsVideo()) {
-            $return .= 'Video, ';
-        }
-
-        if ($this->extractor->containsReviews()) {
-            $return .= 'Reviews, ';
+        $pos = -1;
+        foreach (array_keys(SERPExtractor::SERP_FEATURE_SELECTORS) as $serpFeatureName) {
+            if ($this->extractor->containsSerpFeature($serpFeatureName, $pos)) {
+                $return .= $serpFeatureName.' ('.$pos.'), ';
+            }
         }
 
         return trim($return, ' ,');

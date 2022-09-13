@@ -12,6 +12,18 @@ use Symfony\Component\DomCrawler\Crawler;
 
 class SERPExtractor
 {
+    public const SERP_FEATURE_SELECTORS = [
+        'Ads' => ['.//*[@id="tads"]|.//*[@id="bottomads"]'],
+        'ImagePack' => ["//span[text()='Images']", "//h3[starts-with(text(), 'Images correspondant')]"],
+        'Local Pack' => ["//div[text()='Adresses']"],
+        'PositionZero' => ["//h2[text()='Extrait optimisé sur le Web']"],
+        'KnowledgePanel' => ['//div[contains(concat(" ",normalize-space(@class)," ")," kp-wholepage ")]'],
+        'News' => ['//span[text()="À la une"]'],
+        'PeolpleAlsoAsked' => ['//span[text()="Autres questions posées"]'],
+        'Video' => ['//span[text()="Vidéos"]',            '//div[contains( @aria-label,"second")]'],
+        'Reviews' => ['//span[contains( @aria-label,"Note")]'],
+    ];
+
     private Crawler $domCrawler;
 
     public function __construct(public string $html)
@@ -45,8 +57,9 @@ class SERPExtractor
         $nodesSelector = $this->isMobileSerp() ? 'a[role=presentation]' : 'h3';
         $nodes = $this->domCrawler->filter($nodesSelector);
         $toReturn = [];
+
         $i = 0;
-        if ($this->containsPositionZero()) {
+        if ($this->containsSerpFeature('PositionZero')) {
             $toReturn[0] = $this->getPositionsZero();
             ++$i;
         }
@@ -57,24 +70,31 @@ class SERPExtractor
                 continue;
             }
 
-            $node = $this->isMobileSerp() ? $node : $node->parentNode;
-            if (null === $node || ! $node instanceof DOMElement) {
-                throw new Exception('Google changes his selector. Please upgrade SERPExtractor (mobile  '.(int) $this->isMobileSerp().')');
-            }
-
-            $toReturn[$i] = new OrganicResult();
+            $toReturn[$i] = $this->extractOrganicResultFrom($node);
             $toReturn[$i]->pos = $i + 1;
-            $toReturn[$i]->pixelPos = $this->getPixelPosFor($node->getNodePath() ?? '');
-            $toReturn[$i]->url = $node->getAttribute('href');
-            $toReturn[$i]->title = $this->getTitlteFromTitleLinkNode($node);
-            $toReturn[$i]->description = $this->getDescriptionFromTitleLinkNode($node);
             ++$i;
         }
 
         return $toReturn;
     }
 
-    protected function getPixelPosFor(string $elementXpath): int
+    private function extractOrganicResultFrom(DOMNode $node): OrganicResult
+    {
+        $node = $this->isMobileSerp() ? $node : $node->parentNode;
+        if (null === $node || ! $node instanceof DOMElement) {
+            throw new Exception('Google changes his selector. Please upgrade SERPExtractor (mobile  '.(int) $this->isMobileSerp().')');
+        }
+
+        $toReturn = new OrganicResult();
+        $toReturn->pixelPos = $this->getPixelPosFor($node->getNodePath() ?? '');
+        $toReturn->url = $node->getAttribute('href');
+        $toReturn->title = $this->getTitlteFromTitleLinkNode($node);
+        $toReturn->description = $this->getDescriptionFromTitleLinkNode($node);
+
+        return $toReturn;
+    }
+
+    protected function getPixelPosFor(string|DOMNode $element): int
     {
         return 0;
     }
@@ -120,54 +140,16 @@ class SERPExtractor
         return $this->getParentNode($parentNode, $level, $currentLevel);
     }
 
-    public function containsAds(): bool
+    public function containsSerpFeature(string $serpFeatureName, int &$pos = 0): bool
     {
-        return $this->exist(['.//*[@id="tads"]|.//*[@id="bottomads"]']);
-    }
+        $xpaths = self::SERP_FEATURE_SELECTORS[$serpFeatureName];
+        if (! $this->exist($xpaths)) {
+            return false;
+        }
 
-    public function containsImageBlock(): bool
-    {
-        return $this->exist(["//span[text()='Images']", "//h3[starts-with(text(), 'Images correspondant')]"]);
-    }
+        $pos = $this->getPixelPosFor($this->getNode($xpaths));
 
-    public function containsMapsBlock(): bool
-    {
-        return $this->exist(["//div[text()='Adresses']"]);
-    }
-
-    public function containsPositionZero(): bool
-    {
-        return $this->exist(["//h2[text()='Extrait optimisé sur le Web']"]);
-    }
-
-    public function containsKnowledgePanel(): bool
-    {
-        return $this->exist(['//div[contains(concat(" ",normalize-space(@class)," ")," kp-wholepage ")]']);
-    }
-
-    public function containsNews(): bool
-    {
-        return $this->exist(['//span[text()="À la une"]']);
-    }
-
-    public function containsPeopleAlsoAsked(): bool
-    {
-        return $this->exist(['//span[text()="Autres questions posées"]']);
-    }
-
-    public function containsVideo(): bool
-    {
-        return $this->exist([
-            '//span[text()="Vidéos"]',
-            '//div[contains( @aria-label,"second")]',
-        ]);
-    }
-
-    public function containsReviews(): bool
-    {
-        return $this->exist([
-            '//span[contains( @aria-label,"Note")]',
-        ]);
+        return true;
     }
 
     public function getPositionsZero(): OrganicResult
