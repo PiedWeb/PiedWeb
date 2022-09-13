@@ -14,8 +14,6 @@ final class PuphpeteerProviderTest extends TestCase
 
     private function getSerpManager()
     {
-
-
         $manager = new GoogleSERPManager();
         $manager->language = 'fr-FR';
         $manager->tld = 'fr';

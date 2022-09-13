@@ -12,7 +12,7 @@ class Puphpeteer
 {
     public static ?Puppeteer $puppeteer;
 
-    public static ?Browser $browser;
+    public static ?Browser $browser = null;
 
     public static ?Page $browserPage;
 
@@ -62,6 +62,7 @@ class Puphpeteer
      */
     public function instantiate(array $emulateOptions = [], string $language = ''): self
     {
+        Logger::log('new Puppeteer');
         self::$puppeteer = new Puppeteer([
             'headless' => true,
             'slowMo' => 250,
@@ -69,25 +70,37 @@ class Puphpeteer
             'idle_timeout' => 9000,
             'args' => ['--lang='.('' !== $language ? $language : self::DEFAULT_LANGUAGE)],
         ]);
-        self::$browser = self::$puppeteer->launch();  // @phpstan-ignore-line
-        self::$browserPage = self::$browser->newPage();
-        $this->getBrowserPage()->emulate([] !== $emulateOptions ? $emulateOptions : self::DEFAULT_EMULATE_OPTIONS); // @phpstan-ignore-line
+        self::$browser = self::$puppeteer->launch();
+        self::$browserPage = $this->getBrowserPage(true);
+        $this->emulate();
 
         return $this;
     }
 
-    public function getBrowserPage(): Page
+    /**
+     * @param array<string, mixed> $emulateOptions array{ viewport: mixed, userAgent: string }
+     */
+    public function emulate(array $emulateOptions = []): void
     {
-        if (null === self::$browserPage) {
-            throw new LogicException();
-        }
-
-        return self::$browserPage;
+        $this->getBrowserPage()->emulate([] !== $emulateOptions ? $emulateOptions : self::DEFAULT_EMULATE_OPTIONS);
     }
 
     /**
-     * @psalm-suppress UndefinedMagicMethod
+     * @noRector
      */
+    public function getBrowserPage(bool $new = false): Page
+    {
+        if (null === self::$browser) {
+            $this->instantiate();
+        }
+
+        if ($new) {
+            self::$browserPage = self::$browser->newPage(); // @phpstan-ignore-line
+        }
+
+        return self::$browserPage; // @phpstan-ignore-line
+    }
+
     public function close(): void
     {
         if (null === self::$browser) {
@@ -104,12 +117,9 @@ class Puphpeteer
 
     public function __destruct()
     {
-        $this->close();
+        // $this->close();
     }
 
-    /**
-     * @psalm-suppress UndefinedMagicMethod
-     */
     public function load(string $html, string $from = ''): string
     {
         if ('' !== $from) {
@@ -122,9 +132,6 @@ class Puphpeteer
         return self::$pageContent;
     }
 
-    /**
-     * @psalm-suppress UndefinedMagicMethod
-     */
     public function setCookie(string $name, string $value, string $domain): void
     {
         $cookie = \Safe\json_decode(\Safe\json_encode([
@@ -138,7 +145,7 @@ class Puphpeteer
      */
     public function get(string $url): string
     {
-        $this->getBrowserPage()->goto($url, ['waitUntil' => 'domcontentloaded']); // @phpstan-ignore-line
+        $this->getBrowserPage()->goto($url, ['waitUntil' => 'domcontentloaded']);
         self::$pageContent = $this->getBrowserPage()->content();
 
         $this->manageMetaRefresh(pathinfo($url)['dirname']);

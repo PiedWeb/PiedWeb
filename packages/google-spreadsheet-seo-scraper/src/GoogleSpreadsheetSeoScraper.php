@@ -5,7 +5,7 @@ namespace PiedWeb\GoogleSpreadsheetSeoScraper;
 use Exception;
 use League\Csv\Reader;
 use PiedWeb\Curl\ExtendedClient;
-use PiedWeb\Google\Extractor\SERPExtractor;
+use PiedWeb\Google\Extractor\SERPExtractorJsExtended;
 use PiedWeb\Google\GoogleSERPManager;
 use PiedWeb\Google\Result\OrganicResult;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -154,10 +154,11 @@ class GoogleSpreadsheetSeoScraper
     /**
      * @param array{'kw': string, 'tld': string, 'hl': string, 'pos':string, 'url':string, 'domain': string} $kw
      */
-    protected function addCsvRow(array $kw, string|int $pos, string $url): static
+    protected function addCsvRow(array $kw, string|int $pos = '', string|int $pixelPos = '', string $url = ''): static
     {
         $this->csvToReturn .= '"'.$kw['kw'].'","'.$kw['tld'].'","'.$kw['hl'].'",';
-        $this->csvToReturn .= '"'.$pos.'","'.$url.'"'.\chr(10);
+        $this->csvToReturn .= '"...",'; // serpFeature
+        $this->csvToReturn .= '"'.$pos.'","'.$pixelPos.'","'.$url.'"'.\chr(10);
 
         return $this;
     }
@@ -166,11 +167,11 @@ class GoogleSpreadsheetSeoScraper
     {
         $kwsNbr = \count($this->kws);
 
-        $this->csvToReturn = 'kw,tld,hl,pos,url'.\chr(10);
+        $this->csvToReturn = 'kw,tld,hl,serpFeature,pos,pixelPos,url'.\chr(10);
 
         foreach ($this->kws as $i => $kw) {
             if ($this->failed || '' === $kw['kw']) {
-                $this->addCsvRow($kw, '', '');
+                $this->addCsvRow($kw);
 
                 continue;
             }
@@ -204,13 +205,14 @@ class GoogleSpreadsheetSeoScraper
      */
     protected function parseGoogleResults(array $results, array $kw, bool $retry = true): void
     {
-        $result = ['pos' => '-1', 'url' => ''];
+        $result = ['pos' => '-1', 'pixelPos' => '-1', 'url' => ''];
 
         foreach ($results as $r) {
             $host = parse_url($r->url, \PHP_URL_HOST);
             if (('' !== $kw['domain'] && $kw['domain'] == $host) || \in_array($host, $this->domain)) {
                 $result = [
                     'pos' => $r->pos,
+                    'pixelPos' => $r->pixelPos.','.$r->pos,
                     'url' => $r->url,
                 ];
 
@@ -221,7 +223,7 @@ class GoogleSpreadsheetSeoScraper
         if ($retry && '-1' === $result['pos'] && $this->args->hasParameterOption('--num-100')) {
             $this->parseGoogleResults($this->getGoogleResults($kw, 100), $kw, false);
         } else {
-            $this->addCsvRow($kw, $result['pos'], $result['url']);
+            $this->addCsvRow($kw, $result['pos'], $result['pixelPos'], $result['url']);
         }
     }
 
@@ -237,7 +239,7 @@ class GoogleSpreadsheetSeoScraper
         if (null === $this->client) {
             $this->client = new ExtendedClient();
             $this->client
-                ->setDesktopUserAgent()
+                ->setMobileUserAgent()
                 ->setDefaultSpeedOptions()
                 ->setCookie('CONSENT=YES+')
                 ->fakeBrowserHeader();
@@ -298,7 +300,7 @@ class GoogleSpreadsheetSeoScraper
             $this->previousRequestUsedCache = false;
         }
 
-        $extractor = new SERPExtractor($rawHtml);
+        $extractor = new SERPExtractorJsExtended($rawHtml);
         $result = $extractor->getOrganicResults();
 
         if ([] === $result) {

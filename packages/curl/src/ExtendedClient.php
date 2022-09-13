@@ -80,16 +80,16 @@ class ExtendedClient extends Client
     {
         $this->setOpt(\CURLOPT_HTTPHEADER, array_filter([
             'Upgrade-Insecure-Requests: 1',
-            (null !== $this->getUserAgent() ? 'User-Agent: '.$this->getUserAgent() : self::DEFAULT_USER_AGENT),
+            null !== $this->getUserAgent() ? 'User-Agent: '.$this->getUserAgent() : self::DEFAULT_USER_AGENT,
             'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'Sec-Fetch-Site: same-origin',
             'Sec-Fetch-Mode: navigate',
             'Sec-Fetch-User: ?1',
             'Sec-Fetch-Dest: document',
-            (null !== $this->referer ? 'Referer: '.$this->referer : ''),
+            null !== $this->referer ? 'Referer: '.$this->referer : '',
             'Accept-Encoding: gzip, deflate, br',
             'Accept-Language: '.$this->language,
-            (null !== $this->cookie ? 'Cookie: '.$this->cookie : ''),
+            null !== $this->cookie ? 'Cookie: '.$this->cookie : '',
         ]));
     }
 
@@ -214,6 +214,7 @@ class ExtendedClient extends Client
 
     /**
      * @param int $maxBytes Default 2000000 = 2000 Kbytes = 2 Mo
+     *
      * @psalm-suppress UnusedClosureParam
      */
     public function setMaximumResponseSize(int $maxBytes = 2000000): self

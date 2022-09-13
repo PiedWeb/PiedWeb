@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "@nesk/puphpeteer": "^2.0.0"
+    "@nesk/puphpeteer": "https://github.com/zoonru/puphpeteer.git"
   }
 }

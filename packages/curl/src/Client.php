@@ -58,6 +58,7 @@ class Client
      *
      * @param int   $option cURL Predefined Constant
      * @param mixed $value
+     *
      * @psalm-suppress InvalidArgument (for $handle)
      */
     public function setOpt(int $option, $value): static
@@ -78,6 +79,7 @@ class Client
      *                 http://php.net/manual/en/function.curl-getinfo.php
      *
      * @psalm-suppress InvalidArgument (for $handle)
+     *
      * @noRector
      */
     public function getCurlInfo(int $opt): mixed
@@ -88,12 +90,15 @@ class Client
     /**
      * Undocumented function.
      *
-     * @return array<string, string> an associative array with the following elements (which correspond to opt): "url" "content_type" "http_code" "header_size" "request_size" "filetime" "ssl_verify_result" "redirect_count" "total_time" "namelookup_time" "connect_time" "pretransfer_time" "size_upload" "size_download" "speed_download" "speed_upload" "download_content_length" "upload_content_length" "starttransfer_time" "redirect_time"
+     * @return array<string, int|string> an associative array with the following elements (which correspond to opt): "url" "content_type" "http_code" "header_size" "request_size" "filetime" "ssl_verify_result" "redirect_count" "total_time" "namelookup_time" "connect_time" "pretransfer_time" "size_upload" "size_download" "speed_download" "speed_upload" "download_content_length" "upload_content_length" "starttransfer_time" "redirect_time"
+     *
      * @psalm-suppress InvalidArgument (for $handle)
+     *
+     * @noRector
      */
     public function getCurlInfos(): array
     {
-        return curl_getinfo($this->getHandle());
+        return curl_getinfo($this->getHandle()); // @phpstan-ignore-line
     }
 
     /**
@@ -111,6 +116,7 @@ class Client
      * Return the last error number (curl_errno).
      *
      * @return int the error number or 0 (zero) if no error occurred
+     *
      * @psalm-suppress InvalidArgument (for $handle)
      */
     public function getError(): int
@@ -122,6 +128,7 @@ class Client
      * Return a string containing the last error for the current session (curl_error).
      *
      * @return string the error message or '' (the empty string) if no error occurred
+     *
      * @psalm-suppress InvalidArgument (for $handle)
      */
     public function getErrorMessage(): string
