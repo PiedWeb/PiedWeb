@@ -24,6 +24,18 @@ class SERPExtractor
         'Reviews' => ['//span[contains( @aria-label,"Note")]'],
     ];
 
+    /**
+     * @var string
+     */
+    public const RESULT_SELECTOR = '//a[@role="presentation"]/parent::div/parent::div/parent::div';
+
+    /**
+     * @var string
+     */
+    public const RESULT_SELECTOR_DESKTOP =
+        '//a[not(starts-with(@href, "/search"))]/parent::div/parent::div/parent::div[@data-hveid]
+        |//a[not(starts-with(@href, "/search"))]/parent::div/parent::div/parent::div[@data-sokoban-container]';
+
     private Crawler $domCrawler;
 
     public function __construct(public string $html)
@@ -33,17 +45,14 @@ class SERPExtractor
 
     private function isMobileSerp(): bool
     {
-        return null !== $this->domCrawler->filter('a[role=presentation] [role="heading"]')->getNode(0);
+        return $this->exists([self::RESULT_SELECTOR]);
     }
 
     public function getNbrResults(): int
     {
-        $node = $this->domCrawler->filter('#resultStats')->getNode(0)
-            ?? $this->domCrawler->filter('#result-stats')->getNode(0)
-                ?? null;
-
-        if (null === $node) {
-            return 0;
+        $node = null;
+        if (! $this->exists(['//*[@id="resultStats"]|', '//*[@id="result-stats"]'], $node)) {
+            return -1;
         }
 
         return (int) Helper::preg_replace_str('/[^0-9]/', '', $node->nodeValue ?? '');
@@ -54,8 +63,8 @@ class SERPExtractor
      */
     public function getOrganicResults(): array
     {
-        $nodesSelector = $this->isMobileSerp() ? 'a[role=presentation]' : 'h3';
-        $nodes = $this->domCrawler->filter($nodesSelector);
+        $xpath = $this->isMobileSerp() ? self::RESULT_SELECTOR : self::RESULT_SELECTOR_DESKTOP;
+        $nodes = $this->domCrawler->filterXpath($xpath);
         $toReturn = [];
 
         $i = 0;
@@ -70,7 +79,12 @@ class SERPExtractor
                 continue;
             }
 
-            $toReturn[$i] = $this->extractOrganicResultFrom($node);
+            $result = $this->extractResultFrom($node);
+            if (null === $result) {
+                continue;
+            }
+
+            $toReturn[$i] = $result;
             $toReturn[$i]->pos = $i + 1;
             ++$i;
         }
@@ -78,18 +92,23 @@ class SERPExtractor
         return $toReturn;
     }
 
-    private function extractOrganicResultFrom(DOMNode $node): OrganicResult
+    private function extractResultFrom(DOMNode $node): ?OrganicResult
     {
-        $node = $this->isMobileSerp() ? $node : $node->parentNode;
-        if (null === $node || ! $node instanceof DOMElement) {
+        $domCrawler = new Crawler($node);
+        $linkNode = $domCrawler->filter('a')->getNode(0);
+        if (null === $linkNode || ! $linkNode instanceof DOMElement) {
             throw new Exception('Google changes his selector. Please upgrade SERPExtractor (mobile  '.(int) $this->isMobileSerp().')');
         }
 
+        // skip shopping Results
+        if (str_starts_with($linkNode->getAttribute('href'), '/aclk?')) {
+            return null;
+        }
+
         $toReturn = new OrganicResult();
-        $toReturn->pixelPos = $this->getPixelPosFor($node->getNodePath() ?? '');
-        $toReturn->url = $node->getAttribute('href');
-        $toReturn->title = $this->getTitlteFromTitleLinkNode($node);
-        $toReturn->description = $this->getDescriptionFromTitleLinkNode($node);
+        $toReturn->pixelPos = $this->getPixelPosFor($linkNode->getNodePath() ?? '');
+        $toReturn->url = $linkNode->getAttribute('href');
+        $toReturn->title = (new Crawler($linkNode))->text('');
 
         return $toReturn;
     }
@@ -99,51 +118,10 @@ class SERPExtractor
         return 0;
     }
 
-    private function getTitlteFromTitleLinkNode(DOMElement $node): string
-    {
-        $crawler = (new Crawler($node));
-
-        if ($this->isMobileSerp()) {
-            $node = $crawler->filter('div')->getNode(0);
-        } else {
-            $node = $crawler->filter('h3')->getNode(0);
-        }
-
-        return $node instanceof \DOMNode ? $node->textContent : '';
-    }
-
-    private function getDescriptionFromTitleLinkNode(DOMElement $node): string
-    {
-        $wrapper = $this->getParentNode($node, 5);
-        if (null === $wrapper) {
-            return '';
-        }
-
-        $crawler = new Crawler($wrapper);
-        $description = $crawler->filter('div[data-content-feature]')->getNode(0);
-
-        return null === $description ? '' : strip_tags($description->textContent);
-    }
-
-    private function getParentNode(DOMNode $node, int $level, int $currentLevel = 0): ?DOMNode
-    {
-        $parentNode = $node->parentNode;
-        ++$currentLevel;
-        if ($currentLevel == $level) {
-            return $parentNode;
-        }
-
-        if (null === $parentNode) {
-            return null;
-        }
-
-        return $this->getParentNode($parentNode, $level, $currentLevel);
-    }
-
     public function containsSerpFeature(string $serpFeatureName, int &$pos = 0): bool
     {
         $xpaths = self::SERP_FEATURE_SELECTORS[$serpFeatureName];
-        if (! $this->exist($xpaths)) {
+        if (! $this->exists($xpaths)) {
             return false;
         }
 
@@ -175,10 +153,10 @@ class SERPExtractor
     /**
      * @param string[] $xpaths
      */
-    public function exist(array $xpaths): bool
+    public function exists(array $xpaths, ?DOMNode &$node = null): bool
     {
         try {
-            $this->getNode($xpaths);
+            $node = $this->getNode($xpaths);
 
             return true;
         } catch (LogicException $logicException) {
