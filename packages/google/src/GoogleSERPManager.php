@@ -2,6 +2,8 @@
 
 namespace PiedWeb\Google;
 
+use Symfony\Component\Filesystem\Filesystem;
+
 final class GoogleSERPManager
 {
     /** @var string Contain the string query we will ask to Google Search * */
@@ -58,8 +60,10 @@ final class GoogleSERPManager
     /** @var string Contain the cache folder for SERP results * */
     public string $cacheFolder = '/tmp';
 
-    private function getCacheFilePath(): string
+    public function getCacheFilePath(): string
     {
+        $this->generateGoogleSearchUrl();
+
         return $this->cacheFolder.'/gsc_'.sha1(\Safe\json_encode($this)).'.html';
     }
 
@@ -68,11 +72,13 @@ final class GoogleSERPManager
         @unlink($this->getCacheFilePath());
     }
 
-    public function setCache(string $html): void
+    public function setCache(string $html): string
     {
         if ('' !== $this->cacheFolder) {
-            file_put_contents($this->getCacheFilePath(), $html);
+            (new Filesystem())->dumpFile($this->getCacheFilePath(), $html);
         }
+
+        return $html;
     }
 
     public function getCache(): ?string

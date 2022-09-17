@@ -27,7 +27,7 @@ final class PuphpeteerProviderTest extends TestCase
     {
         $extractor = new SERPExtractor($rawHtml);
         //$this->assertNotSame(0, $extractor->getNbrResults());
-        $this->assertSame('https://piedweb.com/', $extractor->getOrganicResults()[0]->url);
+        $this->assertSame('https://piedweb.com/', $extractor->getResults()[0]->url);
 
     }
 

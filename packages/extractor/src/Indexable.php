@@ -93,7 +93,7 @@ class Indexable
 
     public function getErrorMessage(): string
     {
-        $class = new ReflectionClass(__CLASS__);
+        $class = new ReflectionClass(self::class);
         $constants = array_flip($class->getConstants()); // @phpstan-ignore-line
 
         return $constants[$this->indexable];

@@ -4,16 +4,15 @@ namespace PiedWeb\GoogleSpreadsheetSeoScraper;
 
 use Exception;
 use League\Csv\Reader;
-use PiedWeb\Curl\ExtendedClient;
 use PiedWeb\Google\Extractor\SERPExtractor;
 use PiedWeb\Google\Extractor\SERPExtractorJsExtended;
 use PiedWeb\Google\GoogleSERPManager;
-use PiedWeb\Google\Result\OrganicResult;
+use PiedWeb\Google\Result\SearchResult;
 use Symfony\Component\Console\Input\ArgvInput;
 
 class GoogleSpreadsheetSeoScraper
 {
-    public ?ExtendedClient $client = null;
+    use RequestGoogleTrait;
 
     protected ArgvInput $args;
 
@@ -94,7 +93,7 @@ class GoogleSpreadsheetSeoScraper
         $dataDirectory = $this->dir.'/var';
 
         $files = \Safe\glob($dataDirectory.'/*');
-        usort($files, function ($a, $b): int { return \intval(filemtime($a) < filemtime($b)); });
+        usort($files, fn ($a, $b): int => \intval(filemtime($a) < filemtime($b)));
 
         return $files[0] ?? '';
     }
@@ -129,7 +128,7 @@ class GoogleSpreadsheetSeoScraper
         exec($comand);
 
         $files = \Safe\glob($tmpCsvDir.'/*');
-        usort($files, function ($a, $b): int { return \intval(filemtime($a) < filemtime($b)); });
+        usort($files, fn ($a, $b): int => \intval(filemtime($a) < filemtime($b)));
         $lastConvertedFile = $files[0];
 
         return Reader::createFromPath($lastConvertedFile, 'r');
@@ -218,18 +217,16 @@ class GoogleSpreadsheetSeoScraper
     private function getSerpFeatures(): string
     {
         $return = '';
-        $pos = -1;
-        foreach (array_keys(SERPExtractor::SERP_FEATURE_SELECTORS) as $serpFeatureName) {
-            if ($this->extractor->containsSerpFeature($serpFeatureName, $pos)) {
-                $return .= $serpFeatureName.' ('.$pos.'), ';
-            }
+        $serpFeatures = $this->extractor->getSerpFeatures();
+        foreach ($serpFeatures as $serpFeatureName => $pos) {
+            $return .= $serpFeatureName.' ('.$pos.'), ';
         }
 
         return trim($return, ' ,');
     }
 
     /**
-     * @param OrganicResult[]                                                                                $results
+     * @param SearchResult[]                                                                                 $results
      * @param array{'kw': string, 'tld': string, 'hl': string, 'pos':string, 'url':string, 'domain': string} $kw
      */
     protected function parseGoogleResults(array $results, array $kw, bool $retry = true): void
@@ -247,7 +244,7 @@ class GoogleSpreadsheetSeoScraper
             if (('' !== $kw['domain'] && $kw['domain'] == $host) || \in_array($host, $this->domain)) {
                 $result = array_merge($result, [
                     'pos' => $r->pos,
-                    'pixelPos' => $r->pixelPos.','.$r->pos,
+                    'pixelPos' => $r->pixelPos,
                     'url' => $r->url,
                 ]);
 
@@ -269,35 +266,7 @@ class GoogleSpreadsheetSeoScraper
         }
     }
 
-    public function getClient(): ExtendedClient
-    {
-        if (null === $this->client) {
-            $this->client = new ExtendedClient();
-            $this->client
-                ->setMobileUserAgent()
-                ->setDefaultSpeedOptions()
-                ->setCookie('CONSENT=YES+')
-                ->fakeBrowserHeader();
-        }
-
-        return $this->client;
-    }
-
-    private function requestGoogleWithCurl(GoogleSERPManager $Google): string
-    {
-        $this->messageForCli('Requesting Google with Curl');
-        $this->getClient()->setLanguage($Google->language.';q=0.9');
-        $this->manageProxy();
-
-        $this->getClient()->request($Google->generateGoogleSearchUrl());
-        if (0 !== $this->getClient()->getError()) {
-            throw new Exception($this->getClient()->getErrorMessage());
-        }
-
-        return $this->getClient()->getResponse()->getBody();
-    }
-
-    private function manageProxy(): void
+    protected function manageProxy(): void
     {
         if ($this->args->hasParameterOption('--proxy')) {
             shuffle($this->proxies);
@@ -314,7 +283,7 @@ class GoogleSpreadsheetSeoScraper
     /**
      * @param array{'kw': string, 'tld': string, 'hl': string, 'pos':string, 'url':string, 'domain': string} $kw
      *
-     * @return OrganicResult[]
+     * @return SearchResult[]
      */
     protected function getGoogleResults(array $kw, int $num = 10): array
     {
@@ -326,17 +295,16 @@ class GoogleSpreadsheetSeoScraper
             $Google->setParameter('num', 100);
         }
 
-        $Google->generateGoogleSearchUrl();
-
         $this->previousRequestUsedCache = true;
         if (($rawHtml = $Google->getCache()) === null) {
+            $this->messageForCli('Requesting Google with Curl');
             $rawHtml = $this->requestGoogleWithCurl($Google);
             $Google->setCache($rawHtml);
             $this->previousRequestUsedCache = false;
         }
 
         $this->extractor = new SERPExtractorJsExtended($rawHtml);
-        $result = $this->extractor->getOrganicResults();
+        $result = $this->extractor->getResults();
 
         if ([] === $result) {
             $Google->deleteCache();

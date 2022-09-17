@@ -18,7 +18,7 @@ class StaticClient
 
     public static function request(string $url): string
     {
-        self::$client = self::$client ?? new ExtendedClient();
+        self::$client ??= new ExtendedClient();
 
         self::$client
             ->setTarget($url);

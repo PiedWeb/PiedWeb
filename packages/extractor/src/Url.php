@@ -12,7 +12,7 @@ use League\Uri\Http;
 use League\Uri\UriInfo;
 use League\Uri\UriResolver;
 
-final class Url
+final class Url implements \Stringable
 {
     private Http $http;
 

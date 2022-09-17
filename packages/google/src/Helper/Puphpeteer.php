@@ -10,11 +10,11 @@ use PiedWeb\Google\Logger;
 
 class Puphpeteer
 {
-    public static ?Puppeteer $puppeteer;
+    public static ?Puppeteer $puppeteer = null;
 
     public static ?Browser $browser = null;
 
-    public static ?Page $browserPage;
+    public static ?Page $browserPage = null;
 
     public static string $pageContent = '';
 

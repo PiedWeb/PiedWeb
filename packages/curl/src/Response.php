@@ -147,7 +147,7 @@ class Response
      */
     public function getInfo(?string $key = null)
     {
-        return null !== $key && '' !== $key ? (isset($this->info[$key]) ? $this->info[$key] : null) : $this->info;
+        return null !== $key && '' !== $key ? ($this->info[$key] ?? null) : $this->info;
     }
 
     public function getStatusCode(): int

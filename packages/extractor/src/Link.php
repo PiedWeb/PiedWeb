@@ -5,7 +5,7 @@ namespace PiedWeb\Extractor;
 use DOMElement;
 use Symfony\Component\DomCrawler\Crawler as DomCrawler;
 
-final class Link
+final class Link implements \Stringable
 {
     private Url $url;
 

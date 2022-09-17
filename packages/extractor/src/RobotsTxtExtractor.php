@@ -14,8 +14,7 @@ final class RobotsTxtExtractor
 
     public function get(Url $url): RobotsTxt
     {
-        return self::$cache[$url->getOrigin()] = self::$cache[$url->getOrigin()]
-            ?? $this->directGet($url);
+        return self::$cache[$url->getOrigin()] ??= $this->directGet($url);
     }
 
     public function directGet(Url $url): RobotsTxt

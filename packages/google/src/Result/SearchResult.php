@@ -2,7 +2,7 @@
 
 namespace PiedWeb\Google\Result;
 
-final class OrganicResult
+final class SearchResult
 {
     public int $pos;
 
@@ -13,4 +13,6 @@ final class OrganicResult
     public string $title;
 
     public string $description = '';
+
+    public bool $ads = false;
 }

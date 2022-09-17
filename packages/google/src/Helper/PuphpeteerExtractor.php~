@@ -5,7 +5,7 @@ namespace PiedWeb\Google\Extractor;
 use Nesk\Rialto\Data\JsFunction;
 use PiedWeb\Google\Logger;
 use PiedWeb\Google\Provider\PuphpeteerDesktop;
-use PiedWeb\Google\Result\OrganicResult;
+use PiedWeb\Google\Result\SearchResult;
 
 final class PuphpeteerExtractor
 {
@@ -28,7 +28,7 @@ final class PuphpeteerExtractor
     }
 
     /**
-     * @return OrganicResult[]
+     * @return SearchResult[]
      *
      * TODO: move it to AbstractExtractor using sf dom crawler
      *      Create an abstract function getPixelPos(string $xpath): int
@@ -48,7 +48,7 @@ final class PuphpeteerExtractor
         $toReturn = [];
         $results = $this->puppeteer->getBrowserPage()->querySelectorAll($selector);
         foreach ($results as $k => $result) {
-            $toReturn[$k] = new OrganicResult();
+            $toReturn[$k] = new SearchResult();
             $toReturn[$k]->pos = $k + 1;
             $toReturn[$k]->pixelPos = $result->boundingBox()['y']; // @phpstan-ignore-line
             $toReturn[$k]->url = $result->querySelectorXPath('..')[0] // @phpstan-ignore-line

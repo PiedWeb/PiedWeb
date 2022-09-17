@@ -1,13 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit backupGlobals="false" backupStaticAttributes="false" bootstrap="vendor/autoload.php" colors="true" convertErrorsToExceptions="true" convertNoticesToExceptions="true" convertWarningsToExceptions="true" processIsolation="false" stopOnFailure="false" verbose="true">
+<phpunit backupGlobals="false" backupStaticAttributes="false" bootstrap="packages/seo-status/tests/bootstrap.php" colors="true" convertErrorsToExceptions="true" convertNoticesToExceptions="true" convertWarningsToExceptions="true" processIsolation="false" stopOnFailure="false" verbose="true">
+  <php>
+    <ini name="display_errors" value="1" />
+    <ini name="error_reporting" value="-1" />
+    <server name="KERNEL_CLASS" value="PiedWeb\SeoStatus\Kernel" />
+    <server name="APP_ENV" value="test" force="true" />
+    <server name="SHELL_VERBOSITY" value="-1" />
+    <server name="SYMFONY_PHPUNIT_REMOVE" value="" />
+    <server name="SYMFONY_PHPUNIT_VERSION" value="9.5" />
+    <env name="SYMFONY_DEPRECATIONS_HELPER" value="weak" />
+  </php>
   <testsuites>
     <testsuite name="all">
       <directory>packages/*/tests/</directory>
     </testsuite>
+    <testsuite name="seo-status">
+      <directory>packages/seo-status/tests/</directory>
+    </testsuite>
   </testsuites>
   <coverage>
     <include>
-      <directory>packages/*/src/</directory>
+      <directory suffix=".php">packages/*/src/</directory>
     </include>
   </coverage>
+  <listeners>
+    <listener class="Symfony\Bridge\PhpUnit\SymfonyTestsListener" />
+  </listeners>
 </phpunit>

@@ -36,7 +36,7 @@ final class MultiAnalyzer
             $expressions = $text->getExpressions();
             foreach ($expressions as $expression => $density) {
                 $mergedExpressions[$expression] = \intval(
-                    (isset($mergedExpressions[$expression]) ? $mergedExpressions[$expression] : 0)
+                    ($mergedExpressions[$expression] ?? 0)
                     + $density
                 )
                 ;

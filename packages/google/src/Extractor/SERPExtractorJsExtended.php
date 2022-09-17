@@ -6,6 +6,8 @@ use DOMNode;
 use LogicException;
 use Nesk\Puphpeteer\Resources\Page;
 use PiedWeb\Google\Helper\Puphpeteer;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Contracts\Cache\ItemInterface;
 
 class SERPExtractorJsExtended extends SERPExtractor
 {
@@ -14,11 +16,6 @@ class SERPExtractorJsExtended extends SERPExtractor
     public function __construct(public string $html)
     {
         parent::__construct($html);
-
-        $filePath = __DIR__.'/tmp.html';
-        file_put_contents($filePath, $html);
-        $this->getBrowserPage()->goto('file://'.$filePath);
-        // $this->getBrowserPage()->setContent($html); is failing
     }
 
     private function getBrowserPage(): Page
@@ -30,10 +27,36 @@ class SERPExtractorJsExtended extends SERPExtractor
         $this->browserPage = (new Puphpeteer())->getBrowserPage();
         $this->browserPage->setOfflineMode(true);
 
+        $filePath = __DIR__.'/tmp.html';
+        file_put_contents($filePath, $this->html);
+        $this->browserPage->goto('file://'.$filePath);
+        // $this->getBrowserPage()->setContent($html); is failing
+
         return $this->browserPage;
     }
 
     protected function getPixelPosFor(string|DOMNode $element): int
+    {
+        if (($_ENV['APP_ENV'] ?? 'prod') !== 'test') {
+            return $this->getPixelPosForWithoutCache($element);
+        }
+
+        $cache = new FilesystemAdapter();
+
+        /** @var int */
+        $pixelPos = $cache->get(
+            sha1($this->html.'-'.($element instanceof DOMNode ? $element->getNodePath() : $element)),
+            function (ItemInterface $item) use ($element): int {
+                $item->expiresAfter(86400);
+
+                return $this->getPixelPosForWithoutCache($element);
+            }
+        );
+
+        return $pixelPos;
+    }
+
+    private function getPixelPosForWithoutCache(string|DOMNode $element): int
     {
         if ($element instanceof DOMNode) {
             $element = $element->getNodePath() ?? throw new LogicException();

@@ -23,7 +23,7 @@ class ResponseFromCache extends Response
         }
 
         if (false !== $headersSeparator && \is_string($headersSeparator) && '' !== $headersSeparator) {
-            list($this->headers, $this->content) = explode($headersSeparator, $content, 2);
+            [$this->headers, $this->content] = explode($headersSeparator, $content, 2);
         } else {
             $this->content = $content;
         }

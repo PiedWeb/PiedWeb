@@ -217,7 +217,7 @@ class ExtendedClient extends Client
      *
      * @psalm-suppress UnusedClosureParam
      */
-    public function setMaximumResponseSize(int $maxBytes = 2000000): self
+    public function setMaximumResponseSize(int $maxBytes = 2_000_000): self
     {
         // $this->setOpt(CURLOPT_BUFFERSIZE, 128); // more progress info
         $this->setOpt(\CURLOPT_NOPROGRESS, false);

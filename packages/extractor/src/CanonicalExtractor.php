@@ -16,7 +16,7 @@ final class CanonicalExtractor
     {
         $canonical = $this->crawler->filter('link[rel=canonical]');
 
-        return $canonical->count() > 0 ? (null !== $canonical->attr('href') ? $canonical->attr('href') : '') : null;
+        return $canonical->count() > 0 ? ($canonical->attr('href') ?? '') : null;
     }
 
     public function isCanonicalCorrect(): bool

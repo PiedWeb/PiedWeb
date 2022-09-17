@@ -14,7 +14,7 @@ final class Sleeper
      */
     public function __construct(int $averageSleepTimeInseconds)
     {
-        $this->sleep = $averageSleepTimeInseconds * 1000000;
+        $this->sleep = $averageSleepTimeInseconds * 1_000_000;
     }
 
     /**
@@ -28,7 +28,7 @@ final class Sleeper
         $sleepMin = (int) floor($this->sleep - $halfSleep);
         $sleepMax = (int) ceil($this->sleep + $halfSleep);
 
-        return rand($sleepMin, $sleepMax);
+        return random_int($sleepMin, $sleepMax);
     }
 
     /**
@@ -39,7 +39,7 @@ final class Sleeper
         if (0 !== $this->sleep) {
             $sleep = $this->getSleep();
             usleep($sleep);
-            Logger::log('sleep '.($sleep / 1000000).'s');
+            Logger::log('sleep '.($sleep / 1_000_000).'s');
         }
     }
 
@@ -51,7 +51,7 @@ final class Sleeper
         if (0 !== $this->sleep) {
             $sleep = (int) round($this->getSleep() * $howMuch);
             usleep($sleep);
-            Logger::log('sleep '.($sleep / 1000000).'s');
+            Logger::log('sleep '.($sleep / 1_000_000).'s');
         }
     }
 }

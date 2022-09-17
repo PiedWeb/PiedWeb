@@ -7,16 +7,10 @@ namespace PiedWeb\Curl;
  */
 class MultipleCheckInHeaders
 {
-    protected int $expectedCode;
-
-    protected string $expectedType;
-
     protected ?int $code = null;
 
-    public function __construct(int $expectedCode = 200, string $expectedType = 'text/html')
+    public function __construct(protected int $expectedCode = 200, protected string $expectedType = 'text/html')
     {
-        $this->expectedCode = $expectedCode;
-        $this->expectedType = $expectedType;
     }
 
     public function check(string $line): bool

@@ -7,7 +7,7 @@ use DOMNode;
 use Exception;
 use LogicException;
 use PiedWeb\Extractor\Helper;
-use PiedWeb\Google\Result\OrganicResult;
+use PiedWeb\Google\Result\SearchResult;
 use Symfony\Component\DomCrawler\Crawler;
 
 class SERPExtractor
@@ -48,6 +48,11 @@ class SERPExtractor
 
     private Crawler $domCrawler;
 
+    /**
+     * @var SearchResult[]
+     */
+    private ?array $results = null;
+
     public function __construct(public string $html)
     {
         $this->domCrawler = new Crawler($html);
@@ -62,17 +67,21 @@ class SERPExtractor
     {
         $node = null;
         if (! $this->exists(['//*[@id="resultStats"]|', '//*[@id="result-stats"]'], $node)) {
-            return -1;
+            return 0;
         }
 
         return (int) Helper::preg_replace_str('/[^0-9]/', '', $node->nodeValue ?? '');
     }
 
     /**
-     * @return OrganicResult[]
+     * @return SearchResult[]
      */
-    public function getOrganicResults(): array
+    public function getResults(bool $organicOnly = true): array
     {
+        if (false === $organicOnly && null !== $this->results) {
+            return $this->results;
+        }
+
         $xpath = $this->isMobileSerp() ? self::RESULT_SELECTOR : self::RESULT_SELECTOR_DESKTOP;
         $nodes = $this->domCrawler->filterXpath($xpath);
         $toReturn = [];
@@ -85,11 +94,12 @@ class SERPExtractor
 
         foreach ($nodes as $k => $node) {
             // skip if you are in ads
-            if (null !== $nodes->eq($k)->closest('#tads, #bottomads')) {
+            $ads = null !== $nodes->eq($k)->closest('#tads, #bottomads') ? true : false;
+            if ($organicOnly && $ads) {
                 continue;
             }
 
-            $result = $this->extractResultFrom($node);
+            $result = $this->extractResultFrom($node, $ads);
             if (null === $result) {
                 continue;
             }
@@ -99,10 +109,14 @@ class SERPExtractor
             ++$i;
         }
 
+        if (false === $organicOnly) {
+            $this->results = $toReturn;
+        }
+
         return $toReturn;
     }
 
-    private function extractResultFrom(DOMNode $node): ?OrganicResult
+    private function extractResultFrom(DOMNode $node, bool $ads = false): ?SearchResult
     {
         $domCrawler = new Crawler($node);
         $linkNode = $domCrawler->filter('a')->getNode(0);
@@ -115,10 +129,11 @@ class SERPExtractor
             return null;
         }
 
-        $toReturn = new OrganicResult();
+        $toReturn = new SearchResult();
         $toReturn->pixelPos = $this->getPixelPosFor($linkNode->getNodePath() ?? '');
         $toReturn->url = $linkNode->getAttribute('href');
         $toReturn->title = (new Crawler($linkNode))->text('');
+        $toReturn->ads = $ads;
 
         return $toReturn;
     }
@@ -140,7 +155,23 @@ class SERPExtractor
         return true;
     }
 
-    public function getPositionsZero(): OrganicResult
+    /**
+     * @return array<string, int>
+     */
+    public function getSerpFeatures(): array
+    {
+        $pos = 0;
+        $result = [];
+        foreach (array_keys(self::SERP_FEATURE_SELECTORS) as $serpFeatureName) {
+            if ($this->containsSerpFeature($serpFeatureName, $pos)) {
+                $result[$serpFeatureName] = $pos;
+            }
+        }
+
+        return $result;
+    }
+
+    public function getPositionsZero(): SearchResult
     {
         $blockPositionZero = $this->domCrawler
             ->filterXPath("//h2[text()='Extrait optimisé sur le Web']")
@@ -150,7 +181,7 @@ class SERPExtractor
             throw new LogicException('Google has changed its selector (position Zero)');
         }
 
-        $toReturn = new OrganicResult();
+        $toReturn = new SearchResult();
         $toReturn->pos = 1;
         $toReturn->pixelPos = $this->getPixelPosFor($linkNodePositionZero->getNodePath() ?? '');
         $toReturn->url = $linkNodePositionZero->getAttribute('href');
@@ -188,7 +219,7 @@ class SERPExtractor
             $node = $this->getNode($xpaths);
 
             return true;
-        } catch (LogicException $logicException) {
+        } catch (LogicException) {
             return false;
         }
     }
@@ -206,5 +237,17 @@ class SERPExtractor
         }
 
         throw new LogicException('`'.implode('`, ', $xpaths).'` not found');
+    }
+
+    public function __toJson(): string
+    {
+        return \Safe\json_encode([
+            'version' => '1',
+            'extractedAt' => (new \DateTime('now'))->format('ymdHi'),
+            'resultStat' => $this->getNbrResults(),
+            'serpFeatures' => $this->getSerpFeatures(),
+            'relatedSearches' => $this->getRelatedSearches(),
+            'results' => $this->getResults(),
+        ], \JSON_PRETTY_PRINT);
     }
 }

@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+cd $( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+cd ../
+
+rm var/data/prod/app.db
+rm -rf migrations/*
+
+php bin/console doctrine:database:drop --no-interaction --force --quiet
+php bin/console doctrine:database:create --no-interaction --quiet
+php bin/console doctrine:schema:create --no-interaction --quiet
+
+# then reload database from json

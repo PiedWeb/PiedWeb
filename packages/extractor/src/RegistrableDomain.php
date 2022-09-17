@@ -24,7 +24,7 @@ final class RegistrableDomain
             return self::$rules;
         }
 
-        $reflector = new \ReflectionClass("Pdp\Rules");
+        $reflector = new \ReflectionClass(\Pdp\Rules::class);
         $filename = $reflector->getFileName();
         if (false === $filename) {
             throw new LogicException();
