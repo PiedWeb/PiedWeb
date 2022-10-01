@@ -5,6 +5,7 @@ use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Dotenv\Dotenv;
+use Symfony\Component\Filesystem\Filesystem;
 
 require dirname(__DIR__).'/vendor/autoload.php';
 
@@ -23,4 +24,8 @@ $application->setAutoExit(false);
 $application->run(new ArrayInput(['command' => 'doctrine:database:drop', '--no-interaction' => true, '--force' => true]), new ConsoleOutput());
 $application->run(new ArrayInput(['command' => 'doctrine:database:create', '--no-interaction' => true]), new ConsoleOutput());
 $application->run(new ArrayInput(['command' => 'doctrine:schema:create', '--quiet' => true]), new ConsoleOutput());
-// TODO: import
+
+// Import One kw
+$fs = new Filesystem();
+$fs->remove(__DIR__.'/../var/data/test/search/');
+$fs->mirror(__DIR__.'/searchData/pieds_vert', __DIR__.'/../var/data/test/search/fr-fr/pieds_vert');

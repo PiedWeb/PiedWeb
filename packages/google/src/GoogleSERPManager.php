@@ -2,6 +2,7 @@
 
 namespace PiedWeb\Google;
 
+use DateTime;
 use Symfony\Component\Filesystem\Filesystem;
 
 final class GoogleSERPManager
@@ -10,10 +11,10 @@ final class GoogleSERPManager
     public string $q = '';
 
     /** @var string Contain the Google TLD we want to query * */
-    public string $tld = 'com';
+    public string $tld = 'fr';
 
     /** @var string Contain the language we want to send via HTTP Header Accept-Language (language[-local], eg. : en-US) * */
-    public string $language = 'en-US';
+    public string $language = 'fr';
 
     /** @var array<string, string> Google Search URLs parameters (Eg. : hl => en, num => 100) * */
     public array $parameters = [];
@@ -26,6 +27,8 @@ final class GoogleSERPManager
 
     /** @var int Contain in seconds, the time cache is valid. Default 1 Day (86400). * */
     public int $cacheTime = 86400;
+
+    public int $cacheFilemtime = 0;
 
     public Sleeper $sleeper;
 
@@ -89,11 +92,21 @@ final class GoogleSERPManager
             return null;
         }
 
-        $diff = time() - filemtime($cacheFilePath);
+        $this->cacheFilemtime = \Safe\filemtime($cacheFilePath);
+        $diff = time() - $this->cacheFilemtime;
         if ($diff > $this->cacheTime) {
             return null;
         }
 
         return \Safe\file_get_contents($cacheFilePath);
+    }
+
+    public function getExtractedAt(): int
+    {
+        if (0 === $this->cacheFilemtime) {
+            return (int) (new \DateTime('now'))->format('ymdHi');
+        }
+
+        return (int) (new DateTime())->setTimestamp($this->cacheFilemtime)->format('ymdHi');
     }
 }

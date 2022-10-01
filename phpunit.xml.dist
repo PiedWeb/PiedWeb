@@ -17,6 +17,9 @@
     <testsuite name="seo-status">
       <directory>packages/seo-status/tests/</directory>
     </testsuite>
+    <testsuite name="google">
+      <directory>packages/google/tests/</directory>
+    </testsuite>
   </testsuites>
   <coverage>
     <include>

@@ -16,6 +16,7 @@ use PiedWeb\SeoStatus\Service\SearchResultsComparator;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Console\Tester\CommandTester;
+use Symfony\Component\Filesystem\Filesystem;
 
 class SearchServicesTest extends KernelTestCase
 {
@@ -65,6 +66,35 @@ class SearchServicesTest extends KernelTestCase
         return $this->json = $this->getExtractor()->extractGoogleResults($search);
     }
 
+    public function testNormalizeKeuword(): void
+    {
+        $this->assertSame('test 1', Search::normalizeKeyword('test_1'));
+        $this->assertSame('test 1', Search::normalizeKeyword('test-1'));
+    }
+
+    public function testFindSearchToExtract(): void
+    {
+        /** @var SearchRepository */
+        $searchRepository = $this->getEntityManager()->getRepository(Search::class);
+
+        $search = $this->getSearch();
+        $search->getSearchGoogleData()
+            ->setExtractionFrequency(SearchGoogleData::ExtractionFrequency['daily']);
+
+        $search->getSearchGoogleData()
+            ->setNextExtractionFrom((int) (new \DateTime('now'))->modify('-2 days')->format('ymdHi'));
+        $this->getEntityManager()->flush();
+        $this->assertNotNull($searchRepository->findOneSearchToExtract());
+
+        $search->getSearchGoogleData()
+            ->setNextExtractionFrom((int) (new \DateTime('now'))->modify('+2 days')->format('ymdHi'));
+        $this->getEntityManager()->flush();
+        if (($search = $searchRepository->findOneSearchToExtract()) !== null) {
+            dd($search->getKeyword());
+        }
+        $this->assertNull($search); // @phpstan-ignore-line
+    }
+
     public function testSearchExtractorService(): void
     {
         $json = $this->getJsonFromExtractorService();
@@ -81,7 +111,12 @@ class SearchServicesTest extends KernelTestCase
     {
         $json = $this->getJsonFromExtractorService();
 
-        $searchResults = $this->getImporter()->deserializeSearchResults($this->getSearch(), $json);
+        $search = $this->getSearch();
+        $searchResults = $this->getImporter()->deserializeSearchResults(
+            $search,
+            $json,
+            $search->getSearchGoogleData()->getLastExtractionAskedAt()
+        );
 
         $this->assertSame($this->getSearch(), $searchResults->getSearchGoogleData()->getSearch());
         $this->assertTrue($searchResults->getResults()->filter(function (SearchResult $searchResult) {
@@ -114,26 +149,6 @@ class SearchServicesTest extends KernelTestCase
         $this->assertSame($importedSearch, $importedSearch->getSearchGoogleData()->getSearch());
     }
 
-    public function testFindSearchToExtract(): void
-    {
-        /** @var SearchRepository */
-        $searchRepository = $this->getEntityManager()->getRepository(Search::class);
-
-        $search = $this->getSearch();
-        $search->getSearchGoogleData()
-            ->setExtractionFrequency(SearchGoogleData::ExtractionFrequency['daily']);
-
-        $search->getSearchGoogleData()
-            ->setNextExtractionFrom((int) (new \DateTime('now'))->modify('-2 days')->format('ymdHi'));
-        $this->getEntityManager()->flush();
-        $this->assertNotNull($searchRepository->findOneSearchToExtract());
-
-        $search->getSearchGoogleData()
-            ->setNextExtractionFrom((int) (new \DateTime('now'))->modify('+2 days')->format('ymdHi'));
-        $this->getEntityManager()->flush();
-        $this->assertNull($searchRepository->findOneSearchToExtract());
-    }
-
     public function testSimilar(): void
     {
         $search1 = (new Search())->setKeyword('Pizza avignon');
@@ -159,5 +174,20 @@ class SearchServicesTest extends KernelTestCase
         $this->assertTrue((int) ($similarityScolre * 100) > 25);
         $areSimilar = $comparator->areSimilar($search1, $search2);
         $this->assertTrue($areSimilar);
+    }
+
+    public function testImportCommand(): void
+    {
+        $fs = new Filesystem();
+        $fs->mirror(__DIR__.'/../searchData/fr-fr/huitre', __DIR__.'/../../var/data/test/search/fr-fr/huitre');
+
+        $application = new Application(self::bootKernel());
+        $command = $application->find('search-results:import');
+        $commandTester = new CommandTester($command);
+        $commandTester->execute([], ['limit' => '-1', 'import-search' => true]);
+        $commandTester->assertCommandIsSuccessful();
+
+        $search = $this->getEntityManager()->getRepository(Search::class)->findOneBy(['keyword' => 'huitre']);
+        $this->assertNotNull($search);
     }
 }

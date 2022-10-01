@@ -1,19 +1,117 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text></svg>">
-        {# Run `composer require symfony/webpack-encore-bundle` to start using Symfony UX #}
-        {% block stylesheets %}
-            {{ encore_entry_link_tags('app') }}
-        {% endblock %}
+  <head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{{ title|default('SeoStatus') }}{% endblock %}</title>
+    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name=viewport>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧶</text></svg>">
 
-        {% block javascripts %}
-            {{ encore_entry_script_tags('app') }}
-        {% endblock %}
-    </head>
-    <body>
-        {% block body %}{% endblock %}
-    </body>
+    {% block stylesheets %}
+      {{ encore_entry_link_tags('app') }}
+      {{ encore_entry_link_tags('style') }}
+    {% endblock %}
+
+    {% block javascripts %}
+      {{ encore_entry_script_tags('app', attributes={defer: true}) }}
+    {% endblock %}
+  </head>
+  <body
+    class="flex flex-wrap items-stretch text-gray-900 bg-white"
+    x-data="{ navbarOpen: false }">
+
+    <div class="order-3 w-full">{% block body %}{% endblock %}</div>
+
+    <div class="order-4 w-full">{% block footer %}{% endblock %}</div>
+
+
+    {% block navbar %}
+    <div
+      class="absolute w-full h-full top-0 z-40 order-12 md:hidden"
+      :class="{ 'bg-white opacity-75' : navbarOpen , 'hidden' : !navbarOpen}">
+    </div>
+
+    <nav
+          class="flex items-center justify-between flex-wrap p-6 pr-12 w-full relative z-50 order-1 bg-white {{ search_value is defined ? 'shadow' : '' }} mb-6"
+          @keydown.escape="navbarOpen = false"
+          @click.away="navbarOpen = false"
+          :class="{ 'shadow-md md:shadow' : navbarOpen }"
+        >
+
+      <div class="flex items-center flex-shrink-0 text-gray-800 mr-6">
+        <a
+          class="hover:text-gray-500 py-2"
+          href="/"
+        >
+          <span class="text-4xl block absolute top-0 left-0 mt-6 ml-4">🧶</span>
+          <span class="text-lg pl-10">Seo tatus</span
+          >
+        </a>
+      </div>
+
+      <button
+        @click="navbarOpen = ! navbarOpen"
+        type="button"
+        class="absolute z-50 right-0 top-0 mt-8 block px-3 mr-2 text-gray-800 hover:text-gray-600 focus:outline-none focus:text-gray-600"
+        :class="{ 'transition transform-180': navbarOpen }"
+      >
+        <svg
+          class="h-6 w-6 fill-current"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+        >
+          <path
+            x-show="navbarOpen"
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+            d="M18.278 16.864a1 1 0 0 1-1.414 1.414l-4.829-4.828-4.828 4.828a1 1 0 0 1-1.414-1.414l4.828-4.829-4.828-4.828a1 1 0 0 1 1.414-1.414l4.829 4.828 4.828-4.828a1 1 0 1 1 1.414 1.414l-4.828 4.829 4.828 4.828z"
+          />
+          <path
+            x-show="!navbarOpen"
+            fill-rule="evenodd"
+            d="M4 5h16a1 1 0 0 1 0 2H4a1 1 0 1 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2z"
+          />
+        </svg>
+      </button>
+
+      <div
+        class="w-full"
+        x-show.transition="true"
+        :class="{ 'block shadow-3xl md:max-w-md md:absolute md:right-0 md:top-0 md:h-screen md:overflow-auto md:bg-white md:shadow-lg'
+          : navbarOpen, 'hidden md:flex md:items-center md:w-auto': ! navbarOpen }"
+      >
+        <ul
+          class="pt-6 list-reset justify-end flex-1 items-center"
+          :class="{ '' : navbarOpen, 'md:flex md:pt-0': ! navbarOpen }"
+        >
+
+          <li class="mr-3">
+            <a
+              class="inline-block text-gray-900 no-underline hover:text-gray-500 py-2 px-4"
+              href="#"
+              @click="navbarOpen = false"
+              >
+                NavbarLink
+            </a>
+          </li>
+          <li class="mr-3"
+             :class="{ 'block' : navbarOpen, 'hidden': ! navbarOpen }">
+            <a
+              class="inline-block text-gray-900 no-underline hover:text-gray-500 py-2 px-4"
+              href="#"
+              @click="navbarOpen = false"
+              >
+                NavbarLink in Hamburger
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+    {% endblock %}
+
+    <div class="order-2 w-full">
+      {% block searchbar %}
+        {% include 'searchbar.html.twig' %}
+      {% endblock %}
+    </div>
+  </body>
 </html>

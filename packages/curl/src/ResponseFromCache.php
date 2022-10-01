@@ -14,7 +14,7 @@ class ResponseFromCache extends Response
         string $filePathOrContent,
         ?string $url = null,
         array $info = [],
-        $headersSeparator = \PHP_EOL.\PHP_EOL
+        mixed $headersSeparator = \PHP_EOL.\PHP_EOL
     ) {
         $content = file_exists($filePathOrContent) ? file_get_contents($filePathOrContent) : $filePathOrContent;
 

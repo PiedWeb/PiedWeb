@@ -9,5 +9,5 @@ rm -rf migrations/*
 php bin/console doctrine:database:drop --no-interaction --force --quiet
 php bin/console doctrine:database:create --no-interaction --quiet
 php bin/console doctrine:schema:create --no-interaction --quiet
-
+php bin/console search-results:import --limit=-1 --import-search
 # then reload database from json

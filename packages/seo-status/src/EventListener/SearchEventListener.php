@@ -22,7 +22,7 @@ class SearchEventListener
 
     public function postUpdate(Search $search): void
     {
-        if (true === $search->disableExport) {
+        if (false === $search->disableExport) {
             $this->exporter->exportSearchToJson($search);
         }
     }

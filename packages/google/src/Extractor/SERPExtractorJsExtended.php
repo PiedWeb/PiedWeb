@@ -13,12 +13,7 @@ class SERPExtractorJsExtended extends SERPExtractor
 {
     private ?Page $browserPage = null;
 
-    public function __construct(public string $html)
-    {
-        parent::__construct($html);
-    }
-
-    private function getBrowserPage(): Page
+    public function getBrowserPage(): Page
     {
         if (null !== $this->browserPage) {
             return $this->browserPage;

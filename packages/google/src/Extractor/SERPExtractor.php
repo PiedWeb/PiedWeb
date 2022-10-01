@@ -53,9 +53,10 @@ class SERPExtractor
      */
     private ?array $results = null;
 
-    public function __construct(public string $html)
+    public function __construct(public string $html, private int $extractedAt = 0)
     {
         $this->domCrawler = new Crawler($html);
+        $this->extractedAt = 0 === $this->extractedAt ? (int) (new \DateTime('now'))->format('ymdHi') : $this->extractedAt;
     }
 
     private function isMobileSerp(): bool
@@ -173,11 +174,10 @@ class SERPExtractor
 
     public function getPositionsZero(): SearchResult
     {
-        $blockPositionZero = $this->domCrawler
-            ->filterXPath("//h2[text()='Extrait optimisé sur le Web']")
-            ->closest('block-component');
-        if (null === $blockPositionZero
-            || ! ($linkNodePositionZero = $blockPositionZero->filter('a')->getNode(0)) instanceof DOMElement) {
+        $linkNodePositionZero = $this->domCrawler
+            ->filterXPath("//h2[text()='Extrait optimisé sur le Web']/ancestor::block-component//a[@ping]")
+            ->getNode(0);
+        if (null === $linkNodePositionZero || ! $linkNodePositionZero instanceof DOMElement) {
             throw new LogicException('Google has changed its selector (position Zero)');
         }
 
@@ -186,7 +186,6 @@ class SERPExtractor
         $toReturn->pixelPos = $this->getPixelPosFor($linkNodePositionZero->getNodePath() ?? '');
         $toReturn->url = $linkNodePositionZero->getAttribute('href');
         $toReturn->title = $linkNodePositionZero->textContent;
-        // $toReturn->node =$blockPositionZero;
 
         return $toReturn;
     }
@@ -243,7 +242,7 @@ class SERPExtractor
     {
         return \Safe\json_encode([
             'version' => '1',
-            'extractedAt' => (new \DateTime('now'))->format('ymdHi'),
+            'extractedAt' => $this->extractedAt,
             'resultStat' => $this->getNbrResults(),
             'serpFeatures' => $this->getSerpFeatures(),
             'relatedSearches' => $this->getRelatedSearches(),

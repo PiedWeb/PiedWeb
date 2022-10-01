@@ -1,0 +1,212 @@
+{% extends "base.html.twig" %}
+
+
+{% block body %}
+<div class="px-3 pb-12 mx-auto">
+  <h1 class="text-3xl md:ml-6 sr-only">{{ keyword }}</h1>
+  {% if search is null %}
+    <div class="prose prose-lg md:ml-6 mt-3">
+      Mot clef absent de la base de donnée...
+    </div>
+    <a href="#" class="text-sky-600 block md:ml-6 mt-3"><i class="fa-solid fa-lock pl-2"></i> Ajouter</a>
+    <button
+      id="extractDate"
+      @click="navigator.clipboard.writeText('php bin/console search:extract \'{{ keyword }}\'');"
+      class='has-tooltip text-sky-600 focus:text-gray-400 focus:ring-0 focus:border-0 focus:outline-none block md:ml-6 mt-3'>
+      <span
+        class='tooltip rounded shadow p-2 bg-gray-50 text-gray-800 -mt-12 -ml-6'>
+          Commande copiée...
+      </span>
+      Extraire maintenant
+    </button>
+  {% elseif search.searchGoogleData.lastExtractionAt is same as 0 %}
+    <div class="prose prose-lg md:ml-6 mt-3">
+      Mot clef présent dans la base de donnée. La première extraction de la SERP est en cours.
+    </div>
+    <a href="#" class="text-sky-600 block md:ml-6 mt-3"><i class="fa-solid fa-lock pl-2"></i> Prioriser</a>
+    <button
+      id="extractDate"
+      @click="navigator.clipboard.writeText('php bin/console search:extract \'{{ keyword }}\'');"
+      class='has-tooltip text-sky-600 focus:text-gray-400 focus:ring-0 focus:border-0 focus:outline-none block md:ml-6 mt-3'>
+      <span
+        class='tooltip rounded shadow p-2 bg-gray-50 text-gray-800 -mt-12 -ml-6'>
+          Commande copiée...
+      </span>
+      Extraire maintenant
+    </button>
+  {% else %}
+
+  <ul class="-mt-3 md:ml-6">
+    <li>
+      <span
+        class="font-light"
+        class="visible"
+        >Dernière extraction:</span>
+        <button
+          id="extractDate"
+          @mouseover=" document.getElementById('extractDate').focus()"
+          class='has-tooltip text-sky-600 focus:text-gray-400 focus:ring-0 focus:border-0 focus:outline-none'>
+          <span
+            class='tooltip rounded shadow p-2 bg-gray-50 text-gray-800 -mt-12 -ml-6 z-10'>
+              <span class="font-light">suivante:</span> {{ search.searchGoogleData.nextExtractionFrom|app_date }}
+              - <a href="#" class="text-sky-600"><i class="fa-solid fa-lock pl-2"></i> Prioriser</a>
+          </span>
+        {{ search.searchGoogleData.lastExtractionAt|app_date }}
+        </button>
+    </li>
+  </ul>
+
+  <div class="flex lg:space-x-4 space-y-4 lg:space-y-0 lg:flex-row flex-col mt-12">
+
+    <!-- SerpFeaturesBlock -->
+    <div class="lg:basis-1/2 max-w-[600px] overflow-x-auto border-gray-300 border rounded text-lg">
+      <h2 class="font-light mb-3 px-4 pt-3">SERP Features</h2>
+      <table class="table-auto w-full">
+        <thead class="text-gray-700">
+        <tr class="[&>*]:py-3 [&>*]:px-6 [&>*]:font-thin">
+          <th></th>
+          <th class="text-right">PixelPos</th>
+          <th class="text-right">LastSeen</th>
+        </tr>
+        </thead>
+        {% for feature, data in search.searchGoogleData.serpFeatures %}
+        <tr
+          x-data="{ selected: false }"
+          @click="selected = ! selected"
+          @click.away="selected = false"
+          :class="{ 'bg-gray-200' : selected }"
+          class="border-t [&>*]:py-3 [&>*]:px-6 hover:bg-gray-100">
+          <th class="font-normal text-left">{{ _self.renderFeature(feature) }}</th>
+          <td class="text-right font-light">{{ data[0] }}</td>
+          <td class="text-right">{{ data[1]|app_date }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+    <!-- / SerpFeaturesBlock -->
+
+
+    <!-- ComparableBlock -->
+    <div class="lg:basis-1/4 border-gray-300 border rounded text-lg">
+      <h2 class="font-light mb-3 px-4 pt-3">Comparable</h2>
+        {% if search.searchGoogleData.comparable.count > 0 %}
+          <ul class="[&>*]:border-b [&>*]:py-3 [&>*]:px-6" >
+            {% for comparableSearchGoogleData in search.searchGoogleData.comparable %}
+              <li><a href="#" class="text-sky-600">{{ comparableSearchGoogleData.search.keyword }}</a>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-center mt-6 font-light p-3">Aucun mot clef n'est comparable</p>
+        {% endif %}
+    </div>
+    <!-- / ComparableBlock -->
+
+
+    <!-- SimilarBlock -->
+    <div class="lg:basis-1/4 border-gray-300 border rounded text-lg">
+      <h2 class="font-light mb-3 px-4 pt-3">Similaire</h2>
+        {% if search.searchGoogleData.similar.count > 0 %}
+          <ul class="[&>*]:border-b [&>*]:py-3 [&>*]:px-6" >
+            {% for similarSearchGoogleData in search.searchGoogleData.similar %}
+              <li><a href="#" class="text-sky-600">{{ similarSearchGoogleData.search.keyword }}</a>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-center mt-6 font-light p-3">Aucun mot clef n'est similare</p>
+        {% endif %}
+    </div>
+    <!-- / SimilarBlock -->
+
+  </div>
+
+  <div class="flex lg:space-x-4 space-y-4 lg:space-y-0 lg:flex-row flex-col mt-4">
+
+    <!-- OrganicBlock -->
+    <div class="grow max-w-[1200px] max-h-[500px] overflow-x-auto border-gray-300 border rounded text-lg">
+      <h2 class="font-light mb-3 px-4 pt-3">Résultats naturels</h2>
+      <table
+        class="table-auto w-full"
+        id="organic-table"
+        @click.away="$dispatch('unselect-organicblock-row')">
+        <thead class="text-gray-700 sticky bg-white top-0">
+        <tr class="[&>*]:py-3 [&>*]:px-6 [&>*]:font-thin">
+          <th></th>
+          <th class="text-right">PixelPos</th>
+          <th class="text-left">Url</th>
+          <th class="text-right">Host Kw</th>
+          <th class="text-right">Url Kw</th>
+        </tr>
+        </thead>
+        {% for searchResult in search.searchGoogleData.lastSearchResults.results %}
+        <tr
+          x-data="{ selected: false }"
+          @click="selected = ! selected"
+          @unselect-organicblock-row.window="selected = false "
+          :class="{ 'bg-gray-200' : selected }"
+          class="border-t [&>*]:py-3 [&>*]:px-6 hover:bg-gray-100">
+          <td class="text-right font-thin">{{ searchResult.pos }}</td>
+          <td class="text-right font-light">{{ searchResult.pixelPos }}</td>
+          <td class="text-left">
+            <a
+              href="#"
+              target=_blank
+              class="text-sky-800 tracking-wider">
+              {{ searchResult.url.host }}
+            </a><br>
+            <a href="{{ searchResult.url }}" rel="noopener" target="_blank" class="text-sm inline-block mr-2">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </a>
+            <a href="#"
+              class="font-thin text-sky-600 tracking-widest">
+              <span class="inline-block">{{ searchResult.url.scheme }}://</span><span class="inline-block max-w-[3ch] truncate -mb-2">{{ searchResult.url.host }}</span><span class="inline-block max-w-[50ch] truncate -mb-2 font-light">/{{ searchResult.uri }}
+            </a>
+
+          </td>
+          <td class="text-right">0</td>
+          <td class="text-right">0</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+    <!-- / OrganicBlock -->
+
+  </div>
+
+  {% endif %}
+</div>
+{% endblock %}
+
+
+{% macro renderFeature(feature) %}
+  {% set icon_wrapper = '<span class="text-center inline-block bg-sky-100 mr-1 rounded-full w-8 h-8"><i class="fa-solid fa-%icon% text-sky-900 text-sm"></i></span>' %}
+
+  {% if (feature == 'ImagePack') %}
+     {{ icon_wrapper|replace({'%icon%': 'images'})|raw }} <span class="  hidden sm:inline-block">Image</span>
+  {% elseif (feature == 'Video') %}
+     {{ icon_wrapper|replace({'%icon%': 'video'})|raw }} <span class="  hidden sm:inline-block">{{ feature }}</span>
+
+  {% elseif (feature == 'Ads') %}
+     {{ icon_wrapper|replace({'%icon%': 'dollar-sign'})|raw }} <span class="  hidden sm:inline-block">{{ feature }}</span>
+
+  {% elseif (feature == 'Local Pack') %}
+     {{ icon_wrapper|replace({'%icon%': 'location-dot'})|raw }} <span class="  hidden sm:inline-block">LocalPack</span>
+
+  {% elseif (feature == 'PositionZero') %}
+     {{ icon_wrapper|replace({'%icon%': '0'})|raw }} <span class="  hidden sm:inline-block">{{ feature }}</span>
+
+  {% elseif (feature == 'KnowledgePanel') %}
+     {{ icon_wrapper|replace({'%icon%': 'snowplow'})|raw }} <span class="  hidden sm:inline-block">{{ feature }}</span>
+
+  {% elseif (feature == 'PeolpleAlsoAsked') %}
+     {{ icon_wrapper|replace({'%icon%': 'question'})|raw }} <span class="  hidden sm:inline-block">PAA</span>
+
+  {% elseif (feature == 'News') %}
+     {{ icon_wrapper|replace({'%icon%': 'newspaper'})|raw }} <span class="  hidden sm:inline-block">{{ feature }}</span>
+
+  {% elseif (feature == 'Reviews') %}
+     {{ icon_wrapper|replace({'%icon%': 'star-half-stroke'})|raw }} <span class="  hidden sm:inline-block">{{ feature }}</span>
+
+  {% else %}
+    {{ feature }}
+  {% endif %}
+{% endmacro %}

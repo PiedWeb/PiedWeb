@@ -37,4 +37,25 @@ class Host implements \Stringable
     {
         return $this->id;
     }
+
+    public static function normalizeHost(mixed $host): string
+    {
+        $host = strtolower(\strval($host));
+        $hostLenght = \strlen($host);
+        if ($hostLenght < 3 || $hostLenght > 253) {
+            return '';
+        }
+
+        $host = str_starts_with($host, 'http://') ? substr($host, 7)
+                : (str_starts_with($host, 'https://') ? substr($host, 8) : $host);
+
+        $host = trim($host, ' /.');
+
+        $slashPosition = strpos($host, '/');
+        $host = $slashPosition >= 1 ? substr($host, 0, $slashPosition) : $host;
+
+        $host = false === filter_var('https://'.$host.'/', \FILTER_VALIDATE_URL) ? '' : $host;
+
+        return $host;
+    }
 }

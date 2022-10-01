@@ -20,10 +20,10 @@ class SearchGoogleData
 
     #[ORM\OneToOne(inversedBy: 'searchGoogleData')]
     #[ORM\JoinColumn(name: 'search_id', referencedColumnName: 'id')]
-    private Search $search;
+    private ?Search $search = null;
 
     #[ORM\Column(options: ['unsigned' => true])]
-    private int $volume = 0;
+    private int $volume = 1;
 
     #[ORM\Column(options: ['unsigned' => true])]
     private int $cpc = 0;
@@ -46,24 +46,15 @@ class SearchGoogleData
     private int $lastExtractionAt = 0;
 
     #[ORM\Column(options: ['unsigned' => true])]
+    private int $lastExtractionAskedAt = 0;
+
+    #[ORM\Column(options: ['unsigned' => true])]
     private int $firstExtractionAt = 0;
 
     public bool $firstExtractionWasRunned = false;
 
     #[ORM\Column(options: ['unsigned' => true])]
     private int $nextExtractionFrom;
-
-    public function updateExtractionMetadata(): void
-    {
-        $this->search->disableExport = true;
-        $now = (int) (new \DateTime('now'))->format('ymdHi');
-        $this->lastExtractionAt = $now;
-        if (0 === $this->firstExtractionAt) {
-            $this->firstExtractionAt = $now;
-        }
-
-        $this->calculNextExtraction();
-    }
 
     /**
      * @noRector
@@ -96,10 +87,10 @@ class SearchGoogleData
     ];
 
     #[ORM\Column(type: 'smallint', options: ['unsigned' => true])]
-    private int $extractionFrequency = 2;
+    private int $extractionFrequency = 4;
 
     /**
-     * @var string[]
+     * @var array<string, array<int, int>> where array<serpFeature, array<pixelPos, lastSeenAt>>
      */
     #[ORM\Column(type: 'json')]
     private array $serpFeatures = [];
@@ -138,11 +129,26 @@ class SearchGoogleData
         $this->comparable = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
+    /**
+     * @param int $extractedAt format : ymdHi
+     */
+    public function updateExtractionMetadata(int $extractedAt): void
+    {
+        if (0 === $this->firstExtractionAt || $extractedAt < $this->firstExtractionAt) {
+            $this->firstExtractionAt = $extractedAt;
+        }
+
+        if (0 === $this->lastExtractionAt || $extractedAt > $this->lastExtractionAt) {
+            $this->lastExtractionAt = $extractedAt;
+            $this->calculNextExtraction();
+        }
+    }
+
     public function calculNextExtraction(): void
     {
         $this->nextExtractionFrom = (int) \Safe\DateTime::createFromFormat(
             'ymdHi',
-            (string) $this->nextExtractionFrom
+            (string) $this->lastExtractionAt
         )
             ->modify($this->getDateTimeModifyValueFromFrequency())
             ->format('ymdHi');
@@ -277,7 +283,7 @@ class SearchGoogleData
     }
 
     /**
-     * @return string[]
+     * @return array<string, array<int, int>>
      */
     public function getSerpFeatures(): array
     {
@@ -285,7 +291,7 @@ class SearchGoogleData
     }
 
     /**
-     * @param string[] $serpFeatures
+     * @param array<string, array<int, int>> $serpFeatures
      */
     public function setSerpFeatures(array $serpFeatures): self
     {
@@ -295,11 +301,15 @@ class SearchGoogleData
     }
 
     /**
-     * @param string[] $serpFeatures
+     * @param array<string, int> $serpFeatures
      */
-    public function addSerpFeatures(array $serpFeatures): void
+    public function addSerpFeatures(array $serpFeatures, int $extractedAt): void
     {
-        $this->serpFeatures = array_unique(array_merge($this->serpFeatures, $serpFeatures));
+        foreach ($serpFeatures as $serpFeature => $pixelPos) {
+            $this->serpFeatures[$serpFeature] = [
+                isset($this->serpFeatures[$serpFeature]) ? $this->serpFeatures[$serpFeature][0] : $pixelPos,
+                $extractedAt, ];
+        }
     }
 
     /**
@@ -330,7 +340,7 @@ class SearchGoogleData
 
     public function getSearch(): Search
     {
-        return $this->search;
+        return $this->search ?? throw new LogicException();
     }
 
     public function setSearch(Search $search): self
@@ -431,6 +441,19 @@ class SearchGoogleData
     public function removeComparable(self $comparable): self
     {
         $this->comparable->removeElement($comparable);
+
+        return $this;
+    }
+
+    public function getLastExtractionAskedAt(): int
+    {
+        return $this->lastExtractionAskedAt;
+    }
+
+    public function setLastExtractionAskedAt(int $lastExtractionAskedAt): self
+    {
+        $this->getSearch()->disableExport = true;
+        $this->lastExtractionAskedAt = $lastExtractionAskedAt;
 
         return $this;
     }

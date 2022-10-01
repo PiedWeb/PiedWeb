@@ -33,6 +33,9 @@ class SearchResultsExtractCommand extends Command
     {
         $this
             ->addArgument('keyword', InputArgument::OPTIONAL)
+            ->addArgument('import', InputArgument::OPTIONAL)
+            // ->addArgument('lang', InputArgument::OPTIONAL, '', 'fr') // if lang is langAndTld is Setted, getEntityClassFromLocaleCode...
+            // ->addArgument('tld', InputArgument::OPTIONAL, '', 'fr')
         ;
     }
 
@@ -40,8 +43,8 @@ class SearchResultsExtractCommand extends Command
     {
         /** @var SearchRepository */
         $searchRepository = $this->entityManager->getRepository(Search::class);
-        $keyword = $input->getArgument('keyword');
-        $search = \is_string($keyword) ? $searchRepository->findOneBy(['keyword' => Search::normalizeKeyword($keyword)])
+        $search = \is_string($input->getArgument('keyword'))
+            ? $searchRepository->findOrCreate($input->getArgument('keyword'))
             : $searchRepository->findOneSearchToExtract();
 
         if (null === $search) {
@@ -52,10 +55,14 @@ class SearchResultsExtractCommand extends Command
 
         $output->writeln('Start extracting `'.(string) $search.'`');
         $jsonSearchResults = $this->extractor->extractGoogleResults($search);
-        $searchResults = $this->importer->deserializeSearchResults($search, $jsonSearchResults);
-        $this->entityManager->persist($searchResults);
-        $this->entityManager->flush();
-        $output->writeln(''.(string) $searchResults->getResults()->count().' results...');
+
+        if ($input->hasArgument('import')) {
+            $lastExtractionAskedAt = $search->getSearchGoogleData()->getLastExtractionAskedAt();
+            $searchResults = $this->importer->deserializeSearchResults($search, $jsonSearchResults, $lastExtractionAskedAt);
+            $this->entityManager->persist($searchResults);
+            $this->entityManager->flush();
+            $output->writeln(''.(string) $searchResults->getResults()->count().' results...');
+        }
 
         return Command::SUCCESS;
     }

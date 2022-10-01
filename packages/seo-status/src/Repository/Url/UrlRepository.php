@@ -30,6 +30,10 @@ class UrlRepository extends ServiceEntityRepository
 
     public function findOrCreate(string $url): Url
     {
+        if (str_starts_with($url, '/search')) {
+            $url = 'https://www.google.fr'.$url;
+        }
+
         $urlParts = \Safe\parse_url($url);
         if (! \is_array($urlParts)) {
             throw new Exception('Url `'.$url.'` can\'t be parsed');
@@ -52,7 +56,7 @@ class UrlRepository extends ServiceEntityRepository
     {
         $entity = (new Url())
             ->setHost($this->getEntityManager()->getRepository(Host::class)->findOrCreate($host))
-            ->setUri($this->getEntityManager()->getRepository(Uri::class)->findOrCreate($host))
+            ->setUri($this->getEntityManager()->getRepository(Uri::class)->findOrCreate($uri))
             ->setSchemeCode($schemeCode);
         $this->getEntityManager()->persist($entity);
 

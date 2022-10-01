@@ -56,12 +56,11 @@ class Client
     /**
      * Add a cURL's option.
      *
-     * @param int   $option cURL Predefined Constant
-     * @param mixed $value
+     * @param int $option cURL Predefined Constant
      *
      * @psalm-suppress InvalidArgument (for $handle)
      */
-    public function setOpt(int $option, $value): static
+    public function setOpt(int $option, mixed $value): static
     {
         if (\CURLOPT_HEADER === $option) {
             throw new \Exception('can\'t change CURLOPT_HEADER (always true)');

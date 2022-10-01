@@ -4,16 +4,17 @@ namespace PiedWeb\GoogleSpreadsheetSeoScraper;
 
 use Exception;
 use League\Csv\Reader;
+use LogicException;
+use PiedWeb\Curl\ExtendedClient;
 use PiedWeb\Google\Extractor\SERPExtractor;
 use PiedWeb\Google\Extractor\SERPExtractorJsExtended;
+use PiedWeb\Google\GoogleRequester;
 use PiedWeb\Google\GoogleSERPManager;
 use PiedWeb\Google\Result\SearchResult;
 use Symfony\Component\Console\Input\ArgvInput;
 
 class GoogleSpreadsheetSeoScraper
 {
-    use RequestGoogleTrait;
-
     protected ArgvInput $args;
 
     protected string $dir;
@@ -110,17 +111,14 @@ class GoogleSpreadsheetSeoScraper
             throw new \Exception('Previsous session (`'.$this->args->getParameterOption('--retry').'`) not found');
         }
 
+        $this->messageForCli('reloading data from : ');
+        $this->messageForCli($retryFile);
+
         return $retryFile;
     }
 
     private function getCsv(): Reader
     {
-        if ($this->args->getParameterOption('--retry')) {
-            $retryFile = $this->getRetryFile();
-
-            return Reader::createFromPath($retryFile, 'r');
-        }
-
         $tmpCsvDir = $this->dir.'/tmp';
 
         // $comand = 'unoconv -o "'.$tmpCsvFile.'" -f csv "'.$this->args->getParameterOption('--ods').'"';
@@ -134,12 +132,28 @@ class GoogleSpreadsheetSeoScraper
         return Reader::createFromPath($lastConvertedFile, 'r');
     }
 
+    private function getCsvFromRetry(): Reader
+    {
+        if ($this->args->getParameterOption('--retry')) {
+            $retryFile = $this->getRetryFile();
+
+            return Reader::createFromPath($retryFile, 'r');
+        }
+
+        throw new LogicException();
+    }
+
     protected function extractData(): void
     {
+        if ($this->args->getParameterOption('--retry')) {
+            $csvFromRetry = $this->getCsvFromRetry();
+            $csvFromRetry->setHeaderOffset(0);
+            /** @var array<array{'kw': string, 'tld': string, 'hl': string, 'pos':string,'pixelPos':int, 'url':string, 'domain': string, 'serpFeature': string, 'firstPixelPos': int, 'firstUrl': string, 'related': string}> */
+            $kwsFromRetry = iterator_to_array($csvFromRetry->getRecords());
+        }
+
         $csv = $this->getCsv();
-
         $csv->setHeaderOffset(0);
-
         $kws = $csv->getRecords();
         foreach ($kws as $k => $kw) {
             if (! \is_array($kw) || ! \is_string($kw['kw'] ?? null) || ! \is_string($kw['tld'] ?? null) || ! \is_string($kw['hl'] ?? null) || ! \is_string($kw['pos'] ?? null) || ! \is_string($kw['url'] ?? null)) {
@@ -147,12 +161,17 @@ class GoogleSpreadsheetSeoScraper
             }
 
             $this->kws[$k] = [
-                'kw' => $kw['kw'], 'tld' => $kw['tld'], 'hl' => $kw['hl'],
-                'pos' => $kw['pos'], 'url' => $kw['url'], 'domain' => $kw['domain'] ?? '',
-                'serpFeature' => $kw['serpFeature'] ?? '',
-                'firstPixelPos' => $kw['firstPixelPos'] ?? '',
-                'firstUrl' => $kw['firstUrl'] ?? '',
-                'related' => $kw['related'] ?? '',
+                'kw' => $kw['kw'],
+                'tld' => $kw['tld'],
+                'hl' => $kw['hl'],
+                'pos' => $kwsFromRetry[$k]['pos'] ?? $kw['pos'],
+                'pixelPos' => $kwsFromRetry[$k]['pixelPos'] ?? $kw['pixelPos'],
+                'url' => $kwsFromRetry[$k]['url'] ?? $kw['url'],
+                'domain' => $kwsFromRetry[$k]['domain'] ?? $kw['domain'] ?? '',
+                'serpFeature' => $kwsFromRetry[$k]['serpFeature'] ?? $kw['serpFeature'] ?? '',
+                'firstPixelPos' => $kwsFromRetry[$k]['firstPixelPos'] ?? $kw['firstPixelPos'] ?? '',
+                'firstUrl' => $kwsFromRetry[$k]['firstUrl'] ?? $kw['firstUrl'] ?? '',
+                'related' => $kwsFromRetry[$k]['related'] ?? $kw['related'] ?? '',
             ];
         }
     }
@@ -266,7 +285,7 @@ class GoogleSpreadsheetSeoScraper
         }
     }
 
-    protected function manageProxy(): void
+    public function manageProxy(ExtendedClient $curlClient): void
     {
         if ($this->args->hasParameterOption('--proxy')) {
             shuffle($this->proxies);
@@ -276,7 +295,7 @@ class GoogleSpreadsheetSeoScraper
             }
 
             $this->messageForCli('Using proxy '.$proxy.'');
-            $this->getClient()->setProxy($proxy);
+            $curlClient->setProxy($proxy);
         }
     }
 
@@ -298,7 +317,7 @@ class GoogleSpreadsheetSeoScraper
         $this->previousRequestUsedCache = true;
         if (($rawHtml = $Google->getCache()) === null) {
             $this->messageForCli('Requesting Google with Curl');
-            $rawHtml = $this->requestGoogleWithCurl($Google);
+            $rawHtml = (new GoogleRequester())->requestGoogleWithCurl($Google, [$this, 'manageProxy']);
             $Google->setCache($rawHtml);
             $this->previousRequestUsedCache = false;
         }
@@ -323,6 +342,8 @@ class GoogleSpreadsheetSeoScraper
 
                 return $this->getGoogleResults($kw, $num);
             }
+
+            file_put_contents($this->dir.'/var/'.$this->id.'.csv', $this->csvToReturn);
 
             throw new Exception('no google result, try using a proxy or check the keyword');
         }

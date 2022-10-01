@@ -10,11 +10,14 @@ use PiedWeb\Google\Logger;
 
 class Puphpeteer
 {
-    public static ?Puppeteer $puppeteer = null;
+    /** @var Puppeteer[] */
+    public static array $puppeteer = [];
 
-    public static ?Browser $browser = null;
+    /** @var Browser[] */
+    public static array $browser = [];
 
-    public static ?Page $browserPage = null;
+    /** @var Page[] */
+    public static array $browserPage = [];
 
     public static string $pageContent = '';
 
@@ -23,12 +26,14 @@ class Puphpeteer
      */
     public const DEFAULT_LANGUAGE = 'fr-FR';
 
+    public static string $currentKey = '';
+
     /**
      * Emulate a smartphone.
      *
      * @var array<string, string|array<string, int|bool>>
      */
-    public const DEFAULT_EMULATE_OPTIONS = [
+    public const EMULATE_OPTIONS_MOBILE = [
         'viewport' => [
             'width' => 412,
             'height' => 992,
@@ -56,33 +61,43 @@ class Puphpeteer
     ];
 
     /**
+     * @param array<string, mixed> $userOptions    array{ headless: bool, slowMo: int, read_timeout: int, idle_timeout: 9000 }
      * @param array<string, mixed> $emulateOptions array{ viewport: mixed, userAgent: string }
      *
      * @psalm-suppress UndefinedMagicMethod
      */
-    public function instantiate(array $emulateOptions = [], string $language = ''): self
-    {
-        Logger::log('new Puppeteer');
-        self::$puppeteer = new Puppeteer([
+    public function instantiate(
+        array $emulateOptions = [],
+        string $language = '',
+        array $userOptions = [
             'headless' => true,
             'slowMo' => 250,
             'read_timeout' => 9000,
-            'idle_timeout' => 9000,
-            'args' => ['--lang='.('' !== $language ? $language : self::DEFAULT_LANGUAGE)],
-        ]);
-        self::$browser = self::$puppeteer->launch();
-        self::$browserPage = $this->getBrowserPage(true);
-        $this->emulate();
+            'idle_timeout' => 9000, ]
+    ): self {
+        $userOptions = array_merge($userOptions, ['args' => ['--lang='.('' !== $language ? $language : self::DEFAULT_LANGUAGE)]]);
+        self::$currentKey = substr(md5(serialize($userOptions)), 0, 4);
+
+        if (isset(self::$puppeteer[self::$currentKey])) {
+            $this->emulate([] !== $emulateOptions ? $emulateOptions : self::EMULATE_OPTIONS_MOBILE);
+
+            return $this;
+        }
+
+        Logger::log('launching new Puppeteer instance `'.self::$currentKey.'`');
+        self::$puppeteer[self::$currentKey] = new Puppeteer($userOptions);
+        self::$browser[self::$currentKey] = self::$puppeteer[self::$currentKey]->launch();
+        self::$browserPage[self::$currentKey] = $this->getBrowserPage(true);
+        self::$browserPage[self::$currentKey]->emulate([] !== $emulateOptions ? $emulateOptions : self::EMULATE_OPTIONS_MOBILE);
 
         return $this;
     }
 
-    /**
-     * @param array<string, mixed> $emulateOptions array{ viewport: mixed, userAgent: string }
-     */
-    public function emulate(array $emulateOptions = []): void
+    public function switchTo(string $key): self
     {
-        $this->getBrowserPage()->emulate([] !== $emulateOptions ? $emulateOptions : self::DEFAULT_EMULATE_OPTIONS);
+        self::$currentKey = $key;
+
+        return $this;
     }
 
     /**
@@ -90,29 +105,46 @@ class Puphpeteer
      */
     public function getBrowserPage(bool $new = false): Page
     {
-        if (null === self::$browser) {
+        if ('' === self::$currentKey || ! isset(self::$browser[self::$currentKey])) {
             $this->instantiate();
         }
 
-        if ($new || null === self::$browserPage) {
-            self::$browserPage = (self::$browser ?? throw new LogicException())->newPage();
+        if ($new || ! isset(self::$browserPage[self::$currentKey])) {
+            self::$browserPage[self::$currentKey] = (self::$browser[self::$currentKey] ?? throw new LogicException())->newPage();
         }
 
-        return self::$browserPage;
+        return self::$browserPage[self::$currentKey];
+    }
+
+    /**
+     * @param array<string, mixed> $emulateOptions array{ viewport: mixed, userAgent: string }
+     */
+    public function emulate(array $emulateOptions): void
+    {
+        $this->getBrowserPage()->emulate($emulateOptions);
     }
 
     public function close(): void
     {
-        if (null === self::$browser) {
-            throw new LogicException();
+        $bKey = self::$currentKey;
+        if ('' === $bKey) {
+            return;
         }
 
-        Logger::log('close chrome');
-        self::$browser->close();
+        Logger::log('close chrome `'.$bKey.'`');
+        self::$browser[$bKey]->close();
+        unset(self::$browser[$bKey]);
+        unset(self::$browserPage[$bKey]);
+        unset(self::$puppeteer[$bKey]);
+        self::$currentKey = '';
+    }
 
-        self::$puppeteer = null;
-        self::$browser = null;
-        self::$browserPage = null;
+    public function closeAll(): void
+    {
+        foreach (self::$browser as $bKey => $b) {
+            $this->switchTo($bKey);
+            $this->close();
+        }
     }
 
     public function __destruct()
@@ -132,12 +164,14 @@ class Puphpeteer
         return self::$pageContent;
     }
 
-    public function setCookie(string $name, string $value, string $domain): void
+    public function setCookie(string $name, string $value, string $domain): self
     {
         $cookie = \Safe\json_decode(\Safe\json_encode([
             ['name' => $name, 'value' => $value, 'domain' => $domain, 'expires' => time() + 3600 * 24 * 31 * 12 * 3],
         ]));
         $this->getBrowserPage()->setCookie($cookie[0]); // @phpstan-ignore-line
+
+        return $this;
     }
 
     /**
@@ -148,7 +182,7 @@ class Puphpeteer
         $this->getBrowserPage()->goto($url, ['waitUntil' => 'domcontentloaded']);
         self::$pageContent = $this->getBrowserPage()->content();
 
-        $this->manageMetaRefresh(pathinfo($url)['dirname']);
+        $this->manageMetaRefresh(pathinfo($url)['dirname']); // @phpstan-ignore-line
 
         self::$pageContent = $this->getBrowserPage()->content();
 

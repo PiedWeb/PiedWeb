@@ -1,0 +1,24 @@
+{
+    "lang": "fr",
+    "tld": "fr",
+    "code": "fr-fr",
+    "hashId": "huitre",
+    "id": 1,
+    "keyword": "huitre",
+    "searchGoogleData": {
+        "id": 1,
+        "volume": 0,
+        "cpc": 0,
+        "lastVolumeUpdate": 0,
+        "intent": 0,
+        "lastExtractionAt": 0,
+        "firstExtractionAt": 0,
+        "nextExtractionFrom": 2209271832,
+        "extractionFrequency": 2,
+        "serpFeatures": [],
+        "relatedSearches": [],
+        "lastExtractionAskedAt": 0,
+        "firstExtractionWasRunned": false
+    },
+    "disableExport": false
+}

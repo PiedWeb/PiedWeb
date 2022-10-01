@@ -155,7 +155,7 @@ class ExtendedClient extends Client
      *
      * @param mixed $post if it's an array, will be converted via http build query
      */
-    public function setPost($post): self
+    public function setPost(mixed $post): self
     {
         $this->setOpt(\CURLOPT_CUSTOMREQUEST, 'POST');
         $this->setOpt(\CURLOPT_POST, 1);

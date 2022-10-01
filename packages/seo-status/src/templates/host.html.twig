@@ -1,0 +1,149 @@
+{% extends "base.html.twig" %}
+
+
+{% block body %}
+<div class="px-3 pb-12 mx-auto">
+  <h1 class="text-3xl md:ml-6 sr-only">{{ search_value }}</h1>
+  {% if host is null %}
+    <div class="prose prose-lg md:ml-6 mt-3">
+      Le domaine ou sous-domaine suggéré n'est pas présent dans la base de donnée...
+    </div>
+  {% else %}
+
+
+<div class="flex lg:space-x-4 space-y-4 lg:space-y-0 lg:flex-row flex-col mt-4">
+  <!--  -->
+    <div class="lg:basis-1/3 max-w-[220px border-gray-300 border rounded text-lg">
+      <h2 class="font-light mb-3 px-4 pt-3 text-center">Résultats</h2>
+      <table class="table-auto w-full text-right">
+        <tr class="[&>*]:py-3 [&>*]:px-6 [&>*]:font-thin text-gray-700">
+          <th>Naturel</th>
+          <th>Payant</th>
+          <th>Total</th>
+        </tr>
+        <tr class="[&>*]:py-3 [&>*]:px-6">
+          <td class="font-bold">
+            <a class="text-sky-600" href="#">{{ search_count.organic }}</a>
+          </td>
+          <td>
+            <a class="text-sky-600" href="#">{{ search_count.paid }}</a>
+          </td>
+          <td>
+            <a class="text-sky-600" href="#">{{ search_count.total }}</a>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <!-- /  -->
+</div>
+
+<div class="flex lg:space-x-4 space-y-4 lg:space-y-0 lg:flex-row flex-col mt-4">
+  <script defer>
+
+  document.addEventListener("DOMContentLoaded", function() {
+    window.o = new filtersManager("{{ filters|json_encode|e('js') }}", "{{ path('searchListForHostRoute', {'host': host, 'filters': 'filtersValue'}) }}")
+  });
+  </script>
+    <!-- SearchBlock -->
+    <div class="grow max-w-[1200px] border-gray-300 border rounded text-lg relative">
+      <h2 class="font-light mb-3 px-4 pt-3">Recherches</h2>
+      <table
+        class="table-auto w-full"
+        id="organic-table"
+        @click.away="$dispatch('unselect-organicblock-row')">
+        <thead class="text-gray-700 sticky bg-white top-0">
+          <tr class="[&>*]:py-2 [&>*]:px-4 [&>*]:font-thin">
+            <th class="text-left"></th>
+            <th class="text-right cursor-pointer flex">
+              <span
+                @click="o.toggleOrderBy('r.pixelPos', 'ASC').validate();"
+                class="block grow">PixelPos</span>
+              <span
+                class="{{ _self.getOrderByColor('r.pixelPos', 'DESC', filters) }} ml-2 block px-1"
+                @click="o.toggleOrderBy('r.pixelPos', 'DESC').validate();">
+                  <i class="fa-solid fa-arrow-up"></i></span>
+              <span
+                class="{{ _self.getOrderByColor('r.pixelPos', 'ASC', filters) }} block px-1"
+                @click="o.toggleOrderBy('r.pixelPos', 'ASC').validate();">
+                  <i class="fa-solid fa-arrow-down"></i></span>
+            </th>
+            <th
+              class="text-right cursor-pointer text-sky-600">
+                Pos
+              </th>
+            <th class="!px-0"></th>
+          </tr>
+          <tr class="[&>*]:pb-3 [&>*]:font-thin">
+            <th class="text-left pt-1 pl-2 pr-4">
+              <input
+                type="text"
+                name="s.keyword"
+                placeholder="LIKE part"
+                @keydown.enter="o.validate();"
+                @input="o.update('s.keyword')"
+                value="{{ filters['s.keyword'].v|default('') }}"
+                operator="LIKE"
+                class="rounded border border-gray-200 w-full !text-gray-900 !font-light">
+            </th>
+            <th class="text-right">
+              <input
+                type="text"
+                name="r.pixelPos"
+                placeholder="> 120"
+                class="rounded border border-gray-200 w-full">
+              </th>
+            <th class="text-right">
+              <input
+                type="text"
+                name="r.pos"
+                placeholder="< 3"
+                class="rounded border border-gray-200 w-full">
+              </th>
+              <th class="!px-0">
+                <button
+                  class="bg-sky-600 text-gray-50 py-1 px-3 rounded -ml-2">
+                  <i class="fa-solid fa-search"></i></button>
+              </th>
+          </tr>
+        </thead>
+        {% for search in search_list %}
+          {% set search_result = search.searchGoogleData.lastSearchResults.retrieveSearchResultFor(host) %}
+          {% set search_result_previous = search.searchGoogleData.lastSearchResults.previous is null ? null
+            : search.searchGoogleData.lastSearchResults.previous.retrieveSearchResultFor(host) %}
+
+          <tr
+            x-data="{ selected: false }"
+            @click="selected = ! selected"
+            @unselect-organicblock-row.window="selected = false "
+            :class="{ 'bg-gray-200' : selected }"
+            class="border-t [&>*]:py-3 [&>*]:px-4 hover:bg-gray-100">
+            <td class="text-left">
+              <a
+                href="{{ path('search', {'keyword': search.keyword}) }}"
+                class="text-sky-600">{{ search.keyword }}</a>
+            </td>
+            <td class="text-right">
+              {{ search_result.pixelPos }}
+              {% if search_result_previous is not null %}
+                {% set difference = search_result.pixelPos - search_result_previous.pixelPos %}
+                {{ difference >= 0 ? '+' : '-' }}
+              {% endif %}
+            </td>
+            <td class="text-right">{{ search_result.pos }}</td>
+            <td class="!px-0"></td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+    <!-- / SearchBlock -->
+
+  </div>
+
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% macro getOrderByColor(orderKey, expectedValue, filters) %}
+  {{ filters.orderBy[orderKey] is defined and filters.orderBy[orderKey] == expectedValue ? 'text-sky-600': 'text-gray-300' }}
+{% endmacro %}

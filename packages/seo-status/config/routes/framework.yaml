@@ -11,3 +11,11 @@ _sonata_admin:
     resource: .
     type: sonata_admin
     prefix: /admin
+
+controllers:
+    resource: ../../src/Controller/
+    type: attribute
+
+kernel:
+    resource: ../../src/Kernel.php
+    type: attribute

@@ -5,6 +5,7 @@ namespace PiedWeb\SeoStatus\Entity\Search;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use PiedWeb\SeoStatus\Entity\Url\Host;
 use PiedWeb\SeoStatus\Repository\SearchResultsRepository;
 
 #[ORM\Entity(repositoryClass: SearchResultsRepository::class)]
@@ -46,7 +47,7 @@ class SearchResults
     private int $resultStat = 0;
 
     /**
-     * @var array<string, int>
+     * @var array<string, int> where string is the serpFeature's name and int the pixel pos
      */
     #[ORM\Column(type: 'json')]
     private array $serpFeatures = [];
@@ -88,9 +89,9 @@ class SearchResults
         return $this->extractedAt;
     }
 
-    public function setExtractedAt(int $extractedAt): self
+    public function setExtractedAt(int|string $extractedAt): self
     {
-        $this->extractedAt = $extractedAt;
+        $this->extractedAt = (int) $extractedAt;
 
         return $this;
     }
@@ -121,7 +122,7 @@ class SearchResults
     public function setSerpFeatures(array $serpFeatures): self
     {
         $this->serpFeatures = $serpFeatures;
-        $this->searchGoogleData->addSerpFeatures(array_keys($serpFeatures));
+        $this->searchGoogleData->addSerpFeatures($serpFeatures, $this->extractedAt);
 
         return $this;
     }
@@ -200,5 +201,24 @@ class SearchResults
         $this->next = $next;
 
         return $this;
+    }
+
+    public function retrieveSearchResultFor(Host $host, bool $returnOrganicFirst = true): ?SearchResult
+    {
+        foreach ($this->getResults() as $result) {
+            if (true === $returnOrganicFirst && $result->isAds() && ! isset($paid)) {
+                if ($result->getHost() === $host) {
+                    $paid = $result;
+                }
+
+                continue;
+            }
+
+            if ($result->getHost() === $host) {
+                return $result;
+            }
+        }
+
+        return $paid ?? null;
     }
 }

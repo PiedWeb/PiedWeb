@@ -11,19 +11,19 @@ use Symfony\Component\String\Slugger\AsciiSlugger;
 #[UniqueEntity('keyword')]
 class Search implements \Stringable
 {
-    public ?bool $disableExport = null;
+    public bool $disableExport = false;
 
     #[ORM\Id, ORM\Column(options: ['unsigned' => true]), ORM\GeneratedValue]
     private int $id;
 
-    #[ORM\Column(unique: true)]
+    #[ORM\Column(unique: true, options: ['collate' => 'utf8mb4_unicode_ci', 'charset' => 'utf8mb4'])]
     private string $keyword;
 
     private string $lang = 'fr';
 
     private string $tld = 'fr';
 
-    #[ORM\OneToOne(orphanRemoval: true, cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(orphanRemoval: true, cascade: ['persist', 'remove'], mappedBy: 'search')]
     #[ORM\JoinColumn(nullable: false)]
     private SearchGoogleData $searchGoogleData;
 
@@ -47,6 +47,11 @@ class Search implements \Stringable
         return $this->tld;
     }
 
+    public function getCode(): string
+    {
+        return $this->tld.'-'.$this->lang;
+    }
+
     public function getSearch(): string
     {
         return $this->keyword; // .' ('.$this->tld.'/'.$this->lang.')';
@@ -54,20 +59,24 @@ class Search implements \Stringable
 
     public function getHashId(): string
     {
-        return self::getHashIdFrom($this->keyword, $this->tld, $this->lang);
+        return self::getHashIdFrom($this->keyword);
     }
 
-    public function getHashIdFrom(string $keyword, string $tld = 'fr', string $lang = 'fr'): string
+    /**
+     * @noRector
+     */
+    public function getHashIdFrom(string $keyword): string
     {
         $keyword = self::normalizeKeyword($keyword);
 
-        return (new AsciiSlugger())->slug($keyword).'-'
-            .substr(sha1($keyword.$tld.$lang), 0, 6);
+        return (new AsciiSlugger())->slug($keyword, '_');
     }
 
     public static function normalizeKeyword(string $keyword): string
     {
-        return strtolower((new AsciiSlugger())->slug($keyword, ' '));
+        $keyword = strtolower((new AsciiSlugger())->slug($keyword, ' '));
+
+        return '' === $keyword ? 'empty' : $keyword;
     }
 
     public function setKeyword(string $keyword): self

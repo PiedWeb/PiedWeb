@@ -3,10 +3,16 @@
     "app": {
       "js": [
         "/assets/runtime.js",
+        "/assets/vendors-node_modules_fortawesome_fontawesome-free_js_brands_js-node_modules_fortawesome_fonta-fbfbc6.js",
         "/assets/app.js"
+      ]
+    },
+    "style": {
+      "js": [
+        "/assets/runtime.js"
       ],
       "css": [
-        "/assets/app.css"
+        "/assets/style.css"
       ]
     }
   }

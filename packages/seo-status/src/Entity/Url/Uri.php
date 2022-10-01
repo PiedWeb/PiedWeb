@@ -6,6 +6,8 @@ use Doctrine\ORM\Mapping as ORM;
 use PiedWeb\SeoStatus\Repository\Url\UriRepository;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
+use function Symfony\Component\String\u;
+
 #[ORM\Entity(repositoryClass: UriRepository::class)]
 class Uri implements \Stringable
 {
@@ -28,6 +30,7 @@ class Uri implements \Stringable
 
     public function setUri(string $uri): self
     {
+        $uri = u($uri)->truncate(254, '—');
         $this->uri = $uri;
 
         return $this;

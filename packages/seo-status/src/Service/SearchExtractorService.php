@@ -3,10 +3,12 @@
 namespace PiedWeb\SeoStatus\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
+use PiedWeb\Curl\ExtendedClient;
 use PiedWeb\Google\Extractor\SERPExtractor;
 use PiedWeb\Google\Extractor\SERPExtractorJsExtended;
+use PiedWeb\Google\GoogleException;
+use PiedWeb\Google\GoogleRequester;
 use PiedWeb\Google\GoogleSERPManager;
-use PiedWeb\GoogleSpreadsheetSeoScraper\RequestGoogleTrait;
 use PiedWeb\SeoStatus\Entity\Proxy;
 use PiedWeb\SeoStatus\Entity\Search\Search;
 use PiedWeb\SeoStatus\Repository\ProxyRepository;
@@ -20,8 +22,6 @@ use Symfony\Component\Serializer\Serializer;
 
 final class SearchExtractorService
 {
-    use RequestGoogleTrait;
-
     private ?Proxy $proxy = null;
 
     public function __construct(
@@ -31,7 +31,7 @@ final class SearchExtractorService
     ) {
     }
 
-    protected function manageProxy(): void
+    public function manageProxy(ExtendedClient $curlClient): void
     {
         if (null === $this->entityManager) {
             return;
@@ -47,7 +47,7 @@ final class SearchExtractorService
         // todo alert mail no more proxy
 
         $this->proxy->setLastUsedNow();
-        $this->getClient()->setProxy($this->proxy->getProxy());
+        $curlClient->setProxy($this->proxy->getProxy());
     }
 
     private function initSerpManager(Search $search): GoogleSERPManager
@@ -68,12 +68,13 @@ final class SearchExtractorService
         $googleSerpManager->cacheFolder = $this->dataDir.'tmp';
 
         $rawHtml = $googleSerpManager->getCache()
-            ?? $googleSerpManager->setCache($this->requestGoogleWithCurl($googleSerpManager));
+            ?? $googleSerpManager->setCache((new GoogleRequester())->requestGoogleWithCurl($googleSerpManager, [$this, 'manageProxy']));
 
-        $extractor = new SERPExtractorJsExtended($rawHtml);
+        $extractor = new SERPExtractorJsExtended($rawHtml, $googleSerpManager->getExtractedAt());
 
         if ([] !== $extractor->getResults($organicOnly = false)) {
-            $search->getSearchGoogleData()->updateExtractionMetadata();
+            $search->disableExport = true;
+            $search->getSearchGoogleData()->updateExtractionMetadata($googleSerpManager->getExtractedAt()); // useful ?!
 
             return $this->exportToJson($search, $extractor);
         }
@@ -85,16 +86,19 @@ final class SearchExtractorService
             return $this->extractGoogleResults($search);
         }
 
-        throw new \Exception('no google result : try new proxies, check the keyword `'.$search.'` or check selectors from Google libs.');
+        \Safe\file_put_contents('/tmp/debug.html', $rawHtml);
+
+        throw new GoogleException('no google result from `/tmp/debug.html` : try new proxies, check the keyword `'.$search.'` or check selectors from Google libs.');
     }
 
     private function exportToJson(Search $search, SERPExtractor $extractor): string
     {
         $fileSystem = new Filesystem();
-        $datetime = (new \DateTime('now'))->format('ymdHi');
         $json = $extractor->__toJson();
-        $fileSystem->dumpFile($this->dataDir.$search->getHashId().'/'.$datetime.'.json', $json);
-        $fileSystem->dumpFile($this->dataDir.$search->getHashId().'/lastResult.html', $extractor->html);
+        $lastExtractionAskedAt = $search->getSearchGoogleData()->getLastExtractionAskedAt();
+        $searchExportDir = $this->dataDir->getSearchDir($search);
+        $fileSystem->dumpFile($searchExportDir.$lastExtractionAskedAt.'.json', $json);
+        $fileSystem->dumpFile($searchExportDir.'lastResult.html', $extractor->html);
 
         return $json;
     }
@@ -105,7 +109,7 @@ final class SearchExtractorService
             AbstractObjectNormalizer::SKIP_NULL_VALUES => true,
             AbstractNormalizer::CIRCULAR_REFERENCE_HANDLER => fn ($object, $format, $context) => null,
             JsonEncode::OPTIONS => \JSON_PRETTY_PRINT,
-            AbstractNormalizer::IGNORED_ATTRIBUTES => ['search', 'searchResultsList', 'previous', 'next', 'lastSearchResults', 'similar', 'comparable', 'comparableMain'],
+            AbstractNormalizer::IGNORED_ATTRIBUTES => ['search', 'searchResultsList', 'previous', 'next', 'lastSearchResults', 'similar', 'comparable', 'comparableMain', 'disableExport', 'lastExtractionAskedAt', 'hashId'],
         ];
 
         $serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
@@ -118,12 +122,12 @@ final class SearchExtractorService
     {
         $json = $this->searchToJson($search);
         $fileSystem = new Filesystem();
-        $fileSystem->dumpFile($this->dataDir.$search->getHashId().'/index.json', $json);
+        $fileSystem->dumpFile($this->dataDir->getSearchDir($search).'index.json', $json);
     }
 
     public function deleteSearch(Search $search): void
     {
         $fileSystem = new Filesystem();
-        $fileSystem->remove($this->dataDir.$search->getHashId());
+        $fileSystem->remove($this->dataDir->getSearchDir($search));
     }
 }
