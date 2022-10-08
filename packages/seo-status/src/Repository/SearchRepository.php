@@ -7,30 +7,61 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use PiedWeb\SeoStatus\Entity\Search\Search;
+use PiedWeb\SeoStatus\Entity\Search\SearchGoogleData;
+use PiedWeb\SeoStatus\Entity\Search\SearchVolumeData;
 
 /**
  * @extends ServiceEntityRepository<Search>
  *
  * @method Search|null find($id, $lockMode = null, $lockVersion = null)
- * @method Search|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Search|null findOneBy(array $criteria, ?array $orderBy = null)
  * @method Search[]    findAll()
  * @method Search[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
 class SearchRepository extends ServiceEntityRepository
 {
-    /** @var Search[] */
+    /** @var array<string, ?Search> */
     private array $index = [];
+
+    public function resetIndex(): self
+    {
+        $this->index = [];
+
+        return $this;
+    }
+
+    public function loadIndex(): self
+    {
+        $searches = $this->findAll();
+        foreach ($searches as $search) {
+            $this->addToIndex($search);
+        }
+
+        return $this;
+    }
 
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Search::class);
     }
 
+    public function addToIndex(Search $search): self
+    {
+        $this->index[$search->getKeyword()] = $search;
+
+        return $this;
+    }
+
+    public function findOneByKeyword(string $keyword, bool $onlyIndex = false): ?Search
+    {
+        return $this->index[$keyword] ??= $onlyIndex ? null : parent::findOneBy(['keyword' => $keyword]);
+    }
+
     public function findOrCreate(string $keyword, bool &$creation = false): Search
     {
         $keyword = Search::normalizeKeyword($keyword);
 
-        if (isset($this->index[$keyword])) {
+        if (isset($this->index[$keyword]) && null !== $this->index[$keyword]) {
             return $this->index[$keyword];
         }
 
@@ -44,12 +75,11 @@ class SearchRepository extends ServiceEntityRepository
         return $this->index[$keyword] = $search;
     }
 
-    private function getQueryToFindSearchToExtract(int $maxResults = 10): QueryBuilder
+    public function getQueryToFindSearchToExtract(?int $maxResults = 10): QueryBuilder
     {
         return $this->createQueryBuilder('s')
             ->innerJoin('s.searchGoogleData', 'sgd')
-            ->where('sgd.nextExtractionFrom <= :now')
-            ->setParameter('now', (int) (new \DateTime('now'))->format('ymdHi'))
+            ->where('sgd.nextExtractionFrom <= '.(int) (new \DateTime('now'))->format('ymdHi'))
             ->andWhere('(sgd.lastExtractionAskedAt = 0 OR sgd.lastExtractionAskedAt < '.(int) (new \DateTime('now'))->modify('-3 days')->format('ymdHi').')')
             ->orderBy('sgd.nextExtractionFrom', 'ASC')
             ->setMaxResults($maxResults);
@@ -63,8 +93,45 @@ class SearchRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
 
         if (null !== $search) {
-            $search->getSearchGoogleData()->setLastExtractionAskedAt((int) (new DateTime())->format('ymdHi'));
-            $this->getEntityManager()->flush();
+            $this->updateLastExtractionAksedAt($search);
+        }
+
+        return $search;
+    }
+
+    public function updateLastExtractionAksedAt(Search $search, string $for = SearchGoogleData::class): void
+    {
+        $search->disableExport = true;
+        $entity = $search->getSearchGoogleData();
+        if (SearchVolumeData::class === $for) {
+            $entity = $entity->getSearchVolumeData();
+        }
+
+        $entity->setLastExtractionAskedAt((int) (new DateTime())->format('ymdHi'));
+        $this->getEntityManager()->flush();
+        $search->disableExport = false;
+    }
+
+    public function getQueryToFindSearchTrendsToExtract(): QueryBuilder
+    {
+        return $this->createQueryBuilder('s')
+            ->innerJoin('s.searchGoogleData', 'sgd')
+            ->innerJoin('s.searchVolumeData', 'svd')
+            ->andWhere('(svd.lastExtractionAskedAt = 0 OR svd.lastExtractionAskedAt < '.(int) (new \DateTime('now'))->modify('-3 days')->format('ymdHi').')')
+            ->orderBy('svd.lastExtractionAskedAt', 'ASC')
+            ->orderBy('svd.lastExtractionAt', 'ASC')
+            ->setMaxResults(1);
+    }
+
+    public function findOneSearchTrendsToExtract(): ?Search
+    {
+        /** @var ?Search */
+        $search = $this->getQueryToFindSearchTrendsToExtract()
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        if (null !== $search) {
+            $this->updateLastExtractionAksedAt($search, SearchVolumeData::class);
         }
 
         return $search;
@@ -79,5 +146,21 @@ class SearchRepository extends ServiceEntityRepository
             ->select('id')
             ->getQuery()
             ->getScalarResult();
+    }
+
+    public function countSearchToExtract(): int
+    {
+        return \intval($this->getQueryToFindSearchToExtract(null)
+            ->select('COUNT(s.id)')
+            ->getQuery()
+            ->getSingleScalarResult());
+    }
+
+    public function countSearch(): int
+    {
+        return \intval($this->createQueryBuilder('s')
+            ->select('COUNT(s.id)')
+            ->getQuery()
+            ->getSingleScalarResult());
     }
 }

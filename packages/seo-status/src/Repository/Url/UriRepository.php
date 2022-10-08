@@ -22,11 +22,18 @@ class UriRepository extends ServiceEntityRepository
     }
 
     /** @var Uri[] */
-    private array $entityCache = [];
+    private array $index = [];
+
+    public function resetIndex(): self
+    {
+        $this->index = [];
+
+        return $this;
+    }
 
     public function findOrCreate(string $uri): Uri
     {
-        return $this->entityCache[$uri] ??= $this->findOneBy(['uri' => $uri])
+        return $this->index[$uri] ??= $this->findOneBy(['uri' => $uri])
         ?? $this->create($uri);
     }
 

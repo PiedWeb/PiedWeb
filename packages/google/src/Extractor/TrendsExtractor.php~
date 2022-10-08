@@ -1,0 +1,86 @@
+<?php
+
+
+    private function getNodeTextContent(Crawler $crawler, int $nodePosition = 0): string
+    {
+        $node = $crawler->getNode($nodePosition);
+
+        return $node ? $node->textContent
+            : throw new Exception('Google changes its selector');
+    }
+    public function getExtractorOld(): TrendsExtractor
+    {
+        if (null !== $this->extractor) {
+            return $this->extractor;
+        }
+
+        $html = $this->getCache()
+            ?? $this->setCache($this->requester->requestGoogleTrendsWithPuppeteer($this));
+        file_put_contents('debug.html', $html);
+
+        return $this->extractor = new TrendsExtractor($html);
+    }
+
+namespace PiedWeb\Google\Extractor;
+
+use Exception;
+use Symfony\Component\DomCrawler\Crawler;
+
+class TrendsExtractor
+{
+
+    private Crawler $domCrawler;
+
+    /** @var array<string, string> */
+    private array $volume = [];
+
+    public function __construct(public string $html)
+    {
+        $this->domCrawler = new Crawler($html);
+    }
+
+    /** @return array<string, string> */
+    public function getVolume(): array
+    {
+        if ([] !== $this->volume) {
+            return $this->volume;
+        }
+
+        $rows = $this->domCrawler
+            ->filterXPath('//div[@aria-label="A tabular representation of the data in the chart."]//tbody/tr');
+
+        foreach ($rows as $row) {
+            $columns = (new Crawler($row))->filter('td');
+            $this->volume[$this->getNodeTextContent($columns, 0)] = $this->getNodeTextContent($columns, 1);
+        }
+
+        return $this->volume;
+    }
+
+    public function getVolumeAverage(): int
+    {
+        $volume = $this->getVolume();
+
+        return (int) round(array_sum($volume) / \count($volume));
+    }
+
+    private function getNodeTextContent(Crawler $crawler, int $nodePosition = 0): string
+    {
+        $node = $crawler->getNode($nodePosition);
+
+        return $node ? $node->textContent
+            : throw new Exception('Google changes its selector');
+    }
+
+    /** @return array<string, string> */
+    public function getRelatedQueries(): array
+    {
+
+    }
+
+    /** @return array<string, string> */
+    public function getRelatedTopics(): array
+    {
+
+    }
+}

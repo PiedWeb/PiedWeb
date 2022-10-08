@@ -78,7 +78,8 @@
     "symfony/var-dumper": "^6.0",
     "symfony/web-profiler-bundle": "6.1.*",
     "symplify/monorepo-builder": "^11.1",
-    "vimeo/psalm": "^4"
+    "vimeo/psalm": "^4",
+    "vincentlanglet/twig-cs-fixer": "^0.5.0"
   },
   "extra": {
     "branch-alias": {
@@ -118,7 +119,11 @@
     "test-google": "vendor/bin/phpunit --stop-on-failure --testsuite google",
     "paratest": "vendor/bin/paratest -p16",
     "format": "vendor/bin/php-cs-fixer fix",
-    "reset-db": "bash packages/seo-status/script/reset-database"
+    "format-twig": "vendor/bin/twig-cs-fixer lint --fix ./",
+    "reset-db": [
+      "Composer\\Config::disableProcessTimeout",
+      "bash packages/seo-status/script/reset-database"
+    ]
   },
   "config": {
     "sort-packages": true,

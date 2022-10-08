@@ -2,11 +2,10 @@
 
 namespace PiedWeb\Google;
 
-use DateTime;
-use Symfony\Component\Filesystem\Filesystem;
-
 final class GoogleSERPManager
 {
+    use CacheTrait;
+
     /** @var string Contain the string query we will ask to Google Search * */
     public string $q = '';
 
@@ -25,14 +24,14 @@ final class GoogleSERPManager
     /** @var array<string, string> see emulate options for puppeteer * */
     public array $emulateOptions = [];
 
-    /** @var int Contain in seconds, the time cache is valid. Default 1 Day (86400). * */
-    public int $cacheTime = 86400;
-
-    public int $cacheFilemtime = 0;
-
     public Sleeper $sleeper;
 
     public int $page = 1;
+
+    public function getRequestUid(): string
+    {
+        return substr(sha1($this->q.'++'.$this->language.'++'.$this->tld.'++'.\Safe\json_encode([$this->parameters, $this->emulateOptions]).'++'.$this->page), 0, 8);
+    }
 
     public function setParameter(string $k, string|int $v): void
     {
@@ -58,55 +57,5 @@ final class GoogleSERPManager
     private function generateParameters(): string
     {
         return http_build_query($this->parameters, '', '&');
-    }
-
-    /** @var string Contain the cache folder for SERP results * */
-    public string $cacheFolder = '/tmp';
-
-    public function getCacheFilePath(): string
-    {
-        $this->generateGoogleSearchUrl();
-
-        return $this->cacheFolder.'/gsc_'.sha1(\Safe\json_encode($this)).'.html';
-    }
-
-    public function deleteCache(): void
-    {
-        @unlink($this->getCacheFilePath());
-    }
-
-    public function setCache(string $html): string
-    {
-        if ('' !== $this->cacheFolder) {
-            (new Filesystem())->dumpFile($this->getCacheFilePath(), $html);
-        }
-
-        return $html;
-    }
-
-    public function getCache(): ?string
-    {
-        $cacheFilePath = $this->getCacheFilePath();
-
-        if (! file_exists($cacheFilePath)) {
-            return null;
-        }
-
-        $this->cacheFilemtime = \Safe\filemtime($cacheFilePath);
-        $diff = time() - $this->cacheFilemtime;
-        if ($diff > $this->cacheTime) {
-            return null;
-        }
-
-        return \Safe\file_get_contents($cacheFilePath);
-    }
-
-    public function getExtractedAt(): int
-    {
-        if (0 === $this->cacheFilemtime) {
-            return (int) (new \DateTime('now'))->format('ymdHi');
-        }
-
-        return (int) (new DateTime())->setTimestamp($this->cacheFilemtime)->format('ymdHi');
     }
 }

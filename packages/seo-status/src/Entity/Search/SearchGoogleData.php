@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\Mapping\JoinColumn;
 use Doctrine\ORM\Mapping\JoinTable;
 use LogicException;
+use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity]
 class SearchGoogleData
@@ -20,16 +21,15 @@ class SearchGoogleData
 
     #[ORM\OneToOne(inversedBy: 'searchGoogleData')]
     #[ORM\JoinColumn(name: 'search_id', referencedColumnName: 'id')]
+    #[Ignore]
     private ?Search $search = null;
 
-    #[ORM\Column(options: ['unsigned' => true])]
-    private int $volume = 1;
+    #[ORM\OneToOne(orphanRemoval: true, cascade: ['all'], mappedBy: 'searchGoogleData')]
+    #[ORM\JoinColumn(nullable: false)]
+    private SearchVolumeData $searchVolumeData;
 
     #[ORM\Column(options: ['unsigned' => true])]
     private int $cpc = 0;
-
-    #[ORM\Column(options: ['unsigned' => true])]
-    private int $lastVolumeUpdate = 0;
 
     public const INTENT = [
         0 => '',
@@ -71,7 +71,11 @@ class SearchGoogleData
 
     // extra_lazy permits to use Collection#slice($offset, $length = null)
 
-    #[ORM\OneToOne(targetEntity: SearchResults::class, cascade: ['persist'])]
+    #[ORM\OneToOne(
+        targetEntity: SearchResults::class,
+        cascade: ['persist'],
+        fetch: 'EXTRA_LAZY',
+    )]
     private ?SearchResults $lastSearchResults = null;
 
     /**
@@ -127,6 +131,7 @@ class SearchGoogleData
         $this->searchResultsList = new ArrayCollection();
         $this->similar = new \Doctrine\Common\Collections\ArrayCollection();
         $this->comparable = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->searchVolumeData = (new SearchVolumeData())->setSearchGoogleData($this);
     }
 
     /**
@@ -146,6 +151,12 @@ class SearchGoogleData
 
     public function calculNextExtraction(): void
     {
+        if (0 === $this->lastExtractionAt) {
+            $this->nextExtractionFrom = (int) (new Datetime('now'))->format('ymdHi');
+
+            return;
+        }
+
         $this->nextExtractionFrom = (int) \Safe\DateTime::createFromFormat(
             'ymdHi',
             (string) $this->lastExtractionAt
@@ -182,18 +193,6 @@ class SearchGoogleData
         return $this->id;
     }
 
-    public function getVolume(): int
-    {
-        return $this->volume;
-    }
-
-    public function setVolume(int $volume): self
-    {
-        $this->volume = $volume;
-
-        return $this;
-    }
-
     public function getCpc(): int
     {
         return $this->cpc;
@@ -202,18 +201,6 @@ class SearchGoogleData
     public function setCpc(int $cpc): self
     {
         $this->cpc = $cpc;
-
-        return $this;
-    }
-
-    public function getLastVolumeUpdate(): int
-    {
-        return $this->lastVolumeUpdate;
-    }
-
-    public function setLastVolumeUpdate(int $lastVolumeUpdate): self
-    {
-        $this->lastVolumeUpdate = $lastVolumeUpdate;
 
         return $this;
     }
@@ -338,6 +325,7 @@ class SearchGoogleData
         $this->relatedSearches = array_unique(array_merge($this->relatedSearches, $searches));
     }
 
+    #[Ignore]
     public function getSearch(): Search
     {
         return $this->search ?? throw new LogicException();
@@ -452,8 +440,23 @@ class SearchGoogleData
 
     public function setLastExtractionAskedAt(int $lastExtractionAskedAt): self
     {
-        $this->getSearch()->disableExport = true;
+        if (null !== $this->search) {
+            $this->getSearch()->disableExport = true;
+        }
+
         $this->lastExtractionAskedAt = $lastExtractionAskedAt;
+
+        return $this;
+    }
+
+    public function getSearchVolumeData(): SearchVolumeData
+    {
+        return $this->searchVolumeData;
+    }
+
+    public function setSearchVolumeData(SearchVolumeData $searchVolumeData): self
+    {
+        $this->searchVolumeData = $searchVolumeData;
 
         return $this;
     }

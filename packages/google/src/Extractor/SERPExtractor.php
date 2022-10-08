@@ -175,9 +175,12 @@ class SERPExtractor
     public function getPositionsZero(): SearchResult
     {
         $linkNodePositionZero = $this->domCrawler
-            ->filterXPath("//h2[text()='Extrait optimisé sur le Web']/ancestor::block-component//a[@ping]")
+            ->filterXPath("//h2[text()='Extrait optimisé sur le Web']/ancestor::block-component//a[@class]")
             ->getNode(0);
+
         if (null === $linkNodePositionZero || ! $linkNodePositionZero instanceof DOMElement) {
+            file_put_contents('/tmp/debug.html', $this->html);
+
             throw new LogicException('Google has changed its selector (position Zero)');
         }
 

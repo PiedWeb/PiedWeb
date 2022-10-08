@@ -22,6 +22,7 @@
     "@hotwired/stimulus": "^3.1.0",
     "@symfony/stimulus-bridge": "^3.2.1",
     "alpinejs": "^3.10.3",
-    "postcss-loader": "^7.0.1"
+    "postcss-loader": "^7.0.1",
+    "query-string": "^7.1.1"
   }
 }

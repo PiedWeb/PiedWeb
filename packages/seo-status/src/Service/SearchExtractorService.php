@@ -2,16 +2,13 @@
 
 namespace PiedWeb\SeoStatus\Service;
 
-use Doctrine\ORM\EntityManagerInterface;
-use PiedWeb\Curl\ExtendedClient;
+use DateTime;
 use PiedWeb\Google\Extractor\SERPExtractor;
 use PiedWeb\Google\Extractor\SERPExtractorJsExtended;
 use PiedWeb\Google\GoogleException;
 use PiedWeb\Google\GoogleRequester;
 use PiedWeb\Google\GoogleSERPManager;
-use PiedWeb\SeoStatus\Entity\Proxy;
 use PiedWeb\SeoStatus\Entity\Search\Search;
-use PiedWeb\SeoStatus\Repository\ProxyRepository;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Serializer\Encoder\JsonEncode;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
@@ -22,32 +19,11 @@ use Symfony\Component\Serializer\Serializer;
 
 final class SearchExtractorService
 {
-    private ?Proxy $proxy = null;
-
     public function __construct(
         private DataDirService $dataDir,
-        private ?EntityManagerInterface $entityManager = null,
         // private SearchImportJsonService $importer,
+        private ?ProxyManager $proxyManager = null
     ) {
-    }
-
-    public function manageProxy(ExtendedClient $curlClient): void
-    {
-        if (null === $this->entityManager) {
-            return;
-        }
-
-        /** @var ProxyRepository */
-        $proxyRepo = $this->entityManager->getRepository(Proxy::class);
-        $this->proxy = $proxyRepo->findProxyReadyToUse();
-        if (null === $this->proxy) {
-            return;
-        }
-
-        // todo alert mail no more proxy
-
-        $this->proxy->setLastUsedNow();
-        $curlClient->setProxy($this->proxy->getProxy());
     }
 
     private function initSerpManager(Search $search): GoogleSERPManager
@@ -68,7 +44,7 @@ final class SearchExtractorService
         $googleSerpManager->cacheFolder = $this->dataDir.'tmp';
 
         $rawHtml = $googleSerpManager->getCache()
-            ?? $googleSerpManager->setCache((new GoogleRequester())->requestGoogleWithCurl($googleSerpManager, [$this, 'manageProxy']));
+            ?? $googleSerpManager->setCache((new GoogleRequester())->requestGoogleWithCurl($googleSerpManager, null !== $this->proxyManager ? [$this->proxyManager, 'get'] : null));
 
         $extractor = new SERPExtractorJsExtended($rawHtml, $googleSerpManager->getExtractedAt());
 
@@ -80,8 +56,8 @@ final class SearchExtractorService
         }
 
         $googleSerpManager->deleteCache();
-        if (null !== $this->proxy) {
-            $this->proxy->setGoogleBlacklist(true);
+        if (null !== $this->proxyManager && null !== $this->proxyManager->getProxy()) {
+            $this->proxyManager->getProxy()->setGoogleBlacklist(true);
 
             return $this->extractGoogleResults($search);
         }
@@ -95,7 +71,7 @@ final class SearchExtractorService
     {
         $fileSystem = new Filesystem();
         $json = $extractor->__toJson();
-        $lastExtractionAskedAt = $search->getSearchGoogleData()->getLastExtractionAskedAt();
+        $lastExtractionAskedAt = $search->getSearchGoogleData()->getLastExtractionAskedAt() ?: (new DateTime('now'))->format('ymdHi');
         $searchExportDir = $this->dataDir->getSearchDir($search);
         $fileSystem->dumpFile($searchExportDir.$lastExtractionAskedAt.'.json', $json);
         $fileSystem->dumpFile($searchExportDir.'lastResult.html', $extractor->html);
@@ -109,7 +85,7 @@ final class SearchExtractorService
             AbstractObjectNormalizer::SKIP_NULL_VALUES => true,
             AbstractNormalizer::CIRCULAR_REFERENCE_HANDLER => fn ($object, $format, $context) => null,
             JsonEncode::OPTIONS => \JSON_PRETTY_PRINT,
-            AbstractNormalizer::IGNORED_ATTRIBUTES => ['search', 'searchResultsList', 'previous', 'next', 'lastSearchResults', 'similar', 'comparable', 'comparableMain', 'disableExport', 'lastExtractionAskedAt', 'hashId'],
+            AbstractNormalizer::IGNORED_ATTRIBUTES => ['search', 'searchResultsList', 'previous', 'next', 'lastSearchResults', 'similar', 'comparable', 'comparableMain', 'disableExport', 'lastExtractionAskedAt', 'hashId', 'id'],
         ];
 
         $serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);

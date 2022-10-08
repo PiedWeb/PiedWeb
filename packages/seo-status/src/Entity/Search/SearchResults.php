@@ -5,6 +5,7 @@ namespace PiedWeb\SeoStatus\Entity\Search;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use LogicException;
 use PiedWeb\SeoStatus\Entity\Url\Host;
 use PiedWeb\SeoStatus\Repository\SearchResultsRepository;
 
@@ -30,7 +31,7 @@ class SearchResults
         targetEntity: SearchResult::class,
         mappedBy: 'searchResults',
         orphanRemoval: true,
-        cascade: ['persist', 'remove']
+        cascade: ['all']
     )]
     private $results;
 
@@ -153,6 +154,10 @@ class SearchResults
 
     public function setSearchGoogleData(SearchGoogleData $searchGoogleData): self
     {
+        // if (! $searchGoogleData instanceof SearchGoogleData) {
+        // if (!is_array($searchGoogleData) || array_contain )
+        // dd($searchGoogleData);
+
         $this->searchGoogleData = $searchGoogleData;
 
         return $this;
@@ -220,5 +225,65 @@ class SearchResults
         }
 
         return $paid ?? null;
+    }
+
+    public function calculateMovement(): self
+    {
+        if (null === $this->previous) {
+            return $this;
+        }
+
+        $results = $this->getOrganicResultsByHost();
+        $previousResults = $this->previous->getOrganicResultsByHost();
+        foreach ($results as $host => $searchResult) {
+            if (isset($previousResults[$host])) {
+                $searchResult
+                    ->setMovement($previousResults[$host]->getPos() - $searchResult->getPos())
+                    ->setMovementNew(false);
+                unset($previousResults[$host]);
+            } else {
+                $searchResult
+                    ->setMovement($this->previous->getLastSearchResult()->getPos() + 1 - $searchResult->getPos())
+                    ->setMovementNew(true);
+            }
+        }
+
+        // in previousResults we have the lost
+        return $this;
+    }
+
+    public function getLastSearchResult(): SearchResult
+    {
+        return $this->results->last() ?: throw new LogicException();
+    }
+
+    /**
+     * Parse each searchResult keeping only firstResult for a host.
+     *
+     * @return array<string, SearchResult>
+     */
+    public function getOrganicResultsByHost(): array
+    {
+        $return = [];
+        foreach ($this->results as $result) {
+            if (! $result->isAds()) {
+                $return[(string) $result->getHost()] ??= $result;
+            }
+        }
+
+        return $return;
+    }
+
+    public function getFirst(bool $paid = false): SearchResult
+    {
+        foreach ($this->results as $result) {
+            if (false === $paid && $result->isAds()) {
+                continue;
+            } else {
+                return $result;
+            }
+        }
+
+        throw new LogicException();
     }
 }

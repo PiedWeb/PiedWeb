@@ -22,13 +22,20 @@ class HostRepository extends ServiceEntityRepository
     }
 
     /** @var Host[] */
-    private array $entityCache = [];
+    private array $index = [];
+
+    public function resetIndex(): self
+    {
+        $this->index = [];
+
+        return $this;
+    }
 
     public function findOrCreate(string $host): Host
     {
         $host = strtolower($host);
 
-        return $this->entityCache[$host] ??= $this->findOneBy(['host' => $host])
+        return $this->index[$host] ??= $this->findOneBy(['host' => $host])
         ?? $this->create($host);
     }
 

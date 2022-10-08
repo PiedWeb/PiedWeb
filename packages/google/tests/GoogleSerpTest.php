@@ -8,15 +8,14 @@ use PiedWeb\Google\Extractor\SERPExtractorJsExtended;
 use PiedWeb\Google\GoogleRequester;
 use PiedWeb\Google\GoogleSERPManager;
 
-final class AllInOneTest extends TestCase
+final class GoogleSerpTest extends TestCase
 {
-    private function getSerpManager()
+    private function getSerpManager(string $kw = 'pied web'): GoogleSERPManager
     {
         $manager = new GoogleSERPManager();
         $manager->language = 'fr-FR';
         $manager->tld = 'fr';
-        $manager->q = 'pied web';
-        // $manager->setParameter('num', '100');
+        $manager->q = $kw;
         $manager->generateGoogleSearchUrl();
 
         return $manager;
@@ -45,12 +44,14 @@ final class AllInOneTest extends TestCase
     {
         $extractor = $this->getExtractor('Pied Web');
         $this->assertSame('https://piedweb.com/', $extractor->getResults()[0]->url);
+
+        $extractor = $this->getExtractor('pied vert');
+        $this->assertSame('https://piedvert.com/', $extractor->getResults()[0]->url);
     }
 
     private function getExtractor(string $query): SERPExtractorJsExtended
     {
-        $manager = $this->getSerpManager();
-        $manager->q = $query;
+        $manager = $this->getSerpManager($query);
 
         $googleRequester = new GoogleRequester();
         $rawHtml = $manager->getCache() ?? $manager->setCache((new GoogleRequester())->requestGoogleWithCurl($manager));

@@ -1,13 +1,14 @@
 export const filtersManager = class {
-  operatorList = ['=', '>=', '<=', '<', '>', 'LIKE', '<>'];
+  operatorList = ['NOT LIKE', 'LIKE', '<>', '!=', '>=', '<=', '<', '>', '=', '!'];
 
   constructor(filters, url) {
     this.filters = JSON.parse(filters);
+    this.filters.where = this.filters.where ?? {};
     this.url = url;
   }
 
   validate() {
-    var encodedFilters = btoa(JSON.stringify(this.filters));
+    var encodedFilters = btoa(encodeURIComponent(JSON.stringify(this.filters)));
     var urlToRedirect = this.url.replace('filtersValue', encodedFilters);
     window.location.href = urlToRedirect;
   }
@@ -27,16 +28,30 @@ export const filtersManager = class {
     return this;
   }
 
-  update(key) {
-    let element = document.querySelector('input[name="' + key + '"]');
+  update(key, val, operator = '=') {
+    if (val === '') {
+      delete this.filters.where[key];
+      return this;
+    }
+    this.filters.where[key] = {
+      k: key,
+      o: operator,
+      v: '' + val,
+    };
+
+    return this;
+  }
+
+  updateInput(key) {
+    let element = document.querySelector('input[name="' + key + '"],select[name="' + key + '"]');
     let val = element.value;
     let defaultOperator = element.getAttribute('operator') ?? '=';
     if (val === '') {
-      delete this.filters[key];
+      delete this.filters.where[key];
       return this;
     }
 
-    this.filters[key] = this.parseInputSearchValue(key, val, defaultOperator);
+    this.filters.where[key] = this.parseInputSearchValue(key, val, defaultOperator);
     return this;
   }
 
@@ -44,14 +59,14 @@ export const filtersManager = class {
     let operator = '';
     this.operatorList.forEach(function (operatorToFind) {
       if (val.startsWith(operatorToFind)) {
-        operator = operatoToFind;
+        operator = operator === '' ? operatorToFind : operator;
       }
     });
     val = val.slice(operator.length);
     return {
       k: key,
       o: operator === '' ? defaultOperator : operator,
-      v: val,
+      v: val.trim(),
     };
   }
 };

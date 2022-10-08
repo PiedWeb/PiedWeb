@@ -16,6 +16,10 @@ class Host implements \Stringable
     #[ORM\Column(length: 253)]
     private string $host;
 
+    #[ORM\ManyToOne(cascade: ['persist'])]
+    #[ORM\JoinColumn(nullable: false)]
+    private Domain $domain;
+
     public function __toString(): string
     {
         return $this->host;
@@ -36,6 +40,18 @@ class Host implements \Stringable
     public function getId(): int
     {
         return $this->id;
+    }
+
+    public function getDomain(): Domain
+    {
+        return $this->domain;
+    }
+
+    public function setDomain(Domain $domain): self
+    {
+        $this->domain = $domain;
+
+        return $this;
     }
 
     public static function normalizeHost(mixed $host): string

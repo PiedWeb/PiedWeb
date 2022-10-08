@@ -13,12 +13,17 @@ Google organic results scraper in PHP via Puppeteer.
 ## Google
 
 ```php
-// see test.php
+// see tests/*
 ```
 
 ### Contributors
 
 - [Pied Web](https://piedweb.com)
+
+## See Also
+
+- [PyTrends](https://github.com/GeneralMills/pytrends)
+- [JsTrends](https://github.com/pat310/google-trends-ap)
 
 <p align="center"><a href="https://dev.piedweb.com" rel="dofollow">
 <img src="https://raw.githubusercontent.com/Pushword/Pushword/f5021f4c5d5d3ab3f2858ec2e4bdd70818806c6a/packages/admin/src/Resources/assets/logo.svg" width="200" height="200" alt="PHP Packages Open Source" />

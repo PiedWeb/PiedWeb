@@ -3,6 +3,7 @@
 namespace PiedWeb\SeoStatus\Entity\Search;
 
 use Doctrine\ORM\Mapping as ORM;
+use Exception;
 use PiedWeb\SeoStatus\Repository\SearchRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\String\Slugger\AsciiSlugger;
@@ -23,9 +24,11 @@ class Search implements \Stringable
 
     private string $tld = 'fr';
 
-    #[ORM\OneToOne(orphanRemoval: true, cascade: ['persist', 'remove'], mappedBy: 'search')]
-    #[ORM\JoinColumn(nullable: false)]
-    private SearchGoogleData $searchGoogleData;
+    private string $geo = 'FR';
+
+    #[ORM\OneToOne(orphanRemoval: true, cascade: ['all'], mappedBy: 'search')]
+    #[ORM\JoinColumn(unique: true, nullable: true)]
+    private ?SearchGoogleData $searchGoogleData = null;
 
     public function __construct()
     {
@@ -40,6 +43,11 @@ class Search implements \Stringable
     public function getLang(): string
     {
         return $this->lang;
+    }
+
+    public function getGeo(): string
+    {
+        return $this->geo;
     }
 
     public function getTld(): string
@@ -98,7 +106,12 @@ class Search implements \Stringable
 
     public function getSearchGoogleData(): SearchGoogleData
     {
-        return $this->searchGoogleData;
+        return $this->searchGoogleData ?? throw new Exception();
+    }
+
+    public function getSearchVolumeData(): SearchVolumeData
+    {
+        return $this->getSearchGoogleData()->getSearchVolumeData();
     }
 
     public function setSearchGoogleData(SearchGoogleData $searchGoogleData): self

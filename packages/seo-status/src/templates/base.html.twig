@@ -12,7 +12,7 @@
     {% endblock %}
 
     {% block javascripts %}
-      {{ encore_entry_script_tags('app', attributes={defer: true}) }}
+      {{ encore_entry_script_tags('app', attributes = {defer: true}) }}
     {% endblock %}
   </head>
   <body
@@ -22,7 +22,6 @@
     <div class="order-3 w-full">{% block body %}{% endblock %}</div>
 
     <div class="order-4 w-full">{% block footer %}{% endblock %}</div>
-
 
     {% block navbar %}
     <div
@@ -115,3 +114,50 @@
     </div>
   </body>
 </html>
+
+{% macro renderTooltip(text, tooltip_text, extra_class = 'text-sky-600 focus:text-gray-400 ', tooltip_extra_class = '', extra_attributes = '') %}
+  <button
+    class="has-tooltip focus:outline-none inline-block relative {{ extra_class }}"
+    @mousedown="
+      event.preventDefault();
+      var btn = event.target.closest('button');
+      btn !== document.activeElement ? btn.focus() : btn.blur()"
+    {{ extra_attributes|raw }}>
+    <span
+      class="tooltip w-max max-w-[90vw] inline-block rounded shadow p-2 bg-gray-50 text-gray-800 text-left top-0 -translate-y-[102%] -translate-x-1/2 left-1/2 {{ tooltip_extra_class }}">
+      {{ tooltip_text|raw }}
+    </span>
+    {{ text|raw }}
+  </button>
+{% endmacro %}
+
+{% macro renderSearchResultUrl(searchResult, showScheme = true) %}
+  <a
+    href="{{ path('searchListForHostRoute', {'host': searchResult.url.host}) }}"
+    class="text-sky-800 tracking-wider">
+    {{ searchResult.url.host }}
+  </a><br>
+  <a href="{{ searchResult.url }}" rel="noopener" target="_blank" class="text-sm inline-block mr-2">
+    <i class="fa-solid fa-arrow-up-right-from-square text-gray-400"></i>
+  </a>
+  <a href="#"
+    class="font-thin text-sky-600 tracking-widest">
+    {% if showScheme %}<span class="inline-block">{{ searchResult.url.scheme }}://</span><span class="inline-block max-w-[3ch] truncate -mb-2">{{ searchResult.url.host }}</span>{% endif %}<span class="inline-block max-w-[50ch] truncate -mb-2 font-light">/{{ searchResult.uri }}
+  </a>
+{% endmacro %}
+
+{% macro renderFeature(
+    feature,
+    icon_title = null,
+    icon_wrapper_class = null,
+    feature_label_class = null,
+    icon_class = null
+  ) %}
+  {% set icon_wrapper = '<span
+    class="' ~ (icon_wrapper_class|default('text-center inline-block bg-sky-100 mr-1 rounded-full w-8 h-8')) ~ '"
+    title="' ~ icon_title|default(feature)|e ~ '">
+    <i class="fa-solid fa-%icon% ' ~ (icon_class|default('text-sky-900 text-sm') ~'"></i></span>') %}
+
+    {% set feature = serp_feature(feature) %}
+     {{ icon_wrapper|replace({'%icon%': feature.icon})|raw }} <span class="{{ feature_label_class|default('hidden sm:inline-block') }}">{{ feature.label }}</span>
+{% endmacro %}

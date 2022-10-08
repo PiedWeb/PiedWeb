@@ -1,6 +1,5 @@
 {% extends "base.html.twig" %}
 
-
     {% block searchbar %}
     {% endblock %}
 
@@ -9,5 +8,58 @@
   <h1 class="text-3xl mb-12 pt-12 text-center">&nbsp;</h1>
 
   <div class="-m-3">{% include 'searchbar.html.twig' %}</div>
+
+  <div class="flex lg:space-x-4 space-y-4 lg:space-y-0 lg:flex-row flex-col mt-24">
+    <!--  -->
+      <div class="lg:basis-1/3 border-gray-300 border rounded text-lg">
+        <h2 class="font-light mb-3 px-4 pt-3 text-left">Mots clefs</h2>
+        <table class="table-auto w-full text-center">
+          <tr class="[&>*]:py-1 [&>*]:px-6 [&>*]:text-3xl">
+            <td>
+              {{ numberSearchCount }}
+            </td>
+            <td class="font-bold">
+              {{ numberSearchToExtract }}
+            </td>
+            <td>
+              {{ numberSearchExtractedCount }}
+            </td>
+          </tr>
+          <tr class="[&>*]:py-3 [&>*]:px-6 [&>*]:font-thin text-gray-700">
+            <th>dans la db</th>
+            <th>à extraire</th>
+            <th>extraits</th>
+          </tr>
+        </table>
+      </div>
+      <!-- /  -->
+      <!--  -->
+      <div class="lg:basis-1/3 border-gray-300 border rounded text-lg">
+        <h2 class="font-light mb-3 px-4 pt-3 text-left">Urls</h2>
+        <table class="table-auto w-full text-center">
+          <tr class="[&>*]:py-1 [&>*]:px-6 [&>*]:text-3xl">
+            <td class="font-bold">
+              {{ numberUrl }}
+            </td>
+            <td>
+              {{ numberHost }}
+            </td>
+            <td>
+              {{ numberDomain }}
+            </td>
+            <td>
+              {{ numberUrlExtracted }}
+            </td>
+          </tr>
+          <tr class="[&>*]:py-3 [&>*]:px-6 [&>*]:font-thin text-gray-700">
+            <th>trouvées</th>
+            <th>hosts</th>
+            <th>domaines</th>
+            <th>extraites</th>
+          </tr>
+        </table>
+      </div>
+      <!-- /  -->
+  </div>
 </div>
 {% endblock %}

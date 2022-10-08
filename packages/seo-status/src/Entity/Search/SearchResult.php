@@ -34,6 +34,12 @@ class SearchResult
     #[ORM\Column]
     private bool $ads = false;
 
+    #[ORM\Column]
+    private int $movement = 0;
+
+    #[ORM\Column(nullable: true)]
+    private ?bool $movementNew = null;
+
     #[ORM\ManyToOne(targetEntity: SearchResults::class, inversedBy: 'results')]
     #[ORM\JoinColumn(nullable: false)]
     private SearchResults $searchResults;
@@ -125,5 +131,40 @@ class SearchResult
         $this->uri = $uri;
 
         return $this;
+    }
+
+    public function getMovement(): int
+    {
+        return $this->movement;
+    }
+
+    public function setMovement(int $movement): self
+    {
+        $this->movement = $movement;
+
+        return $this;
+    }
+
+    public function getMovementNew(): ?bool
+    {
+        return $this->movementNew;
+    }
+
+    public function setMovementNew(bool $movementNew): self
+    {
+        $this->movementNew = $movementNew;
+
+        return $this;
+    }
+
+    public function getMovementStr(): string
+    {
+        return (0 === $this->movement || null === $this->movementNew) ? ''
+                : ($this->movementNew ? 'new' : ($this->movement > 0 ? '+' : '').$this->movement);
+    }
+
+    public function isMovementNew(): ?bool
+    {
+        return $this->movementNew;
     }
 }

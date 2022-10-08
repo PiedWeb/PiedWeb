@@ -26,12 +26,19 @@ class UrlRepository extends ServiceEntityRepository
     }
 
     /** @var Url[] */
-    private array $entityCache = [];
+    private array $index = [];
 
-    public function findOrCreate(string $url): Url
+    public function resetIndex(): self
     {
-        if (str_starts_with($url, '/search')) {
-            $url = 'https://www.google.fr'.$url;
+        $this->index = [];
+
+        return $this;
+    }
+
+    public function findOrCreate(string $url, string $fromBase = 'https://www.google.fr'): Url
+    {
+        if (str_starts_with($url, '/')) {
+            $url = $fromBase.$url;
         }
 
         $urlParts = \Safe\parse_url($url);
@@ -48,7 +55,7 @@ class UrlRepository extends ServiceEntityRepository
 
         $cleanedUrl = strtolower($urlParts['scheme']).'://'.$criteria['host'].'/'.$criteria['uri'];
 
-        return $this->entityCache[$cleanedUrl] ??= $this->findOneBy($criteria)
+        return $this->index[$cleanedUrl] ??= $this->findOneBy($criteria)
         ?? $this->createUrl($criteria['host'], $criteria['uri'], $criteria['schemeCode']);
     }
 

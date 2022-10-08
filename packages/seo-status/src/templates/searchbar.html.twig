@@ -1,19 +1,25 @@
-<form method="post" class="p-3 mt-6" action="/">
+<form method="post" class="p-3 mt-6" action="/" id="search-form">
   <label
-    for="default-search"
+    for="search-input"
     class="mb-2 text-sm font-medium text-gray-900 sr-only">Recherche</label>
   <div class="relative">
     <div class="flex absolute inset-y-0 -left-1 md:left-2 items-center pl-3 pt-2 pointer-events-none ">
       <svg aria-hidden="true" class="w-5 h-5 rotate-90 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
     </div>
     <input
+      type="hidden"
+      name="referring_route"
+      value="{{ app.request.get('_route') }}">
+    <textarea
+      x-data="{enterIsSubmit: true}"
+      @keypress="if (event.ctrlKey && event.key == 'Enter') document.querySelector('#search-input').value =  document.querySelector('#search-input').value + '\n'"
+      @keydown.enter="if (!event.ctrlKey && enterIsSubmit) {event.preventDefault(); document.querySelector('#search-form').submit();} "
       type="search"
-      id="default-search"
+      id="search-input"
       name="query"
-      class="block p-4 pl-10 md:pl-12 w-full text-3xl text-gray-900  rounded border {{ search_value is defined ? 'border-white' : 'border-gray-300' }} focus:ring-sky-500 focus:border-sky-500"
+      class="block h-[65px] p-4 pl-10 md:pl-12 w-full text-3xl text-gray-900  rounded border overflow-y-hidden {{ search_value is defined ? 'border-white' : 'border-gray-300' }} focus:ring-sky-500 focus:border-sky-500"
       placeholder="Mot clef, Url, Domaine..."
-      value="{{ search_value|default('') }}"
-      required>
+      required>{{ search_value|default('') }}</textarea>
     <button
       type="submit"
       class="md:block hidden text-white bg-white m-2 absolute right-0 top-0 bottom-0   rounded-r  px-4 h-3/4">

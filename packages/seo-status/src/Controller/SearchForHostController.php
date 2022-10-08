@@ -3,8 +3,10 @@
 namespace PiedWeb\SeoStatus\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
+use PiedWeb\SeoStatus\Entity\Search\Search;
 use PiedWeb\SeoStatus\Entity\Url\Host;
 use PiedWeb\SeoStatus\Repository\SearchForHostRepository;
+use PiedWeb\SeoStatus\Repository\SearchRepository;
 use PiedWeb\SeoStatus\Repository\Url\HostRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,6 +23,8 @@ class SearchForHostController extends AbstractController
     #[Route('/host/{host}/{filters}', methods: ['GET', 'HEAD'], name: 'searchListForHostRoute')]
     public function showSearchListForHost(string $host, string $filters = ''): Response
     {
+        $view = 'searchListForHost.html.twig';
+
         if (Host::normalizeHost($host) !== $host) {
             $this->redirectToRoute('host', ['host' => Host::normalizeHost($host)]);
         }
@@ -30,7 +34,7 @@ class SearchForHostController extends AbstractController
         $hostObject = $hostRepo->findOneBy(['host' => $host]);
 
         if (null === $hostObject) {
-            return $this->render('host.html.twig', [
+            return $this->render($view, [
                 'title' => $host,
                 'search_value' => $host,
                 'host' => $hostObject,
@@ -43,7 +47,7 @@ class SearchForHostController extends AbstractController
         $filters = $this->searchForHostRepo->getFilters();
         $this->searchForHostRepo->resetFilters();
 
-        return $this->render('host.html.twig', [
+        return $this->render($view, [
             'title' => $host,
             'search_value' => $host,
             'host' => $hostObject,
@@ -55,5 +59,32 @@ class SearchForHostController extends AbstractController
             ],
             'search_list' => $searchList,
         ]);
+    }
+
+    /**
+     * @param Search[] $searchList
+     */
+    public function resetBadSearchResults(array $searchList): void
+    {
+        $toAdd = [];
+        foreach ($searchList as $search) {
+            $last = $search->getSearchGoogleData()->getLastSearchResults();
+            if (null !== $last
+                && 'www.champsaur-valgaudemar.com' === $last->getResults()[0]->getHost()->getHost() // @phpstan-ignore-line
+                && 'wildroad.fr' === $last->getResults()[1]->getHost()->getHost()) { // @phpstan-ignore-line
+                dump($search->getKeyword());
+                $toAdd[] = $search->getKeyword();
+                $this->entityManager->remove($search);
+            }
+        }
+        $this->entityManager->flush();
+
+        /** @var SearchRepository */
+        $searchRepo = $this->entityManager->getRepository(Search::class);
+
+        foreach ($toAdd as $kw) {
+            $searchRepo->findOrCreate($kw);
+        }
+        dd('exit');
     }
 }
