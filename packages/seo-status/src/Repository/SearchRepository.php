@@ -102,12 +102,16 @@ class SearchRepository extends ServiceEntityRepository
     public function updateLastExtractionAksedAt(Search $search, string $for = SearchGoogleData::class): void
     {
         $search->disableExport = true;
-        $entity = $search->getSearchGoogleData();
-        if (SearchVolumeData::class === $for) {
-            $entity = $entity->getSearchVolumeData();
-        }
+        $entity = SearchVolumeData::class === $for
+            ? $search->getSearchVolumeData()
+            : $search->getSearchGoogleData();
 
         $entity->setLastExtractionAskedAt((int) (new DateTime())->format('ymdHi'));
+
+        if ($entity instanceof SearchVolumeData) {
+            $entity->setSearchGoogleData($search->getSearchGoogleData());
+        }
+
         $this->getEntityManager()->flush();
         $search->disableExport = false;
     }
@@ -116,7 +120,7 @@ class SearchRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('s')
             ->innerJoin('s.searchGoogleData', 'sgd')
-            ->innerJoin('s.searchVolumeData', 'svd')
+            ->innerJoin('sgd.searchVolumeData', 'svd')
             ->andWhere('(svd.lastExtractionAskedAt = 0 OR svd.lastExtractionAskedAt < '.(int) (new \DateTime('now'))->modify('-3 days')->format('ymdHi').')')
             ->orderBy('svd.lastExtractionAskedAt', 'ASC')
             ->orderBy('svd.lastExtractionAt', 'ASC')
@@ -160,6 +164,17 @@ class SearchRepository extends ServiceEntityRepository
     {
         return \intval($this->createQueryBuilder('s')
             ->select('COUNT(s.id)')
+            ->getQuery()
+            ->getSingleScalarResult());
+    }
+
+    public function countSearchTrendsExtracted(): int
+    {
+        return \intval($this->createQueryBuilder('s')
+            ->select('COUNT(s.id)')
+            ->innerJoin('s.searchGoogleData', 'sgd')
+            ->innerJoin('sgd.searchVolumeData', 'svd')
+            ->where('svd.lastExtractionAt > 0')
             ->getQuery()
             ->getSingleScalarResult());
     }

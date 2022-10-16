@@ -1,5 +1,8 @@
 # En cours et A venir
 
+- [ ] Trends
+      Fixed malformed Request eg: rando 3 jours vercors sud
+      Fix not imported mainRelatedTopic
 - [ ] Google :
   Test all selectors...
   Check pixelPos for serpFeatures eg: http://127.0.0.1:8000/search/balade%20familiale%20autrans
@@ -9,21 +12,8 @@
 
 - [ ] refresh only for host
 
-- [ ] Volume depuis TRENDS
-      Trends Table : id, subject, type (société, sujet, vêtement,...), associated_subject (manyToMany)
-      SearchGoogleData oneToMany searchTrends: trend, percent
-      searchGoogleData trendsKw manyToMany searchGoogleData
-      searchGoogleData suggets manyTomany ? suggestedBy / suggest
-      Liste les sujets associées + %
-      Liste les kw liées
+- [ ] Extract TrendsTopic
       Calculate visibility seo for a SearchResult from pixelPosRank (si dispo sinon from Pos)
-      6: 0,001
-      5: 0,05
-      4: 0,1
-      3: 0,15
-      2: 0,3
-      1: 0,399
-      Retrieve volume from trends by downloading the last csv and calculate the average from last 12 months
 
 - UI : paginator
 - PAA : quand tu cliques sur PAA dans un tableau, ça t'ajoute une ligne en dessous avec une liste des PAA
@@ -108,7 +98,7 @@
 while true; do bin/console search:extract -l1000 -s0; php /home/robin/localhost/PiedWebMono/packages/perso/rebooBox.php; done
 
 # Refresh for a defined Host
-while true; do bin/console search:extract 'forHost:altimood.com' -l1000 -s0; php /home/robin/localhost/PiedWebMono/packages/perso/rebooBox.php; done
+while true; do bin/console search:extract-trends 'forHost:altimood.com' -l1000 -s50; php /home/robin/localhost/PiedWebMono/packages/perso/rebooBox.php; done
 ```
 
 With 1 kw checked every minuts

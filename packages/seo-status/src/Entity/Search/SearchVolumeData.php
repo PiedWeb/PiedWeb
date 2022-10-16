@@ -148,7 +148,7 @@ class SearchVolumeData
     }
 
     /**
-     * @return array<string, array{'title': string, 'type': string, 'value': int}> $relatedTopics
+     * @return array<string, array{'mid': string, 'title': string, 'type': string, 'value': int}> $relatedTopics
      */
     public function getRelatedTopics(): array
     {

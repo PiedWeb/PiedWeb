@@ -38,7 +38,14 @@ class AppController extends AbstractController
         $searchRepo = $this->entityManager->getRepository(Search::class);
         $parameters['numberSearchToExtract'] = $searchRepo->countSearchToExtract();
         $parameters['numberSearchCount'] = $searchRepo->countSearch();
+        $parameters['numberSearchTrendsExtractedCount'] = $searchRepo->countSearchTrendsExtracted();
         $parameters['numberSearchExtractedCount'] = $parameters['numberSearchCount'] - $parameters['numberSearchToExtract'];
+        $parameters['lastExtractedSearches'] = $searchRepo->createQueryBuilder('s')
+            ->innerJoin('s.searchGoogleData', 'sgd')
+            ->where('sgd.lastExtractionAt > 0')
+            ->orderBy('sgd.lastExtractionAt', 'DESC')
+            ->setMaxResults(10)
+            ->getQuery()->getResult();
 
         /** @var DomainRepository */
         $domainRepo = $this->entityManager->getRepository(Domain::class);
@@ -131,6 +138,7 @@ class AppController extends AbstractController
         if (Search::normalizeKeyword($keyword) !== $keyword) {
             return $this->redirectToRoute('searchRoute', ['keyword' => Search::normalizeKeyword($keyword)]);
         }
+
         /** @var SearchRepository */
         $searchRepo = $this->entityManager->getRepository(Search::class);
         $search = $searchRepo->findOneBy(['keyword' => $keyword]);
@@ -142,7 +150,7 @@ class AppController extends AbstractController
         $cacheContent = \Safe\file_get_contents($this->dataDirService->getSearchDir($search).'lastResult.html');
         $cacheContent = \Safe\preg_replace('/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/i', '', $cacheContent);
         /** @var string */
-        $cacheContent = \Safe\preg_replace('/<noscript\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/noscript>/i', '', $cacheContent);
+        $cacheContent = \Safe\preg_replace('/<noscript\b[^<]*(?:(?!<\/noscript>)<[^<]*)*<\/noscript>/i', '', $cacheContent);
 
         return new Response($cacheContent);
     }

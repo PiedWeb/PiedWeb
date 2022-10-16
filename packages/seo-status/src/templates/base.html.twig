@@ -116,18 +116,20 @@
 </html>
 
 {% macro renderTooltip(text, tooltip_text, extra_class = 'text-sky-600 focus:text-gray-400 ', tooltip_extra_class = '', extra_attributes = '') %}
+
+{% set tooltip_content = "<span class=\"max-h-[50vh] overflow-y-auto block "~tooltip_extra_class~"\">"~tooltip_text~"</span>"  %}
   <button
-    class="has-tooltip focus:outline-none inline-block relative {{ extra_class }}"
-    @mousedown="
-      event.preventDefault();
-      var btn = event.target.closest('button');
-      btn !== document.activeElement ? btn.focus() : btn.blur()"
+    class="focus:outline-none inline-block {{ extra_class }}"
+    x-tooltip="{
+      content: '',
+      allowHTML: true,
+      interactive: true,
+      theme: 'light',
+      appendTo: document.body
+    }"
+    x-tooltip.raw="{{ tooltip_content|replace({'"': "&quot;"})|raw }}"
     {{ extra_attributes|raw }}>
-    <span
-      class="tooltip w-max max-w-[90vw] inline-block rounded shadow p-2 bg-gray-50 text-gray-800 text-left top-0 -translate-y-[102%] -translate-x-1/2 left-1/2 {{ tooltip_extra_class }}">
-      {{ tooltip_text|raw }}
-    </span>
-    {{ text|raw }}
+      {{ text|raw }}
   </button>
 {% endmacro %}
 
@@ -160,4 +162,41 @@
 
     {% set feature = serp_feature(feature) %}
      {{ icon_wrapper|replace({'%icon%': feature.icon})|raw }} <span class="{{ feature_label_class|default('hidden sm:inline-block') }}">{{ feature.label }}</span>
+{% endmacro %}
+
+
+{% macro trSelectableAttribute(unselect_event = 'unselect-organicblock-row') %}
+  x-data="{ selected: false }"
+  @click="selected = ! selected"
+  @{{ unselect_event }}.window="selected = false "
+  :class="{ 'bg-gray-200' : selected }"
+  class="border-t [&>*]:py-3 [&>*]:px-4 hover:bg-gray-100"
+{% endmacro %}
+
+{% macro renderVolume(search) %}
+  {% if search.searchVolumeData.lastExtractionAt != 0 %}
+    {{ _self.renderTooltip(
+        search.searchVolumeData.volume,
+        '<span class="text-gray-400">extrait le:</span> ' ~ search.searchVolumeData.lastExtractionAt|app_date
+        ~ (search.searchVolumeData.volume > 1
+          ? ' | <span class="text-gray-400">min-max:</span> '
+          ~ min(search.searchVolumeData.volumeOverTheTime) ~ '-' ~ max(search.searchVolumeData.volumeOverTheTime)
+          : ''),
+        'text-light', 'text-gray-600 p-1 text-base') }}
+  {% endif %}
+{% endmacro %}
+
+{% macro renderRelatedTopics(relatedTopics) %}
+<table>
+  <tr>
+    <th>Sujet</th>
+    <th>Type</th>
+  </tr>
+  {% for relatedTopic in relatedTopics %}
+  <tr class="[&>*]:py-1 [&>*]:px-2">
+    <td>{{  relatedTopic.title }}</td>
+    <td>{{  relatedTopic.type }}</td>
+  </tr>
+  {% endfor %}
+</table>
 {% endmacro %}

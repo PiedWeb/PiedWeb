@@ -70,7 +70,7 @@ class Host implements \Stringable
         $slashPosition = strpos($host, '/');
         $host = $slashPosition >= 1 ? substr($host, 0, $slashPosition) : $host;
 
-        $host = false === filter_var('https://'.$host.'/', \FILTER_VALIDATE_URL) ? '' : $host;
+        $host = false === str_contains($host, '.') || false === filter_var('https://'.$host.'/', \FILTER_VALIDATE_URL) ? '' : $host;
 
         return $host;
     }

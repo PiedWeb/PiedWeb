@@ -250,6 +250,6 @@ class SERPExtractor
             'serpFeatures' => $this->getSerpFeatures(),
             'relatedSearches' => $this->getRelatedSearches(),
             'results' => $this->getResults(),
-        ], \JSON_PRETTY_PRINT);
+        ]);
     }
 }

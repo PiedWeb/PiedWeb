@@ -75,6 +75,30 @@ class SearchResults
         return $this->results;
     }
 
+    private int $medianPixelSizeForOneResult = 0;
+
+    public function getMedianPixelSizeForOneResult(): int
+    {
+        $numbers = [];
+        if (0 !== $this->medianPixelSizeForOneResult) {
+            return $this->medianPixelSizeForOneResult;
+        }
+
+        $data = [185];
+        $previous = 0;
+        foreach ($this->results as $result) {
+            continue;
+            $data[] = $result->getPixelPos() - $previous;  // @phpstan-ignore-line
+            $previous = $result->getPixelPos();
+        }
+
+        sort($data);
+
+        $this->medianPixelSizeForOneResult = $numbers[(int) round(\count($data) / 2) - 1] ?? 185; // @phpstan-ignore-line
+
+        return $this->medianPixelSizeForOneResult;
+    }
+
     public function addResult(SearchResult $result): self
     {
         if (! $this->results->contains($result)) {
@@ -154,10 +178,6 @@ class SearchResults
 
     public function setSearchGoogleData(SearchGoogleData $searchGoogleData): self
     {
-        // if (! $searchGoogleData instanceof SearchGoogleData) {
-        // if (!is_array($searchGoogleData) || array_contain )
-        // dd($searchGoogleData);
-
         $this->searchGoogleData = $searchGoogleData;
 
         return $this;

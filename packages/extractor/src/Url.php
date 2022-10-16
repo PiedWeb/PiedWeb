@@ -68,8 +68,9 @@ final class Url implements \Stringable
 
     public function getAbsoluteUri(): string
     {
-        // return substr($this->get(), \strlen($this->getOrigin()));
-        return substr($this->http->withFragment('')->__toString(), \strlen($this->getOrigin()));
+        $absolute = substr($this->http->withFragment('')->__toString(), \strlen($this->getOrigin()));
+
+        return '' === $absolute ? '/' : $absolute;
     }
 
     public function get(): string

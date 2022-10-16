@@ -2,6 +2,7 @@
 
 namespace PiedWeb\SeoStatus\Service;
 
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use PiedWeb\SeoStatus\Entity\Search\Search;
@@ -47,7 +48,7 @@ final class SearchImportJsonService
 
         $serializer = new Serializer([new ObjectNormalizer()],  [new JsonEncoder()]);
         $searchResults = new SearchResults();
-        $searchResults->setExtractedAt($extractionAskedAt);
+        $searchResults->setExtractedAt(0 !== $extractionAskedAt || 0 !== $extractionAskedAt ? $extractionAskedAt : (new DateTime())->format('ymdHi'));
         $searchResults->setSearchGoogleData($search->getSearchGoogleData());
         $searchResults->setPrevious($search->getSearchGoogleData()->getLastSearchResults());
         // ↥↥↥ Ceci implique que les résultats de recherches sont importées dans l'ordre chronologique...

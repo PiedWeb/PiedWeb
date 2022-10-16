@@ -217,4 +217,19 @@ class SearchServicesTest extends KernelTestCase
             $this->assertNotNull($search);
         }
     }
+
+    public function testExtractTrends(): void
+    {
+        $application = new Application(self::bootKernel());
+        $command = $application->find('search:extract-trends');
+        $commandTester = new CommandTester($command);
+        $commandTester->execute(['keyword' => 'pizza avignon']);
+        $commandTester->assertCommandIsSuccessful();
+
+        /** @var Search */
+        $search = $this->getEntityManager()->getRepository(Search::class)->findOrCreate('pizza avignon');
+        $this->assertGreaterThan(1, $search->getSearchVolumeData()->getVolume());
+        // dump($search->getSearchVolumeData()->getRelatedTopics());
+        $this->assertContains('Avignon', $search->getSearchVolumeData()->getRelatedTopics()['/m/09hzc']);
+    }
 }

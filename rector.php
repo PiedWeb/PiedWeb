@@ -63,6 +63,10 @@ return static function (RectorConfig $rectorConfig): void {
             array_values(json_decode(file_get_contents('composer.json'), true)['autoload']['psr-4'])
         ));
 
+    $rectorConfig->skip([
+        __DIR__ . 'packages/*/var/*',
+    ]);
+
     //$parameters->rule(Option::PHP_VERSION_FEATURES, PhpVersion::PHP_80);
     //$containerConfigurator->import(SetList::PHP_80);
     $rectorConfig->sets([

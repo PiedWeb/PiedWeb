@@ -2,6 +2,7 @@
 
 namespace PiedWeb\Google\Helper;
 
+use Exception;
 use LogicException;
 use Nesk\Puphpeteer\Puppeteer;
 use Nesk\Puphpeteer\Resources\Browser;
@@ -27,6 +28,13 @@ class Puphpeteer
     public const DEFAULT_LANGUAGE = 'fr-FR';
 
     public static string $currentKey = '';
+
+    public static PuppeteerLogger $logger;
+
+    public function getLogger(): PuppeteerLogger
+    {
+        return self::$logger;
+    }
 
     /**
      * Emulate a smartphone.
@@ -75,8 +83,13 @@ class Puphpeteer
             'read_timeout' => 9000,
             'idle_timeout' => 9000, ]
     ): self {
-        $userOptions = array_merge($userOptions, ['args' => ['--lang='.('' !== $language ? $language : self::DEFAULT_LANGUAGE)]]);
+        $userOptions = array_merge($userOptions, ['args' => ['--disable-web-security', '--lang='.('' !== $language ? $language : self::DEFAULT_LANGUAGE)]]);
+
         self::$currentKey = substr(md5(serialize($userOptions)), 0, 4);
+
+        $userOptions['logger'] = self::$logger ??= new PuppeteerLogger();
+        $userOptions['log_browser_console'] = true;
+        $userOptions['log_node_console'] = true;
 
         if (isset(self::$puppeteer[self::$currentKey])) {
             $this->emulate([] !== $emulateOptions ? $emulateOptions : self::EMULATE_OPTIONS_MOBILE);
@@ -122,34 +135,6 @@ class Puphpeteer
     public function emulate(array $emulateOptions): void
     {
         $this->getBrowserPage()->emulate($emulateOptions);
-    }
-
-    public function close(): void
-    {
-        $bKey = self::$currentKey;
-        if ('' === $bKey) {
-            return;
-        }
-
-        Logger::log('close chrome `'.$bKey.'`');
-        self::$browser[$bKey]->close();
-        unset(self::$browser[$bKey]);
-        unset(self::$browserPage[$bKey]);
-        unset(self::$puppeteer[$bKey]);
-        self::$currentKey = '';
-    }
-
-    public function closeAll(): void
-    {
-        foreach (self::$browser as $bKey => $b) {
-            $this->switchTo($bKey);
-            $this->close();
-        }
-    }
-
-    public function __destruct()
-    {
-        // $this->close();
     }
 
     public function load(string $html, string $from = ''): string
@@ -205,5 +190,40 @@ class Puphpeteer
     public function elementExists(string $selector): bool
     {
         return \count($this->getBrowserPage()->querySelectorAll($selector)) > 0;
+    }
+
+    public function close(): void
+    {
+        $bKey = self::$currentKey;
+        if ('' === $bKey) {
+            return;
+        }
+
+        Logger::log('close chrome `'.$bKey.'`');
+        self::$browser[$bKey]->close();
+        unset(self::$browser[$bKey]);
+        unset(self::$browserPage[$bKey]);
+        unset(self::$puppeteer[$bKey]);
+        self::$currentKey = '';
+    }
+
+    public static function closeAll(): void
+    {
+        Logger::log('close All Chrome');
+        foreach (self::$browser as $b) {
+            try {
+                $b->close();
+            } catch (Exception) {
+            }
+        }
+
+        self::$puppeteer = [];
+        self::$browser = [];
+        self::$browserPage = [];
+    }
+
+    public function __destruct()
+    {
+        // $this->closeAll();
     }
 }

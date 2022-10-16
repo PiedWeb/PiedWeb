@@ -167,4 +167,80 @@ class SearchResult
     {
         return $this->movementNew;
     }
+
+    /**
+     From 0 to
+     1: 200
+     */
+    public function getPixelPosRank(): int
+    {
+        if ($this->getPixelPos() < 1) {
+            return 0;
+        }
+
+        if ($this->getPixelPos() <= 450 && 1 === $this->getPos()) {
+            return 1;
+        }
+
+        $medianSize = $this->getSearchResults()->getMedianPixelSizeForOneResult();
+        $pixelPos = 450;
+        for ($i = 2; $i <= 150; ++$i) {
+            if ($this->getPixelPos() <= $pixelPos + $medianSize) {
+                return $i;
+            }
+
+            $pixelPos += $medianSize;
+        }
+
+        return $i;
+    }
+
+    /**
+      6+: 0,001
+      5: 0,05
+      4: 0,1
+      3: 0,15
+      2: 0,3
+      1: 0,399
+     */
+    private function calculateVisibilityScore(int $pos): int
+    {
+        $volume = $this->searchResults->getSearchGoogleData()->getSearchVolumeData()->getVolume();
+
+        $posFactor = [
+            5 => 0.05,
+            4 => 0.1,
+            3 => 0.15,
+            2 => 0.3,
+            1 => 0.399,
+        ];
+
+        if ($pos < 1) {
+            return 0;
+        }
+
+        if ($pos >= 6) {
+            $posFactor = \floatval('0.001'.sprintf('%0'.(\strlen((string) $pos) * 2 - 1).'d', $pos));
+
+            return (int) ceil($posFactor * $volume);
+        }
+
+        return (int) ceil($pos * $posFactor[$pos] * $volume);
+    }
+
+    public function getVisibilityScore(): int
+    {
+        $searchVolumeData = $this->searchResults->getSearchGoogleData()->getSearchVolumeData();
+
+        if (0 === $this->getPixelPos()) {
+            return $this->getOrganicVisibilityScore();
+        }
+
+        return $this->calculateVisibilityScore($this->getPixelPosRank());
+    }
+
+    public function getOrganicVisibilityScore(): int
+    {
+        return $this->calculateVisibilityScore($this->pos);
+    }
 }

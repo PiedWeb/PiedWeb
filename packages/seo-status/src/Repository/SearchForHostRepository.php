@@ -21,9 +21,27 @@ class SearchForHostRepository
     /** @var array<string, string> */
     private array $orderBy = ['r.pos' => 'ASC'];
 
-    public const ORDER_KEYS = ['s.keyword', 'r.pixelPos', 'r.pos', 'r.movement', 'sr.extractedAt'];
+    public const ORDER_KEYS = [
+        's.keyword',
+        'r.pixelPos',
+        'r.pos',
+        'r.movement',
+        'sr.extractedAt',
+        'svd.volume',
+        'mrt.title',
+    ];
 
-    public const SEARCH_KEYS = ['s.keyword', 'r.pixelPos', 'r.pos', 'r.ads', 'r.movement', 'sr.serpFeatures'];
+    public const SEARCH_KEYS = [
+        's.keyword',
+        'r.pixelPos',
+        'r.pos',
+        'r.ads',
+        'r.movement',
+        'sr.serpFeatures',
+        'svd.volume',
+        'mrt.title',
+        'svd.relatedTopics',
+    ];
 
     public const OPERATOR_LIST = ['NOT LIKE', 'LIKE', '<>', '!=', '>=', '<=', '<', '>', '=', '!'];
 
@@ -68,9 +86,9 @@ class SearchForHostRepository
                 array_keys($where) !== ['k', 'o', 'v']
                 || ! \in_array($where['k'], self::SEARCH_KEYS)
                 || ! \in_array($where['o'], self::OPERATOR_LIST)
-                || ! \is_string($where['v'])
+                || (! \is_string($where['v']) && ! \is_int($where['v']))
             ) {
-                throw new Exception($key);
+                throw new Exception($key.' '.\Safe\json_encode($where));
             }
         }
 
@@ -96,7 +114,7 @@ class SearchForHostRepository
     {
         $filters = ['where' => []];
         foreach ($this->where as $k => $f) {
-            $filters['where'][] = $f;
+            $filters['where'][$f['k']] = $f;
         }
 
         $filters['orderBy'] = $this->orderBy;
@@ -114,9 +132,11 @@ class SearchForHostRepository
         $queryBuilder = $this->repository->createQueryBuilder('s')
             ->innerJoin('s.searchGoogleData', 'sgd')
             ->innerJoin('sgd.lastSearchResults', 'sr')
+            ->innerJoin('sgd.searchVolumeData', 'svd')
+            ->leftJoin('svd.mainRelatedTopic', 'mrt')
             ->innerJoin('sr.results', 'r')
-            ->where('r.host = '.$host->getId());
-
+            ->where('r.host = '.$host->getId())
+            ->add('orderBy', '' !== $this->getOrderByFlatten() ? $this->getOrderByFlatten() : 's.keyword ASC');
         foreach ($this->where as $where) {
             $where['o'] = '!' === $where['o'] ? 'NOT LIKE' : $where['o'];
             $paramKey = 'param'.substr(sha1(implode(',', $where)), 0, 6);
@@ -138,7 +158,6 @@ class SearchForHostRepository
         /** @var Search[] */
         $results = $this->getQueryBuildeSearchForHost($host)
             ->setMaxResults(100)
-            ->add('orderBy', '' !== $this->getOrderByFlatten() ? $this->getOrderByFlatten() : 's.keyword ASC')
             ->getQuery()
             ->getResult();
 
@@ -150,17 +169,27 @@ class SearchForHostRepository
         $return = '';
 
         foreach ($this->orderBy as $col => $dir) {
+            if ('sr.extractedAt' === $col) {
+                $col = 'SUBSTRING(sr.extractedAt, 1, 6)';
+            }
+
             $return .= $col.' '.$dir.',';
         }
 
         return trim($return, ',');
     }
 
-    public function countSearchOrganicFor(Host $host): int
+    public function countSearchOrganicFor(Host $host, int $top = 0): int
     {
-        return \intval($this->getQueryBuildeSearchForHost($host)
+        $qb = $this->getQueryBuildeSearchForHost($host)
             ->select('COUNT(s.id)')
-            ->andWhere('r.ads = false')
+            ->andWhere('r.ads = false');
+
+        if ($top > 0) {
+            $qb->andWhere('r.pos <= '.$top);
+        }
+
+        return \intval($qb
             ->getQuery()
             ->getSingleScalarResult());
     }

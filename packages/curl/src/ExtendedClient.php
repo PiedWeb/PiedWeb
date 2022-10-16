@@ -17,9 +17,9 @@ class ExtendedClient extends Client
 
     private bool  $fakeBrowserHeader = false;
 
-    private ?string $referer = null;
+    public ?string $referer = null;
 
-    private ?string $cookie = null;
+    public ?string $cookie = null;
 
     private string $language = 'fr-FR,fr;q=0.9';
 
@@ -205,6 +205,9 @@ class ExtendedClient extends Client
      */
     public function setDownloadOnlyIf(callable $func): self
     {
+        $this->error = 92832;
+        $this->errorMessage = 'Aborted because user check in headers';
+
         $this->filter = $func;
         $this->setOpt(\CURLOPT_HEADERFUNCTION, [$this, 'checkHeader']);
         $this->setOpt(\CURLOPT_NOBODY, 1);
@@ -239,13 +242,11 @@ class ExtendedClient extends Client
 
     public function checkHeader(CurlHandle $handle, string $line): int
     {
-        $this->error = 92832;
-        $this->errorMessage = 'Aborted because user check in headers';
-
         if (\call_user_func($this->filter, $line)) {
-            ++$this->optChangeDuringRequest;
-            $this->setOpt(\CURLOPT_NOBODY, false);
             $this->resetError();
+            ++$this->optChangeDuringRequest;
+            $this->setOpt(\CURLOPT_NOBODY, 0);
+            // $this->setOpt(\CURLOPT_HEADERFUNCTION, false); // only required if we implement multi-check
         }
 
         return \strlen($line);
@@ -254,7 +255,7 @@ class ExtendedClient extends Client
     /**
      * Execute the request.
      */
-    public function request(?string $target = null): bool
+    public function request(?string $target = null, bool $updateRefererAndCookies = true): bool
     {
         if ($this->fakeBrowserHeader) {
             $this->setBrowserHeader();
@@ -269,11 +270,11 @@ class ExtendedClient extends Client
 
         $this->optChangeDuringRequest = 0;
 
-        if (($effectiveUrl = $this->getResponse()->getUrl()) !== null) {
+        if ($updateRefererAndCookies && ($effectiveUrl = $this->getResponse()->getUrl()) !== null) {
             $this->setReferer($effectiveUrl);
         }
 
-        if (($cookies = $this->getResponse()->getCookies()) !== null) {
+        if ($updateRefererAndCookies && ($cookies = $this->getResponse()->getCookies()) !== null) {
             $this->setCookie($cookies);
         }
 

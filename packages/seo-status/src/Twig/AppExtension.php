@@ -2,15 +2,22 @@
 
 namespace PiedWeb\SeoStatus\Twig;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use PiedWeb\SeoStatus\Entity\Search\Search;
+use PiedWeb\SeoStatus\Repository\SearchRepository;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 
 class AppExtension extends AbstractExtension
 {
-    public function __construct()
-    {
+    private SearchRepository $searchRepo;
+
+    public function __construct(
+        private EntityManagerInterface $entityManager,
+    ) {
+        $this->searchRepo = $this->entityManager->getRepository(Search::class);
     }
 
     /**
@@ -34,6 +41,7 @@ class AppExtension extends AbstractExtension
             new TwigFunction('generate_filters_uri_parameter', [$this, 'generateFilterUriParameter'], $options),
             new TwigFunction('random_string', [$this, 'generateRandomString'], $options),
             new TwigFunction('serp_feature', [$this, 'getSerpFeature'], $options),
+            new TwigFunction('get_search', [$this, 'getSearch'], $options),
         ];
     }
 
@@ -88,5 +96,10 @@ class AppExtension extends AbstractExtension
         }
 
         return $list[$serpFeature] ?? throw new Exception($serpFeature);
+    }
+
+    public function getSearch(string $keyword): Search
+    {
+        return $this->searchRepo->findOrCreate($keyword);
     }
 }

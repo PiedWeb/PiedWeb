@@ -3,7 +3,7 @@ export const filtersManager = class {
 
   constructor(filters, url) {
     this.filters = JSON.parse(filters);
-    this.filters.where = this.filters.where ?? {};
+    this.filters.where = Object.assign({}, this.filters.where ?? {});
     this.url = url;
   }
 

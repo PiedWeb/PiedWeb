@@ -47,6 +47,8 @@ class TrendsTopicRepository extends ServiceEntityRepository
             $this->getEntityManager()->persist($trendsTopic);
         }
 
-        return $this->index[$mid] = $trendsTopic;
+        $this->index[$mid] = $trendsTopic;
+
+        return $this->index[$mid];
     }
 }

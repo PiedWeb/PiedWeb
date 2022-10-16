@@ -2,6 +2,9 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+@import "tippy.js/dist/tippy.css";
+@import 'tippy.js/themes/light.css';
+
 .tooltip {
     position: absolute;
     visibility:hidden;

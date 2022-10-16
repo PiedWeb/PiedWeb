@@ -4,6 +4,7 @@ namespace PiedWeb\SeoStatus\Command;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use PiedWeb\Google\Helper\Puphpeteer;
 use PiedWeb\SeoStatus\Entity\Search\Search;
 use PiedWeb\SeoStatus\Entity\Url\Host;
 use PiedWeb\SeoStatus\Repository\SearchForHostRepository;
@@ -28,6 +29,8 @@ class SearchResultsExtractCommand extends Command
      */
     protected static $defaultName = 'search:extract';
 
+    protected Puphpeteer $puphpeteer;
+
     protected SearchRepository $searchRepo;
 
     public function __construct(
@@ -39,7 +42,13 @@ class SearchResultsExtractCommand extends Command
     ) {
         parent::__construct();
 
+        $this->puphpeteer = new Puphpeteer();
         $this->searchRepo = $this->entityManager->getRepository(Search::class);
+    }
+
+    public function __destruct()
+    {
+        $this->puphpeteer->closeAll();
     }
 
     protected function configure(): void
@@ -124,7 +133,7 @@ class SearchResultsExtractCommand extends Command
             return $this->findSearchToExtractForHost(substr($input->getArgument('keyword'), \strlen('forHost:')));
         }
 
-        $this->keywordList = $this->keywordList ?? explode(\chr(10), $input->getArgument('keyword'));
+        $this->keywordList ??= explode(\chr(10), $input->getArgument('keyword'));
 
         $keyword = $this->keywordList[$this->keywordListIteratorKey] ?? null;
 

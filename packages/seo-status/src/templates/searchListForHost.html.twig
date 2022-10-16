@@ -43,6 +43,34 @@
       </table>
     </div>
     <!-- /  -->
+    <!--  -->
+    <div class="lg:basis-1/3 max-w-[220px border-gray-300 border rounded text-lg">
+      <h2 class="font-light mb-3 px-4 pt-3 text-left">Naturel</h2>
+      <table class="table-auto w-full text-center">
+        <tr class="[&>*]:py-3 [&>*]:px-6 [&>*]:font-thin text-gray-700">
+          <th>Top 1</th>
+          <th>Top 3</th>
+          <th>Top 5</th>
+          <th>Top 10</th>
+        </tr>
+        <tr class="[&>*]:py-3 [&>*]:px-6">
+          {% for pos in [1,3,5,10] %}
+          <td class="font-bold">
+            <a
+              class="text-sky-600"
+              href="{{ path('searchListForHostRoute', {
+                'host': host,
+                'filters': generate_filters_uri_parameter({'where': [
+                    {'k': 'r.ads', 'o': '=', 'v': '0'},
+                    {'k': 'r.pos', 'o': '<=', 'v': pos}
+                ]})
+              }) }}">{{ search_count.organic_top[pos] }}</a>
+          </td>
+          {% endfor %}
+        </tr>
+      </table>
+    </div>
+    <!-- /  -->
 </div>
 
 <script defer>
@@ -50,7 +78,7 @@ document.addEventListener("DOMContentLoaded", function() {
   window.o = new filtersManager("{{ filters|json_encode|e('js') }}", "{{ path('searchListForHostRoute', {'host': host, 'filters': 'filtersValue'}) }}");window.colManager = new columnManager();
 });
 </script>
-<div class="flex lg:space-x-4 space-y-4 lg:space-y-0 lg:flex-row flex-col mt-4">
+<div class="flex lg:space-x-4 space-y-4 lg:space-y-0 flex-col mt-4">
     <!-- SearchBlock -->
     <div
       x-data="{
@@ -61,21 +89,28 @@ document.addEventListener("DOMContentLoaded", function() {
       x-init="
         colManager = new columnManager();
         columns.ads = colManager.setDefaultValue('ads', 1).isShown('ads');
+        columns.mainRelatedTopic = colManager.setDefaultValue('mainRelatedTopic', 1).isShown('mainRelatedTopic');
+        columns.volume = colManager.setDefaultValue('volume', 1).isShown('volume');
         columns.extractedAt = colManager.setDefaultValue('extractedAt', 1).isShown('extractedAt');
         columns.serpFeatures = colManager.setDefaultValue('serpFeatures', 1).isShown('serpFeatures');
         columns.pixelPos = colManager.setDefaultValue('pixelPos', 1).isShown('pixelPos');
         columns.pos = colManager.setDefaultValue('pos', 1).isShown('pos');
         columns.movement = colManager.setDefaultValue('movement', 1).isShown('movement');
+        columns.visibilityScore = colManager.setDefaultValue('visibilityScore', 1).isShown('visibilityScore');
       "
-      class="grow max-w-[1200px] overflow-x-auto border-gray-300 border rounded text-lg relative">
-      <h2 class="font-light mb-3 px-4 pt-3">Recherches</h2>
+      class="max-w-[1800px] overflow-x-auto border-gray-300 border rounded text-lg">
+      <div class="relative">
+      <h2 class="font-light mb-3 px-4 pt-3">
+        Recherches
+        ({{ _self.renderTooltip(pager.nbResults, 'Visible: '~ pager.currentPageOffsetStart ~' à ' ~ pager.currentPageOffsetEnd) }})
+      </h2>
       <div
         class="absolute right-2 top-2 px-2 font-light text-gray-600 mt-1 cursor-pointer"
         @click="showFilter = !showFilter">
         <i class="fa-solid fa-table-columns"></i>
       </div>
       <div
-        class="absolute bg-white rounded border shadow p-5 px-4 top-3 right-2 mt-6 font-normal -mr-3 z-20"
+        class="absolute bg-white rounded border shadow p-5 px-4 top-3 right-1 mt-6 font-normal z-20"
         x-show="showFilter"
         @click.away="showFilter = false">
         <template x-for="column in Object.keys(columns)" :key="column">
@@ -101,20 +136,44 @@ document.addEventListener("DOMContentLoaded", function() {
             <th x-show="columns.ads"><!--Ads--></th>
             <th class="text-left"><!--Keyword--></th>
             <th
+              x-show="columns.mainRelatedTopic"
+              class="text-right w-[160px]">
+              <div class="flex">
+                <span
+                  class="block grow">
+                  {{ _self.renderTooltip('Sujet', 'Principaux sujets associés', '') }}
+                </span>
+                {{ _self.renderOrderBy(filters, 'mrt.title') }}
+              </div>
+            </th>
+            <th
+              x-show="columns.volume"
+              class="text-right w-[160px]">
+              <div class="flex">
+                <span
+                  class="block grow">
+                  {{ _self.renderTooltip('Volume', 'Nombre moyen de recherches mensuelles', '') }}
+                </span>
+                {{ _self.renderOrderBy(filters, 'svd.volume', 'ASC') }}
+              </div>
+            </th>
+            <th
               x-show="columns.extractedAt"
               class="text-right">
               <div class="flex">
                 <span class="block grow">
                   {{ _self.renderTooltip('E. le', 'Extrait le', '') }}</span>
-                {{ _self.renderOrderBy(filters, 'sr.extractedAt') }}
+                {{ _self.renderOrderBy(filters, 'sr.extractedAt', 'ASC') }}
               </div>
             </th>
             <th
               x-show="columns.serpFeatures"
-              class="text-left w-[150px]">SERP Fonc.</th>
+              class="text-left w-[150px]">
+              {{ _self.renderTooltip('SERP F.', 'Fonctionnalités de la page de résultats Google', '') }}
+            </th>
             <th
               x-show="columns.pixelPos"
-              class="text-right cursor-pointer w-[160px]" colspan=2>
+              class="text-right w-[160px]" colspan=2>
               <div class="flex">
                 <span class="block grow">
                   {{ _self.renderTooltip('PixelPos', 'first | ' ~ host, '') }}</span>
@@ -127,17 +186,27 @@ document.addEventListener("DOMContentLoaded", function() {
               <div class="flex">
                 <span
                   @click="o.toggleOrderBy('r.pos', 'ASC').validate();"
-                  class="block grow">Pos</span>
+                  class="block grow">
+                    Pos
+                </span>
                 {{ _self.renderOrderBy(filters, 'r.pos') }}
               </div>
             </th>
             <th
               x-show="columns.movement"
-              class="text-right cursor-pointer w-[80px]">
+              class="text-right w-[80px]">
               <div class="flex">
                 <span
                   class="block grow">{{ _self.renderTooltip('M...', 'Mouvement', '') }}</span>
                 {{ _self.renderOrderBy(filters, 'r.movement') }}
+              </div>
+            </th>
+            <th
+              x-show="columns.visibilityScore"
+              class="text-right cursor-pointer w-[80px]">
+              <div class="flex">
+                <span
+                  class="block grow">{{ _self.renderTooltip('Vis.', 'Indice de Visibilité', '') }}</span>
               </div>
             </th>
             <th class="!px-0"></th>
@@ -156,8 +225,29 @@ document.addEventListener("DOMContentLoaded", function() {
                 <i class="fa-solid fa-ad"></i>
               </span>
             </th>
-            <th class="text-left pt-1 pl-2 pr-4">
+            <th
+              class="text-left pt-1 pl-2 pr-4">
               {{ _self.renderFilterInput(filters.where, 's.keyword', 'LIKE', 'keywor...') }}
+            </th>
+            <th
+              x-show="columns.mainRelatedTopic"
+              x-data="{right: {{ (filters['svd.relatedTopics'].v|default('')) ? 'false' : 'true' }} }"
+              class="text-left pt-1 pl-2 pr-4 flex flex-row">
+              <div
+                @click="right = true"
+                :class="{'w-3/4': right, 'w-1/4': !right}">
+              {{ _self.renderFilterInput(filters.where, 'mrt.title', 'LIKE', 'key...', 'rounded-r-none') }}
+              </div>
+              <div
+                @click="right = false"
+                :class="{'w-1/4': right, 'w-3/4': !right}">
+              {{ _self.renderFilterInput(filters.where, 'svd.relatedTopics', 'LIKE', 'key...', 'rounded-l-none') }}
+              </div>
+            </th>
+            <th
+              x-show="columns.volume"
+              class="text-left pt-1 pl-2 pr-4">
+              {{ _self.renderFilterInput(filters.where, 'svd.volume', '>=', '> 1') }}
             </th>
             <th
               x-show="columns.extractedAt"><!--filter sr.extractedAt --></th>
@@ -191,6 +281,9 @@ document.addEventListener("DOMContentLoaded", function() {
               class="text-right pt-1 pl-2 pr-4">
               {{ _self.renderFilterInput(filters.where, 'r.movement', '>=', '>= 5') }}
             </th>
+            <th>
+              <!--r.visibilityScore-->
+            </th>
             <th class="!px-0">
               <button
                 @click="o.validate();"
@@ -207,11 +300,7 @@ document.addEventListener("DOMContentLoaded", function() {
             : search.searchGoogleData.lastSearchResults.previous.retrieveSearchResultFor(host) %}
 
           <tr
-            x-data="{ selected: false }"
-            @click="selected = ! selected"
-            @unselect-organicblock-row.window="selected = false "
-            :class="{ 'bg-gray-200' : selected }"
-            class="border-t [&>*]:py-3 [&>*]:px-4 hover:bg-gray-100">
+            {{ _self.trSelectableAttribute() }}>
             <td
               x-show="columns.ads"
               class="text-gray-300 text-center">
@@ -232,12 +321,26 @@ document.addEventListener("DOMContentLoaded", function() {
                     Cache
                   </a>',
                   'text-sm inline-block mr-2 text-gray-400',
-                  'p-3 text-gray-400 text-base',
-                  '@dblclick="console.log(event.target.parentNode); event.target.parentNode.querySelector(\'a\').click()"'
+                  'p-3 text-gray-400 text-base'
                 ) }}
               <a
                 href="{{ path('searchRoute', {'keyword': search.keyword}) }}"
                 class="text-sky-600">{{ search.keyword }}</a>
+            </td>
+            <td
+              x-show="columns.mainRelatedTopic"
+              class="text-left">
+                {% if search.searchVolumeData.lastExtractionAt != 0 and search.searchVolumeData.mainRelatedTopic %}
+                  {{ _self.renderTooltip(
+                      search.searchVolumeData.mainRelatedTopic.title,
+                      _self.renderRelatedTopics(search.searchVolumeData.relatedTopics),
+                      'text-light text-gray-600 text-left', 'text-gray-600 p-3') }}
+                {% endif %}
+            </td>
+            <td
+              x-show="columns.volume"
+              class="text-right">
+                  {{ _self.renderVolume(search) }}
             </td>
 
             <td
@@ -284,7 +387,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <td
               x-show="columns.pixelPos"
               class="text-right w-[60px]">
-              {{ search_result.pixelPos }}
+              {{ _self.renderTooltip(search_result.pixelPos, _self.renderSearchResultUrl(search_result, false), '', 'p-3') }}
               {#
               {% if search_result_previous is not null %}
                 {% set difference = search_result.pixelPos - search_result_previous.pixelPos %}
@@ -293,15 +396,26 @@ document.addEventListener("DOMContentLoaded", function() {
             </td>
             <td
               x-show="columns.pos"
-              class="text-right">{{ search_result.pos }}</td>
+              class="text-right">
+              {{ _self.renderTooltip(search_result.pos, _self.renderSearchResultUrl(search_result, false), '', 'p-3') }}
+            </td>
             <td
               x-show="columns.movement"
               class="text-right">{{ search_result.movementStr }}</td>
+            <td
+              x-show="columns.visibilityScore"
+              class="text-right">
+                {{ _self.renderTooltip(search_result.visibilityScore,search_result.pixelPosRank, '', 'p-3') }}
+              </td>
             <td
               class="!px-0"></td>
           </tr>
         {% endfor %}
       </table>
+      <div class="p-3">
+        {{ pagination_block|raw }}
+      </div>
+    </div>
     </div>
     <!-- / SearchBlock -->
 
@@ -328,16 +442,17 @@ document.addEventListener("DOMContentLoaded", function() {
   class="rounded border border-gray-200 w-full !text-gray-900 !font-light {{ extra_class }}">
 {% endmacro %}
 
-{% macro renderOrderBy(filters, orderKey) %}
+{% macro renderOrderBy(filters, orderKey, arrow_up_direction = 'DESC') %}
   <span
-    class="{{ _self.getOrderByColor(orderKey, 'DESC', filters) }} ml-2 block px-1 cursor-pointer"
-    @click="o.toggleOrderBy('{{ orderKey }}', 'DESC').validate();">
+    class="{{ _self.getOrderByColor(orderKey, arrow_up_direction, filters) }} ml-2 block px-1 cursor-pointer"
+    @click="o.toggleOrderBy('{{ orderKey }}', '{{ arrow_up_direction }}').validate();">
       <i class="fa-solid fa-arrow-up"></i></span>
   <span
-    class="{{ _self.getOrderByColor(orderKey, 'ASC', filters) }} block px-1  cursor-pointer"
-    @click="o.toggleOrderBy('{{ orderKey }}', 'ASC').validate();">
+    class="{{ _self.getOrderByColor(orderKey, arrow_up_direction == 'DESC' ? 'ASC' : 'DESC', filters) }} block px-1  cursor-pointer"
+    @click="o.toggleOrderBy('{{ orderKey }}', '{{ arrow_up_direction == 'DESC' ? 'ASC' : 'DESC' }}').validate();">
       <i class="fa-solid fa-arrow-down"></i></span>
 {% endmacro %}
+
 {# renderSelectOption:
   <select
                 name="sr.serpFeatures"

@@ -10,7 +10,6 @@ use PiedWeb\Google\GoogleRequester;
 use PiedWeb\Google\GoogleSERPManager;
 use PiedWeb\SeoStatus\Entity\Search\Search;
 use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\Serializer\Encoder\JsonEncode;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
@@ -71,7 +70,7 @@ final class SearchExtractorService
     {
         $fileSystem = new Filesystem();
         $json = $extractor->__toJson();
-        $lastExtractionAskedAt = $search->getSearchGoogleData()->getLastExtractionAskedAt() ?: (new DateTime('now'))->format('ymdHi');
+        $lastExtractionAskedAt = 0 !== $search->getSearchGoogleData()->getLastExtractionAskedAt() ? $search->getSearchGoogleData()->getLastExtractionAskedAt() : (new DateTime('now'))->format('ymdHi');
         $searchExportDir = $this->dataDir->getSearchDir($search);
         $fileSystem->dumpFile($searchExportDir.$lastExtractionAskedAt.'.json', $json);
         $fileSystem->dumpFile($searchExportDir.'lastResult.html', $extractor->html);
@@ -84,7 +83,6 @@ final class SearchExtractorService
         $context = [
             AbstractObjectNormalizer::SKIP_NULL_VALUES => true,
             AbstractNormalizer::CIRCULAR_REFERENCE_HANDLER => fn ($object, $format, $context) => null,
-            JsonEncode::OPTIONS => \JSON_PRETTY_PRINT,
             AbstractNormalizer::IGNORED_ATTRIBUTES => ['search', 'searchResultsList', 'previous', 'next', 'lastSearchResults', 'similar', 'comparable', 'comparableMain', 'disableExport', 'lastExtractionAskedAt', 'hashId', 'id'],
         ];
 

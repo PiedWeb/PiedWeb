@@ -30,19 +30,22 @@ class TrendsExtractor
      */
     public array $relatedQueries = [];
 
-    public function setRelatedTopics(mixed $relatedTopics): void
+    public function setRelatedTopics(string $relatedTopics): void
     {
-        $this->relatedTopics = \Safe\json_decode(\Safe\json_encode($relatedTopics), true); // @phpstan-ignore-line
+        $this->relatedTopics = '' === $relatedTopics ? [] // @phpstan-ignore-line
+            : \Safe\json_decode($relatedTopics, true);
     }
 
-    public function setInterestOverTime(mixed $interestOverTime): void
+    public function setInterestOverTime(string $interestOverTime): void
     {
-        $this->interestOverTime = \Safe\json_decode(\Safe\json_encode($interestOverTime), true); // @phpstan-ignore-line
+        $this->interestOverTime = '' === $interestOverTime ? [] // @phpstan-ignore-line
+            : \Safe\json_decode($interestOverTime, true);
     }
 
-    public function setRelatedQueries(mixed $relatedQueries): void
+    public function setRelatedQueries(string $relatedQueries): void
     {
-        $this->relatedQueries = \Safe\json_decode(\Safe\json_encode($relatedQueries), true); // @phpstan-ignore-line
+        $this->relatedQueries = '' === $relatedQueries ? [] // @phpstan-ignore-line
+            : \Safe\json_decode($relatedQueries, true);
     }
 
     /** @return array<int, int> */
@@ -65,7 +68,8 @@ class TrendsExtractor
     {
         $volume = $this->getVolume();
 
-        return (int) round(array_sum($volume) / \count($volume));
+        return 0 === \count($volume) ? 1
+            : (int) round(array_sum($volume) / \count($volume));
     }
 
     /** @return array{query:string, value: int, link:string}[] */

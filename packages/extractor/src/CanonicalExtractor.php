@@ -2,29 +2,48 @@
 
 namespace PiedWeb\Extractor;
 
+use Exception;
 use Symfony\Component\DomCrawler\Crawler;
 
 final class CanonicalExtractor
 {
+    private ?string $canonical = null;
+
     public function __construct(
         private Url $urlRequested,
         private Crawler $crawler
     ) {
+        $this->init();
+    }
+
+    private function init(): ?string
+    {
+        $canonical = $this->crawler->filter('link[rel=canonical]');
+
+        return $this->canonical = $canonical->count() > 0 ? ($canonical->attr('href') ?? '') : null;
     }
 
     public function get(): ?string
     {
-        $canonical = $this->crawler->filter('link[rel=canonical]');
+        return $this->canonical;
+    }
 
-        return $canonical->count() > 0 ? ($canonical->attr('href') ?? '') : null;
+    public function canonicalExists(): bool
+    {
+        return null != $this->canonical;
+    }
+
+    public function isCanonicalPartiallyCorrect(): bool
+    {
+        return $this->urlRequested->getAbsoluteUri() == $this->canonical;
     }
 
     public function isCanonicalCorrect(): bool
     {
-        $canonical = $this->get();
+        $canonical = $this->canonical;
 
         if (null === $canonical) {
-            return true;
+            throw new Exception('You must check if canonical exists before');
         }
 
         if ($this->urlRequested->__toString() == $canonical) {
@@ -32,6 +51,7 @@ final class CanonicalExtractor
         }
 
         $pregMatch = preg_match('/^.+?[^\/:](?=[?\/]|$)/', $this->urlRequested->__toString(), $match);
+
         // check for http://example.tld or http://example.tld/
         return false !== $pregMatch
                 && $match[0] === ltrim($this->urlRequested->__toString(), '/')

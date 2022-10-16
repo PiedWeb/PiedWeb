@@ -23,7 +23,7 @@ trait CacheTrait
 
         $cacheKey = $this->getRequestUid();
 
-        return $this->cacheFolder.'/gsc_'.$cacheKey.'.html';
+        return $this->cacheFolder.'/gsc9_'.$cacheKey.'.html';
     }
 
     abstract public function getRequestUid(): string;

@@ -10,6 +10,11 @@ import { filtersManager } from './filtersManager.js';
 window.filtersManager = filtersManager;
 
 import Alpine from 'alpinejs';
-
+import Tooltip from '@ryangjchandler/alpine-tooltip';
+Alpine.plugin(Tooltip);
 window.Alpine = Alpine;
 Alpine.start();
+
+import Chart from 'chart.js/auto';
+
+window.Chart = Chart;
