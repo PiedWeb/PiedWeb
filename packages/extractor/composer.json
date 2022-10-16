@@ -21,6 +21,8 @@
     "php": ">=8.0",
     "neitanod/forceutf8": "^2.0",
     "symfony/dom-crawler": "^6.0",
+    "league/uri": "^6.5",
+    "spatie/robots-txt": "^2.0",
     "jeremykendall/php-domain-parser": "^6.1"
   },
   "autoload": {
