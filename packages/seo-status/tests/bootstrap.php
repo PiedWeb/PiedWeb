@@ -24,6 +24,9 @@ $kernel->boot();
 $application = new Application($kernel);
 $application->setAutoExit(false);
 
+$dirToCreate = dirname(__DIR__).'/var/data/test';
+exec('mkdir -p "'.$dirToCreate.'"');
+
 $application->run(new ArrayInput(['command' => 'doctrine:database:drop', '--no-interaction' => true, '--force' => true]), new ConsoleOutput());
 $application->run(new ArrayInput(['command' => 'doctrine:database:create', '--no-interaction' => true]), new ConsoleOutput());
 $application->run(new ArrayInput(['command' => 'doctrine:schema:create', '--quiet' => true]), new ConsoleOutput());
