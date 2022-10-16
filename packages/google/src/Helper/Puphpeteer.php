@@ -99,7 +99,7 @@ class Puphpeteer
 
         Logger::log('launching new Puppeteer instance `'.self::$currentKey.'`');
         self::$puppeteer[self::$currentKey] = new Puppeteer($userOptions);
-        self::$browser[self::$currentKey] = self::$puppeteer[self::$currentKey]->launch();
+        self::$browser[self::$currentKey] = self::$puppeteer[self::$currentKey]->launch([] !== $emulateOptions ? $emulateOptions : self::EMULATE_OPTIONS_MOBILE);
         self::$browserPage[self::$currentKey] = $this->getBrowserPage(true);
         self::$browserPage[self::$currentKey]->emulate([] !== $emulateOptions ? $emulateOptions : self::EMULATE_OPTIONS_MOBILE);
 
