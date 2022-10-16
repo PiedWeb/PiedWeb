@@ -6,6 +6,8 @@ cd ../
 rm var/data/prod/app.db
 rm -rf migrations/*
 
+mkdir -p var/data/prod/search
+
 php bin/console doctrine:database:drop --no-interaction --force -vvv
 php bin/console doctrine:database:create --no-interaction -vvv
 php bin/console doctrine:schema:create --no-interaction -vvv

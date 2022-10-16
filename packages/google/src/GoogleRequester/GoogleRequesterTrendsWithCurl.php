@@ -19,7 +19,7 @@ class GoogleRequesterTrendsWithCurl extends GoogleRequester implements GoogleReq
      */
     private function requestTrendsApi(string $uri, array $parameters, int $slice = 4): object
     {
-        $curlClient = $this->getCurlClient()->setLanguage('FR-fr'.';q=0.9');
+        $curlClient = $this->getCurlClient()->setLanguage('FR-fr;q=0.9');
 
         if (null !== $this->trendsManager->manageProxy) {
             \call_user_func($this->trendsManager->manageProxy, $this->getCurlClient());
