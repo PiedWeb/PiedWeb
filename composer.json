@@ -14,7 +14,7 @@
     "league/csv": "^9.8",
     "league/uri": "^6.5",
     "neitanod/forceutf8": "^2.0",
-    "nesk/puphpeteer": "dev-zoon",
+    "nesk/puphpeteer": "@dev",
     "spatie/robots-txt": "^2.0",
     "symfony/cache": "^6.1",
     "symfony/console": "^6.1",
@@ -76,11 +76,7 @@
   "repositories": [
     {
       "type": "vcs",
-      "url": "https://github.com/zoonru/puphpeteer.git"
-    },
-    {
-      "type": "vcs",
-      "url": "https://github.com/zoonru/rialto.git"
+      "url": "https://github.com/RobinDev/puphpeteer.git"
     }
   ]
 }
