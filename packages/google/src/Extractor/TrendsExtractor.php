@@ -2,8 +2,6 @@
 
 namespace PiedWeb\Google\Extractor;
 
-use Exception;
-
 class TrendsExtractor
 {
     /** @var array<int, int> */
@@ -58,7 +56,7 @@ class TrendsExtractor
         $timelineData = $this->interestOverTime['default']['timelineData'];
 
         foreach ($timelineData as $data) {
-            $this->volume[$data['time']] = $data['value'][0] ?? throw new Exception();
+            $this->volume[$data['time']] = $data['value'][0] ?? throw new \Exception();
         }
 
         return $this->volume;

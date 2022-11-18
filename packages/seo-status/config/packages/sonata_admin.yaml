@@ -1,5 +1,0 @@
-sonata_block:
-    blocks:
-        # enable the SonataAdminBundle block
-        sonata.admin.block.admin_list:
-            contexts: [admin]

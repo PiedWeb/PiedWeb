@@ -2,7 +2,6 @@
 
 namespace PiedWeb\Extractor;
 
-use ReflectionClass;
 use Spatie\Robots\RobotsHeaders;
 use Spatie\Robots\RobotsTxt;
 use Symfony\Component\DomCrawler\Crawler;
@@ -93,7 +92,7 @@ class Indexable
 
     public function getErrorMessage(): string
     {
-        $class = new ReflectionClass(self::class);
+        $class = new \ReflectionClass(self::class);
         $constants = array_flip($class->getConstants()); // @phpstan-ignore-line
 
         return $constants[$this->indexable];

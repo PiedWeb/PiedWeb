@@ -2,7 +2,6 @@
 
 namespace PiedWeb\Extractor;
 
-use LogicException;
 use Symfony\Component\DomCrawler\Crawler;
 
 class LinksExtractor
@@ -87,7 +86,7 @@ class LinksExtractor
 
         foreach ($elements as $element) {
             if (! $element instanceof \DOMElement) {
-                throw new LogicException('check your selector');
+                throw new \LogicException('check your selector');
             }
 
             $url = $this->extractUrl($element);

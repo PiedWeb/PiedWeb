@@ -16,8 +16,9 @@
     }
   ],
   "require": {
-    "php": ">=8.0",
-    "piedweb/curl": "^0",
+    "php": ">=8.1",
+    "piedweb/curl": "*",
+    "symfony/cache": "^6.1",
     "nesk/puphpeteer": "dev-zoon"
   },
   "autoload": {

@@ -2,8 +2,6 @@
 
 namespace PiedWeb\Google;
 
-use Exception;
-
-class GoogleException extends Exception
+class GoogleException extends \Exception
 {
 }

@@ -2,7 +2,6 @@
 
 namespace PiedWeb\Extractor;
 
-use Exception;
 use Symfony\Component\DomCrawler\Crawler;
 
 final class CanonicalExtractor
@@ -43,7 +42,7 @@ final class CanonicalExtractor
         $canonical = $this->canonical;
 
         if (null === $canonical) {
-            throw new Exception('You must check if canonical exists before');
+            throw new \Exception('You must check if canonical exists before');
         }
 
         if ($this->urlRequested->__toString() == $canonical) {

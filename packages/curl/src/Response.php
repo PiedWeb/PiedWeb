@@ -2,8 +2,6 @@
 
 namespace PiedWeb\Curl;
 
-use Exception;
-
 class Response
 {
     protected string $headers = '';
@@ -78,7 +76,7 @@ class Response
 
         $parsed = Helper::httpParseHeaders($this->headers);
         if ([] === $parsed) {
-            throw new Exception('Failed to parse Headers `'.$this->headers.'`');
+            throw new \Exception('Failed to parse Headers `'.$this->headers.'`');
         }
 
         return $this->headersParsed = $parsed;

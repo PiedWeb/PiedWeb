@@ -3,7 +3,6 @@
 namespace PiedWeb\Google\Helper;
 
 use Exception;
-use LogicException;
 use Nesk\Puphpeteer\Puppeteer;
 use Nesk\Puphpeteer\Resources\Browser;
 use Nesk\Puphpeteer\Resources\Page;
@@ -29,11 +28,11 @@ class Puphpeteer
 
     public static string $currentKey = '';
 
-    public static PuppeteerLogger $logger;
+    public static ?PuppeteerLogger $logger = null;
 
     public function getLogger(): PuppeteerLogger
     {
-        return self::$logger;
+        return self::$logger ??= new PuppeteerLogger();
     }
 
     /**
@@ -123,7 +122,7 @@ class Puphpeteer
         }
 
         if ($new || ! isset(self::$browserPage[self::$currentKey])) {
-            self::$browserPage[self::$currentKey] = (self::$browser[self::$currentKey] ?? throw new LogicException())->newPage();
+            self::$browserPage[self::$currentKey] = (self::$browser[self::$currentKey] ?? throw new \LogicException())->newPage();
         }
 
         return self::$browserPage[self::$currentKey];

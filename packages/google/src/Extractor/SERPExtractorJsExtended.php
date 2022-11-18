@@ -2,8 +2,6 @@
 
 namespace PiedWeb\Google\Extractor;
 
-use DOMNode;
-use LogicException;
 use Nesk\Puphpeteer\Resources\Page;
 use PiedWeb\Google\Helper\Puphpeteer;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
@@ -30,7 +28,7 @@ class SERPExtractorJsExtended extends SERPExtractor
         return $this->browserPage;
     }
 
-    protected function getPixelPosFor(string|DOMNode $element): int
+    protected function getPixelPosFor(string|\DOMNode $element): int
     {
         if (($_ENV['APP_ENV'] ?? 'prod') !== 'test') {
             return $this->getPixelPosForWithoutCache($element);
@@ -40,7 +38,7 @@ class SERPExtractorJsExtended extends SERPExtractor
 
         /** @var int */
         $pixelPos = $cache->get(
-            sha1($this->html.'-'.($element instanceof DOMNode ? $element->getNodePath() : $element)),
+            sha1($this->html.'-'.($element instanceof \DOMNode ? $element->getNodePath() : $element)),
             function (ItemInterface $item) use ($element): int {
                 $item->expiresAfter(86400);
 
@@ -51,10 +49,10 @@ class SERPExtractorJsExtended extends SERPExtractor
         return $pixelPos;
     }
 
-    private function getPixelPosForWithoutCache(string|DOMNode $element): int
+    private function getPixelPosForWithoutCache(string|\DOMNode $element): int
     {
-        if ($element instanceof DOMNode) {
-            $element = $element->getNodePath() ?? throw new LogicException();
+        if ($element instanceof \DOMNode) {
+            $element = $element->getNodePath() ?? throw new \LogicException();
         }
 
         $element = $this->getBrowserPage()->querySelectorXPath($element);

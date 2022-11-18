@@ -2,8 +2,6 @@
 
 namespace PiedWeb\Curl;
 
-use CurlHandle;
-
 class ExtendedClient extends Client
 {
     use UserAgentTrait;
@@ -240,7 +238,7 @@ class ExtendedClient extends Client
         return $this;
     }
 
-    public function checkHeader(CurlHandle $handle, string $line): int
+    public function checkHeader(\CurlHandle $handle, string $line): int
     {
         if (\call_user_func($this->filter, $line)) {
             $this->resetError();

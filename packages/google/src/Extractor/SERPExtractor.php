@@ -2,9 +2,6 @@
 
 namespace PiedWeb\Google\Extractor;
 
-use DOMElement;
-use DOMNode;
-use Exception;
 use LogicException;
 use PiedWeb\Extractor\Helper;
 use PiedWeb\Google\Result\SearchResult;
@@ -117,12 +114,12 @@ class SERPExtractor
         return $toReturn;
     }
 
-    private function extractResultFrom(DOMNode $node, bool $ads = false): ?SearchResult
+    private function extractResultFrom(\DOMNode $node, bool $ads = false): ?SearchResult
     {
         $domCrawler = new Crawler($node);
         $linkNode = $domCrawler->filter('a')->getNode(0);
-        if (null === $linkNode || ! $linkNode instanceof DOMElement) {
-            throw new Exception('Google changes his selector. Please upgrade SERPExtractor (mobile  '.(int) $this->isMobileSerp().')');
+        if (null === $linkNode || ! $linkNode instanceof \DOMElement) {
+            throw new \Exception('Google changes his selector. Please upgrade SERPExtractor (mobile  '.(int) $this->isMobileSerp().')');
         }
 
         // skip shopping Results
@@ -139,7 +136,7 @@ class SERPExtractor
         return $toReturn;
     }
 
-    protected function getPixelPosFor(string|DOMNode $element): int
+    protected function getPixelPosFor(string|\DOMNode $element): int
     {
         return 0;
     }
@@ -178,10 +175,10 @@ class SERPExtractor
             ->filterXPath("//h2[text()='Extrait optimisé sur le Web']/ancestor::block-component//a[@class]")
             ->getNode(0);
 
-        if (null === $linkNodePositionZero || ! $linkNodePositionZero instanceof DOMElement) {
+        if (null === $linkNodePositionZero || ! $linkNodePositionZero instanceof \DOMElement) {
             file_put_contents('/tmp/debug.html', $this->html);
 
-            throw new LogicException('Google has changed its selector (position Zero)');
+            throw new \LogicException('Google has changed its selector (position Zero)');
         }
 
         $toReturn = new SearchResult();
@@ -215,7 +212,7 @@ class SERPExtractor
     /**
      * @param string[] $xpaths
      */
-    public function exists(array $xpaths, ?DOMNode &$node = null): bool
+    public function exists(array $xpaths, ?\DOMNode &$node = null): bool
     {
         try {
             $node = $this->getNode($xpaths);
@@ -229,7 +226,7 @@ class SERPExtractor
     /**
      * @param string[] $xpaths
      */
-    public function getNode(array $xpaths): DOMNode
+    public function getNode(array $xpaths): \DOMNode
     {
         foreach ($xpaths as $xpath) {
             $node = $this->domCrawler->filterXPath($xpath)->getNode(0);
@@ -238,7 +235,7 @@ class SERPExtractor
             }
         }
 
-        throw new LogicException('`'.implode('`, ', $xpaths).'` not found');
+        throw new \LogicException('`'.implode('`, ', $xpaths).'` not found');
     }
 
     public function __toJson(): string

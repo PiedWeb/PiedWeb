@@ -2,7 +2,6 @@
 
 namespace PiedWeb\Google;
 
-use Exception;
 use PiedWeb\Curl\ExtendedClient;
 use PiedWeb\Google\Helper\Puphpeteer;
 
@@ -48,7 +47,7 @@ class GoogleRequester
 
         $this->getCurlClient()->request($Google->generateGoogleSearchUrl());
         if (0 !== $this->getCurlClient()->getError()) {
-            throw new Exception($this->getCurlClient()->getErrorMessage());
+            throw new \Exception($this->getCurlClient()->getErrorMessage());
         }
 
         return $this->getCurlClient()->getResponse()->getBody();

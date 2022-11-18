@@ -2,7 +2,6 @@
 
 namespace PiedWeb\Google;
 
-use DateTime;
 use Symfony\Component\Filesystem\Filesystem;
 
 trait CacheTrait
@@ -52,6 +51,7 @@ trait CacheTrait
 
         $this->cacheFilemtime = \Safe\filemtime($cacheFilePath);
         $diff = time() - $this->cacheFilemtime;
+
         if ($diff > $this->cacheTime) {
             return null;
         }
@@ -65,6 +65,6 @@ trait CacheTrait
             return (int) (new \DateTime('now'))->format('ymdHi');
         }
 
-        return (int) (new DateTime())->setTimestamp($this->cacheFilemtime)->format('ymdHi');
+        return (int) (new \DateTime())->setTimestamp($this->cacheFilemtime)->format('ymdHi');
     }
 }

@@ -2,7 +2,6 @@
 
 namespace PiedWeb\Extractor;
 
-use DOMElement;
 use Symfony\Component\DomCrawler\Crawler as DomCrawler;
 
 final class Link implements \Stringable
@@ -72,7 +71,7 @@ final class Link implements \Stringable
         return $url;
     }
 
-    private function setWrapper(DOMElement $element): void
+    private function setWrapper(\DOMElement $element): void
     {
         if ('a' == $element->tagName && $element->getAttribute('href')) {
             $this->wrapper = self::LINK_A;
@@ -94,7 +93,7 @@ final class Link implements \Stringable
         string $url,
         private Url $parentUrl,
         private bool $parentMayFollow = true,
-        private ?DOMElement $element = null,
+        private ?\DOMElement $element = null,
         private ?int $wrapper = null
     ) {
         $this->url = new Url(self::normalizeUrl($url));
@@ -156,7 +155,7 @@ final class Link implements \Stringable
         return $this->anchor;
     }
 
-    public function getElement(): ?DOMElement
+    public function getElement(): ?\DOMElement
     {
         return $this->element;
     }

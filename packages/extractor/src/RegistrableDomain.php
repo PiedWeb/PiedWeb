@@ -6,7 +6,6 @@
 
 namespace PiedWeb\Extractor;
 
-use LogicException;
 use Pdp\Rules;
 
 final class RegistrableDomain
@@ -20,18 +19,7 @@ final class RegistrableDomain
 
     private static function getRules(): Rules
     {
-        if (null !== self::$rules) {
-            return self::$rules;
-        }
-
-        $reflector = new \ReflectionClass(\Pdp\Rules::class);
-        $filename = $reflector->getFileName();
-        if (false === $filename) {
-            throw new LogicException();
-        }
-
-        $base = \dirname($filename, 2);
-
-        return self::$rules = Rules::fromPath($base.'/test_data/public_suffix_list.dat');
+        // todo automatic update from https://publicsuffix.org/list/public_suffix_list.dat
+        return self::$rules ??= Rules::fromPath(__DIR__.'/public_suffix_list.dat');
     }
 }

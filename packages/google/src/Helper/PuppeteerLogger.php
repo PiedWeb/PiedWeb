@@ -2,7 +2,6 @@
 
 namespace PiedWeb\Google\Helper;
 
-use Exception;
 use Psr\Log\LoggerInterface;
 
 class PuppeteerLogger implements LoggerInterface
@@ -31,15 +30,15 @@ class PuppeteerLogger implements LoggerInterface
     {
         $expectedStarting = "Received a Node log: \n".self::TO_INDEX;
 
-        if (! str_starts_with($message, $expectedStarting)) {
+        if (! str_starts_with((string) $message, $expectedStarting)) {
             return;
         }
 
-        $message = substr($message, \strlen($expectedStarting));
+        $message = substr((string) $message, \strlen($expectedStarting));
         $messageExploded = explode(self::KEY_VALUE_SEPARATOR, $message, 2);
 
         if (2 !== \count($messageExploded)) {
-            throw new Exception($message);
+            throw new \Exception($message);
         }
 
         $this->index[$messageExploded[0]] = $messageExploded[1];

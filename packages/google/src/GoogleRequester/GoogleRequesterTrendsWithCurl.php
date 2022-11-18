@@ -33,7 +33,7 @@ class GoogleRequesterTrendsWithCurl extends GoogleRequester implements GoogleReq
         $url = 'https://trends.google.com'.$uri.'?'.$this->stringifyParameters($parameters);
         // dump($url);
         for ($i = 0; $i < 2; ++$i) {
-            $request = $curlClient->request($url, false);
+            $curlClient->request($url, false);
             $response = $curlClient->getResponse()->getBody();
 
             $rawJson = trim(substr($response, $slice));
@@ -53,7 +53,7 @@ class GoogleRequesterTrendsWithCurl extends GoogleRequester implements GoogleReq
         if (! isset($jsonResponse) || ! $jsonResponse) {
             file_put_contents('/tmp/debug.html', $response);
 
-            throw new Exception('Google Trends Api Request to `'.$uri.'` failed... see /tmp/debug.html');
+            throw new \Exception('Google Trends Api Request to `'.$uri.'` failed... see /tmp/debug.html');
         }
 
         return $jsonResponse;
@@ -91,7 +91,7 @@ class GoogleRequesterTrendsWithCurl extends GoogleRequester implements GoogleReq
         ]);
 
         if (! property_exists($jsonResponse, 'widgets')) {
-            throw new Exception();
+            throw new \Exception();
         }
 
         $toReturn = [

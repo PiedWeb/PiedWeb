@@ -2,7 +2,6 @@
 
 namespace PiedWeb\Extractor;
 
-use Exception;
 use ForceUTF8\Encoding;
 
 class Helper
@@ -38,7 +37,7 @@ class Helper
 
         // if (\gettype($pattern) !== \gettype($return)) {
         if (! \is_string($return)) {
-            throw new Exception('An error occured on preg_replace');
+            throw new \Exception('An error occured on preg_replace');
         }
 
         return $return;

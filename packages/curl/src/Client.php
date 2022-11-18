@@ -2,11 +2,9 @@
 
 namespace PiedWeb\Curl;
 
-use CurlHandle;
-
 class Client
 {
-    private ?CurlHandle $handle = null;
+    private ?\CurlHandle $handle = null;
 
     protected int $error = 0;
 
@@ -41,7 +39,7 @@ class Client
         return $this;
     }
 
-    public function getHandle(): CurlHandle
+    public function getHandle(): \CurlHandle
     {
         if (null === $this->handle) {
             $this->handle = \Safe\curl_init();

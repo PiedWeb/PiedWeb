@@ -2,13 +2,11 @@
 
 namespace PiedWeb\Google\GoogleRequester;
 
-use Exception;
 use Nesk\Rialto\Data\JsFunction;
 use PiedWeb\Google\GoogleRequester;
 use PiedWeb\Google\GoogleTrendsManager;
 use PiedWeb\Google\Helper\Puphpeteer;
 use PiedWeb\Google\Helper\PuppeteerLogger;
-use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 
 class GoogleRequesterTrendsWithPuppeteer extends GoogleRequester implements GoogleRequesterTrendsInterface
 {
@@ -31,7 +29,7 @@ class GoogleRequesterTrendsWithPuppeteer extends GoogleRequester implements Goog
         $index = $this->getPuppeteerClient()->getLogger()->getIndex();
 
         if ([] === $index) {
-            throw new Exception('index empty');
+            throw new \Exception('index empty');
         }
 
         foreach ($index as $key => $value) {
@@ -82,10 +80,10 @@ class GoogleRequesterTrendsWithPuppeteer extends GoogleRequester implements Goog
             ")->async(true);
         $page->on('response', $onResponseFunction);
         $response = $page->goto($url)
-            ?? throw new Exception('Puppeteer return null targeting `'.$url.'`');
+            ?? throw new \Exception('Puppeteer return null targeting `'.$url.'`');
         $status = $response->status();
         if (200 !== (int) $status) {
-            throw 429 === (int) $status ? new TooManyRequestsHttpException(null, 'Google blocked current IP requesting Trends') : new Exception((string) $status);
+            throw new \Exception(429 === (int) $status ? 'Google blocked current IP requesting Trends' : (string) $status);
         }
 
         sleep(5);
