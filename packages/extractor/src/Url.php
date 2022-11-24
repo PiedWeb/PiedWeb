@@ -14,7 +14,7 @@ use League\Uri\UriResolver;
 
 final class Url implements \Stringable
 {
-    private Http $http;
+    private readonly Http $http;
 
     private string $origin = '';
 

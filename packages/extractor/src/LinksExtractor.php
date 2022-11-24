@@ -9,24 +9,24 @@ class LinksExtractor
     /**
      * @var string
      */
-    public const SELECT_A = 'a[href]';
+    final public const SELECT_A = 'a[href]';
 
     /**
      * @var string
      */
-    public const SELECT_ALL = '[href],[src]';
+    final public const SELECT_ALL = '[href],[src]';
 
     /** @var Link[] */
-    private array $links;
+    private readonly array $links;
 
     /** @var array<int, array<Link>> */
     private array $linksPerType = [];
 
     public function __construct(
-        private Url $requestedUrl,
-        private Crawler $crawler,
-        private string $headers,
-        private string $selector = self::SELECT_A
+        private readonly Url $requestedUrl,
+        private readonly Crawler $crawler,
+        private readonly string $headers,
+        private readonly string $selector = self::SELECT_A
     ) {
         $this->links = $this->extract();
         $this->classifyLinks();

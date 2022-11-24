@@ -34,8 +34,8 @@ final class BreadcrumbExtractor
     ];
 
     public function __construct(
-        private string $html,
-        private Url $parentUrl
+        private readonly string $html,
+        private readonly Url $parentUrl
     ) {
     }
 

@@ -24,7 +24,7 @@ class Puphpeteer
     /**
      * @var string
      */
-    public const DEFAULT_LANGUAGE = 'fr-FR';
+    final public const DEFAULT_LANGUAGE = 'fr-FR';
 
     public static string $currentKey = '';
 
@@ -40,7 +40,7 @@ class Puphpeteer
      *
      * @var array<string, string|array<string, int|bool>>
      */
-    public const EMULATE_OPTIONS_MOBILE = [
+    final public const EMULATE_OPTIONS_MOBILE = [
         'viewport' => [
             'width' => 412,
             'height' => 992,
@@ -55,7 +55,7 @@ class Puphpeteer
     /**
      * @var array<string, string|array<string, int|bool>>
      */
-    public const EMULATE_OPTIONS_DESKTOP = [
+    final public const EMULATE_OPTIONS_DESKTOP = [
         'viewport' => [
             'width' => 1440,
             'height' => 900,
@@ -82,7 +82,7 @@ class Puphpeteer
             'read_timeout' => 9000,
             'idle_timeout' => 9000, ]
     ): self {
-        $userOptions = array_merge($userOptions, ['args' => ['--disable-web-security', '--lang='.('' !== $language ? $language : self::DEFAULT_LANGUAGE)]]);
+        $userOptions = [...$userOptions, ...['args' => ['--disable-web-security', '--lang='.('' !== $language ? $language : self::DEFAULT_LANGUAGE)]]];
 
         self::$currentKey = substr(md5(serialize($userOptions)), 0, 4);
 

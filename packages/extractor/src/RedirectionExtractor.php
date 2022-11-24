@@ -8,8 +8,8 @@ final class RedirectionExtractor
      * @param array<int|string, string|string[]> $headers
      */
     public function __construct(
-        private Url $url,
-        private array $headers
+        private readonly Url $url,
+        private readonly array $headers
     ) {
     }
 

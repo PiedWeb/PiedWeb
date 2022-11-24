@@ -12,14 +12,14 @@ final class GoogleTrendsTest extends TestCase
     {
         $manager = new GoogleTrendsManager('randonnée', null, GoogleRequesterTrendsWithCurl::class);
         $extractor = $manager->getExtractor();
-        $this->assertGreaterThan(10, $extractor->getVolumeAverage());
+        $this->assertGreaterThan(10, $extractor->getInterestAverage());
 
-        // dump($extractor->getVolumeAverage());
+        // dump($extractor->getInterestAverage());
         // dump($extractor->getRelatedQueries());
         // dump($extractor->getRelatedTopics());
 
         $extractor = $manager->getExtractor();
-        $this->assertGreaterThan(10, $extractor->getVolumeAverage());
+        $this->assertGreaterThan(10, $extractor->getInterestAverage());
         $this->assertArrayHasKey('randonnée vtt', $extractor->getRelatedQueriesSimplified());
     }
 
@@ -27,14 +27,14 @@ final class GoogleTrendsTest extends TestCase
     {
         $manager = new GoogleTrendsManager('a big unknow keyword not know in google database2');
         $extractor = $manager->getExtractor();
-        $this->assertSame(1, $extractor->getVolumeAverage());
+        $this->assertSame(1, $extractor->getInterestAverage());
 
         $manager = new GoogleTrendsManager('randonnée');
         $extractor = $manager->getExtractor();
-        $this->assertGreaterThan(10, $extractor->getVolumeAverage());
+        $this->assertGreaterThan(10, $extractor->getInterestAverage());
 
         $extractor = $manager->getExtractor();
-        $this->assertGreaterThan(10, $extractor->getVolumeAverage());
+        $this->assertGreaterThan(10, $extractor->getInterestAverage());
         $this->assertArrayHasKey('randonnée vtt', $extractor->getRelatedQueriesSimplified());
     }
 }

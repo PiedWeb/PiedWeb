@@ -8,7 +8,7 @@ use Symfony\Component\DomCrawler\Crawler;
 
 class Indexable
 {
-    private int $indexable;
+    private readonly int $indexable;
 
     /**
      * @var int
@@ -48,15 +48,15 @@ class Indexable
     /**
      * @var int
      */
-    public const NOT_INDEXABLE_REDIR = 9;
+    final public const NOT_INDEXABLE_REDIR = 9;
 
     public function __construct(
-        private Url $url,
-        private RobotsTxt $robotsTxt,
-        private Crawler $crawler,
-        private int $statusCode,
-        private string $headers,
-        private string $isIndexableFor = 'googlebot'
+        private readonly Url $url,
+        private readonly RobotsTxt $robotsTxt,
+        private readonly Crawler $crawler,
+        private readonly int $statusCode,
+        private readonly string $headers,
+        private readonly string $isIndexableFor = 'googlebot'
     ) {
         $this->indexable = $this->analyze();
     }

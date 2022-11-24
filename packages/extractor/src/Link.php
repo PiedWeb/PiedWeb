@@ -6,7 +6,7 @@ use Symfony\Component\DomCrawler\Crawler as DomCrawler;
 
 final class Link implements \Stringable
 {
-    private Url $url;
+    private readonly Url $url;
 
     private ?string $anchor = null;
 
@@ -91,9 +91,9 @@ final class Link implements \Stringable
      */
     public function __construct(
         string $url,
-        private Url $parentUrl,
-        private bool $parentMayFollow = true,
-        private ?\DOMElement $element = null,
+        private readonly Url $parentUrl,
+        private readonly bool $parentMayFollow = true,
+        private readonly ?\DOMElement $element = null,
         private ?int $wrapper = null
     ) {
         $this->url = new Url(self::normalizeUrl($url));

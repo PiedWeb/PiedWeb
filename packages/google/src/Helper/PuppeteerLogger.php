@@ -6,9 +6,9 @@ use Psr\Log\LoggerInterface;
 
 class PuppeteerLogger implements LoggerInterface
 {
-    public const TO_INDEX = 'TOINDEX: ';
+    final public const TO_INDEX = 'TOINDEX: ';
 
-    public const KEY_VALUE_SEPARATOR = '::KEY%VALUE%SEPARATOR:: ';
+    final public const KEY_VALUE_SEPARATOR = '::KEY%VALUE%SEPARATOR:: ';
 
     /** @var array<string, string> */
     private array $index = [];

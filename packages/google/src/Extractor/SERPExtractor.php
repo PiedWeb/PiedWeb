@@ -43,7 +43,7 @@ class SERPExtractor
         '//a[not(starts-with(@href, "/search"))]/parent::div/parent::div/parent::div[@data-hveid]
         |//a[not(starts-with(@href, "/search"))]/parent::div/parent::div/parent::div[@data-sokoban-container]';
 
-    private Crawler $domCrawler;
+    private readonly Crawler $domCrawler;
 
     /**
      * @var SearchResult[]

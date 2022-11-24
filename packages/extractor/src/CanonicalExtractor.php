@@ -9,8 +9,8 @@ final class CanonicalExtractor
     private ?string $canonical = null;
 
     public function __construct(
-        private Url $urlRequested,
-        private Crawler $crawler
+        private readonly Url $urlRequested,
+        private readonly Crawler $crawler
     ) {
         $this->init();
     }

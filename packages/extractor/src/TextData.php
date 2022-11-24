@@ -9,8 +9,8 @@ use Symfony\Component\DomCrawler\Crawler;
 final class TextData
 {
     public function __construct(
-        private Crawler $crawler,
-        private string $html
+        private readonly Crawler $crawler,
+        private readonly string $html
     ) {
     }
 

@@ -15,8 +15,8 @@ class Analyzer
 
     public function __construct(
         private string $text,
-        private bool $onlyInSentence = false,
-        private int $expressionMaxWords = 5,
+        private readonly bool $onlyInSentence = false,
+        private readonly int $expressionMaxWords = 5,
     ) {
         $this->text = CleanText::stripHtmlTags($this->text);
         $this->text = CleanText::fixEncoding($this->text);

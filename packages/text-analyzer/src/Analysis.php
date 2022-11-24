@@ -8,8 +8,8 @@ final class Analysis
      * @param array<string, int> $expressions
      */
     public function __construct(
-        private array $expressions,
-        private int $wordNumber = 0,
+        private readonly array $expressions,
+        private readonly int $wordNumber = 0,
     ) {
     }
 

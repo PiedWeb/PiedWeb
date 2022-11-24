@@ -12,7 +12,7 @@ class GoogleRequesterTrendsWithPuppeteer extends GoogleRequester implements Goog
 {
     private bool $firstTrendsRequest = true;
 
-    public function __construct(private GoogleTrendsManager $trendsManager)
+    public function __construct(private readonly GoogleTrendsManager $trendsManager)
     {
     }
 

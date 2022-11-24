@@ -8,8 +8,8 @@ use Symfony\Component\DomCrawler\Crawler;
 final class FollowExtractor
 {
     public function __construct(
-        private Crawler $crawler,
-        private string $headers
+        private readonly Crawler $crawler,
+        private readonly string $headers
     ) {
     }
 

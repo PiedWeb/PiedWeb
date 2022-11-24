@@ -11,13 +11,13 @@ class CleanText
     /**
      * @var string
      */
-    public const REGEX_SENTENCE = '/[A-Z][^\n\.\!\?…]{4,}[\.\!\?…]/';
+    final public const REGEX_SENTENCE = '/[A-Z][^\n\.\!\?…]{4,}[\.\!\?…]/';
 
     // '/([^\n\.\!\?]{10,}[\.\!\?…])*/';
     /**
      * @var string[]
      */
-    public const STOP_WORDS = [
+    final public const STOP_WORDS = [
         // English stop words
         'a', 'able', 'about', 'across', 'after', 'all', 'almost', 'also', 'am', 'among', 'an', 'and', 'any', 'are',
         'as', 'at', 'be', 'because', 'been', 'but', 'by', 'can', 'cannot', 'could', 'dear', 'did', 'do', 'does',
@@ -61,7 +61,7 @@ class CleanText
     {
         // fix encoding
         $text = Encoding::toUTF8($text);
-        $text = html_entity_decode(html_entity_decode(htmlentities($text)));
+        $text = html_entity_decode(html_entity_decode(htmlentities((string) $text)));
         $text = htmlspecialchars_decode($text, \ENT_QUOTES);
         $text = str_replace('’', "'", $text); // Unify '
         $text = html_entity_decode(str_replace(['  ', '&nbsp;'], ' ', htmlentities($text)));

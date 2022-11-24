@@ -4,7 +4,7 @@ namespace PiedWeb\Extractor;
 
 class BreadcrumbItem
 {
-    public function __construct(private string $url, private string $name)
+    public function __construct(private readonly string $url, private readonly string $name)
     {
     }
 

@@ -11,7 +11,7 @@ class ExtendedClient extends Client
     /**
      * @var string
      */
-    public const DEFAULT_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.104 Safari/537.36';
+    final public const DEFAULT_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.104 Safari/537.36';
 
     private bool  $fakeBrowserHeader = false;
 
@@ -188,7 +188,7 @@ class ExtendedClient extends Client
         }
 
         $scheme = Helper::getSchemeFrom($proxy);
-        $proxy = explode(':', $proxy);
+        $proxy = explode(':', (string) $proxy);
         $this->setOpt(\CURLOPT_HTTPPROXYTUNNEL, 1);
         $this->setOpt(\CURLOPT_PROXY, $scheme.$proxy[0].':'.$proxy[1]);
         if (isset($proxy[2])) {
@@ -207,7 +207,7 @@ class ExtendedClient extends Client
         $this->errorMessage = 'Aborted because user check in headers';
 
         $this->filter = $func;
-        $this->setOpt(\CURLOPT_HEADERFUNCTION, [$this, 'checkHeader']);
+        $this->setOpt(\CURLOPT_HEADERFUNCTION, $this->checkHeader(...));
         $this->setOpt(\CURLOPT_NOBODY, 1);
 
         return $this;

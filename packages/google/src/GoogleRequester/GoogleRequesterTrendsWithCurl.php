@@ -10,7 +10,7 @@ class GoogleRequesterTrendsWithCurl extends GoogleRequester implements GoogleReq
 {
     private bool $firstTrendsRequest = true;
 
-    public function __construct(private GoogleTrendsManager $trendsManager)
+    public function __construct(private readonly GoogleTrendsManager $trendsManager)
     {
     }
 

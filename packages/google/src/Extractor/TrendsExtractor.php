@@ -5,7 +5,7 @@ namespace PiedWeb\Google\Extractor;
 class TrendsExtractor
 {
     /** @var array<int, int> */
-    private array $volume = [];
+    private array $interest = [];
 
     /**
      * @noRector
@@ -47,27 +47,27 @@ class TrendsExtractor
     }
 
     /** @return array<int, int> */
-    public function getVolume(): array
+    public function getInterest(): array
     {
-        if ([] !== $this->volume || [] === $this->interestOverTime) {
-            return $this->volume;
+        if ([] !== $this->interest || [] === $this->interestOverTime) {
+            return $this->interest;
         }
 
         $timelineData = $this->interestOverTime['default']['timelineData'];
 
         foreach ($timelineData as $data) {
-            $this->volume[$data['time']] = $data['value'][0] ?? throw new \Exception();
+            $this->interest[$data['time']] = $data['value'][0] ?? throw new \Exception();
         }
 
-        return $this->volume;
+        return $this->interest;
     }
 
-    public function getVolumeAverage(): int
+    public function getInterestAverage(): int
     {
-        $volume = $this->getVolume();
+        $interest = $this->getinterest();
 
-        return 0 === \count($volume) ? 1
-            : (int) round(array_sum($volume) / \count($volume));
+        return 0 === \count($interest) ? 1
+            : (int) round(array_sum($interest) / \count($interest));
     }
 
     /** @return array{query:string, value: int, link:string}[] */

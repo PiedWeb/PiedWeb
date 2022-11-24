@@ -7,7 +7,7 @@ use Symfony\Component\DomCrawler\Crawler;
 final class MetaExtractor
 {
     public function __construct(
-        private Crawler $crawler
+        private readonly Crawler $crawler
     ) {
     }
 

@@ -10,8 +10,8 @@ final class MultiAnalyzer
     private array $text = [];
 
     public function __construct(
-        private bool $onlyInSentence = false,
-        private int $expressionMaxWords = 5
+        private readonly bool $onlyInSentence = false,
+        private readonly int $expressionMaxWords = 5
     ) {
     }
 
