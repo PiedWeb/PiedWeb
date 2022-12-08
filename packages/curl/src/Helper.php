@@ -68,6 +68,8 @@ class Helper
      * @param string|string[] $header header to parse into components
      *
      * @return array<int, array<int|string, string>> returns the parsed header values
+     *
+     * @noRector
      */
     public static function parseHeader(array|string $header): array
     {

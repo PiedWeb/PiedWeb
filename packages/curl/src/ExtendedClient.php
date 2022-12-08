@@ -178,6 +178,8 @@ class ExtendedClient extends Client
      *
      * @param string $proxy [scheme]IP:PORT[:LOGIN:PASSWORD]
      *                      Eg. : socks5://98.023.023.02:1098:cUrlRequestProxId:SecretPassword
+     *
+     * @noRector
      */
     public function setProxy(string $proxy): self
     {
