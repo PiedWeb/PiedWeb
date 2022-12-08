@@ -31,9 +31,7 @@ class SERPExtractor
      */
     public const RELATED_DESKTOP = ["//a[@data-xbu][starts-with(@href, '/search')]/div"];
 
-    /**
-     * @var string
-     */
+    /** @var string */
     public const RESULT_SELECTOR = '//a[@role="presentation"]/parent::div/parent::div/parent::div';
 
     /**
@@ -72,6 +70,21 @@ class SERPExtractor
     }
 
     /**
+     * @return string[]
+     */
+    public function getAlsoAsked(): array
+    {
+        $alsoAsked = [];
+        $nodes = $this->domCrawler->filterXpath('//div[@data-q]');
+        foreach ($nodes as $node) {
+            $alsoAsked[] = $node instanceof \DOMElement ? $node->getAttribute('data-q')
+                : throw new \Exception();
+        }
+
+        return $alsoAsked;
+    }
+
+    /**
      * @return SearchResult[]
      */
     public function getResults(bool $organicOnly = true): array
@@ -80,7 +93,7 @@ class SERPExtractor
             return $this->results;
         }
 
-        $xpath = $this->isMobileSerp() ? self::RESULT_SELECTOR : self::RESULT_SELECTOR_DESKTOP;
+        $xpath = self::RESULT_SELECTOR;
         $nodes = $this->domCrawler->filterXpath($xpath);
         $toReturn = [];
 
@@ -246,7 +259,8 @@ class SERPExtractor
             'resultStat' => $this->getNbrResults(),
             'serpFeatures' => $this->getSerpFeatures(),
             'relatedSearches' => $this->getRelatedSearches(),
-            'results' => $this->getResults(),
+            'results' => $this->getResults(false),
+            'alsoAsked' => $this->getAlsoAsked(),
         ]);
     }
 }
