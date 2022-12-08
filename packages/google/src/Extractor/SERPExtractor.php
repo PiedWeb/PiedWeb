@@ -32,8 +32,10 @@ class SERPExtractor
     public const RELATED_DESKTOP = ["//a[@data-xbu][starts-with(@href, '/search')]/div"];
 
     /** @var string */
-    public const RESULT_SELECTOR = '//a[@role="presentation"]/parent::div/parent::div/parent::div';
+    // public const RESULT_SELECTOR = '//a[@role="presentation"]/parent::div/parent::div/parent::div';
+    public const RESULT_SELECTOR = '(//h2[text()=\'Extrait optimisé sur le Web\']/ancestor::block-component//a[@class])[1]|//a[@role="presentation"] ';
 
+    // (//h2[text()='Extrait optimisé sur le Web']/ancestor::block-component//a[@class])[1]|//a[@role="presentation"]
     /**
      * @var string
      */
@@ -98,10 +100,7 @@ class SERPExtractor
         $toReturn = [];
 
         $i = 0;
-        if ($this->containsSerpFeature('PositionZero')) {
-            $toReturn[0] = $this->getPositionsZero();
-            ++$i;
-        }
+        $iOrganic = 0;
 
         foreach ($nodes as $k => $node) {
             // skip if you are in ads
@@ -116,8 +115,12 @@ class SERPExtractor
             }
 
             $toReturn[$i] = $result;
-            $toReturn[$i]->pos = $i + 1;
+            $toReturn[$i]->organicPos = $ads ? 0 : $iOrganic + 1;
+            $toReturn[$i]->position = $i + 1;
             ++$i;
+            if (! $ads) {
+                ++$iOrganic;
+            }
         }
 
         if (false === $organicOnly) {
@@ -127,16 +130,17 @@ class SERPExtractor
         return $toReturn;
     }
 
-    private function extractResultFrom(\DOMNode $node, bool $ads = false): ?SearchResult
+    private function extractResultFrom(\DOMNode $linkNode, bool $ads = false): ?SearchResult
     {
-        $domCrawler = new Crawler($node);
-        $linkNode = $domCrawler->filter('a')->getNode(0);
-        if (null === $linkNode || ! $linkNode instanceof \DOMElement) {
-            throw new \Exception('Google changes his selector. Please upgrade SERPExtractor (mobile  '.(int) $this->isMobileSerp().')');
+        // $domCrawler = new Crawler($node);
+        // $linkNode = $domCrawler->filter('a')->getNode(0);
+        if (! $linkNode instanceof \DOMElement) {
+            throw new \Exception('Google changes his selector.');
         }
 
         // skip shopping Results
-        if (str_starts_with($linkNode->getAttribute('href'), '/aclk?')) {
+        if (str_starts_with($linkNode->getAttribute('href'), 'https://www.google.')
+            || str_starts_with($linkNode->getAttribute('href'), '/aclk?')) {
             return null;
         }
 
@@ -195,7 +199,8 @@ class SERPExtractor
         }
 
         $toReturn = new SearchResult();
-        $toReturn->pos = 1;
+        $toReturn->position = 1; // not true
+        $toReturn->organicPos = 1;
         $toReturn->pixelPos = $this->getPixelPosFor($linkNodePositionZero->getNodePath() ?? '');
         $toReturn->url = $linkNodePositionZero->getAttribute('href');
         $toReturn->title = $linkNodePositionZero->textContent;

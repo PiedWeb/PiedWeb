@@ -4,7 +4,9 @@ namespace PiedWeb\Google\Result;
 
 final class SearchResult
 {
-    public int $pos;
+    public int $organicPos;
+
+    public int $position;
 
     public int $pixelPos = 0;
 
