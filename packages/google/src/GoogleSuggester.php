@@ -33,9 +33,12 @@ class GoogleSuggester
 
     private function extractSuggests(string $url): void
     {
-        $this->client->request($url);
+        if (! $this->client->request($url)) {
+            throw new GoogleException('kicked harvesting suggests');
+        }
+
         $content = $this->client->getResponse()->getContent();
-        $data = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
+        $data = json_decode($content, true, 512, \JSON_THROW_ON_ERROR);
         if (! \is_array($data) || ! isset($data[1])) {
             return;
         }
