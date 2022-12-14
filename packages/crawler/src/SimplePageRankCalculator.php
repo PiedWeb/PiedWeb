@@ -16,7 +16,7 @@ final class SimplePageRankCalculator
     /**
      * @var array<int, float>
      */
-    private array $results;
+    private array $results = [];
 
     private int $maxIteration = 10000;
 
@@ -91,9 +91,6 @@ final class SimplePageRankCalculator
         return $this->nbrLinksFrom[$id];
     }
 
-    /**
-     * @noRector
-     */
     private function initLinksIndex(): void
     {
         $csv = Reader::createFromPath($this->config->getDataFolder().Recorder::LINKS_DIR.'/Index.csv', 'r');
@@ -111,7 +108,8 @@ final class SimplePageRankCalculator
                 $this->linksTo[$r['To']] = [];
             }
 
-            $this->linksTo[$r['To']][] = $r['From'] = (int) $r['From'];
+            $r['From'] = (int) $r['From'];
+            $this->linksTo[$r['To']][] = $r['From'];
 
             $this->nbrLinksFrom[$r['From']] = ($this->nbrLinksFrom[$r['From']] ?? 0) + 1;
         }

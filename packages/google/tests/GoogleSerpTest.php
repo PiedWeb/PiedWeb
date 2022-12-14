@@ -65,7 +65,7 @@ final class GoogleSerpTest extends TestCase
         $extractor = $this->getExtractor('marmotte vercors'); // position Zero PiedVert.com, if test failed, check position Zero on SERP exists
 
         $extractor->getBrowserPage()->screenshot(['path' => 'debug.png']);
-        if (!$extractor->containsSerpFeature('PositionZero')) {
+        if (! $extractor->containsSerpFeature('PositionZero')) {
             $this->assertStringContainsString('piedvert.com', 'https://piedweb.com/', $extractor->getResults()[0]->url);
             dump('Position Zero was not checked');
 

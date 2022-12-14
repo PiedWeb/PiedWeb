@@ -1,6 +1,5 @@
-#!/usr/bin/env php
 <?php
 
 include __DIR__.'/console-loader.php';
 
-$application->run($input);
+return $application;

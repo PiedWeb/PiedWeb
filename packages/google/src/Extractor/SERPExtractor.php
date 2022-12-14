@@ -110,7 +110,7 @@ class SERPExtractor
             }
 
             $result = $this->extractResultFrom($node, $ads);
-            if (!$result instanceof \PiedWeb\Google\Result\SearchResult) {
+            if (! $result instanceof \PiedWeb\Google\Result\SearchResult) {
                 continue;
             }
 
@@ -195,7 +195,7 @@ class SERPExtractor
             ->filterXPath("//h2[text()='Extrait optimisé sur le Web']/ancestor::block-component//a[@class]")
             ->getNode(0);
 
-        if (!$linkNodePositionZero instanceof \DOMNode || ! $linkNodePositionZero instanceof \DOMElement) {
+        if (! $linkNodePositionZero instanceof \DOMNode || ! $linkNodePositionZero instanceof \DOMElement) {
             file_put_contents('/tmp/debug.html', $this->html);
 
             throw new \LogicException('Google has changed its selector (position Zero)');
@@ -251,7 +251,7 @@ class SERPExtractor
     {
         foreach ($xpaths as $xpath) {
             $node = $this->domCrawler->filterXPath($xpath)->getNode(0);
-            if (!$node instanceof \DOMNode) {
+            if (! $node instanceof \DOMNode) {
                 continue;
             }
 
@@ -265,7 +265,7 @@ class SERPExtractor
         throw new \LogicException('`'.implode('`, ', $xpaths).'` not found');
     }
 
-    public function __toJson(): string
+    public function toJson(): string
     {
         return \Safe\json_encode([
             'version' => '1',

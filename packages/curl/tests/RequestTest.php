@@ -17,7 +17,7 @@ class RequestTest extends \PHPUnit\Framework\TestCase
         $request = new Client($url);
         $request
             ->setDefaultGetOptions()
-            ->setDownloadOnlyIf(fn ($line): bool => 0 === stripos(trim((string) $line), 'content-type') && false !== stripos((string) $line, 'text/html'))
+            ->setDownloadOnlyIf(static fn ($line): bool => 0 === stripos(trim((string) $line), 'content-type') && false !== stripos((string) $line, 'text/html'))
             ->setDesktopUserAgent()
             ->setEncodingGzip()
         ;
@@ -30,9 +30,9 @@ class RequestTest extends \PHPUnit\Framework\TestCase
 
         $this->assertSame('text/html; charset=UTF-8', $request->getResponse()->getContentType());
         $this->assertGreaterThan(10, \strlen($request->getResponse()->getContent()));
-        $this->assertStringContainsString('200', (string) ($request->getResponse()->getHeaders()[0] ?? ''));
+        $this->assertStringContainsString('200',  $request->getResponse()->getHeaders()[0] ?? ''); // @phpstan-ignore-line
         $this->assertStringContainsString('200', (string) $request->getResponse()->getHeaderLine('0'));
-        $this->assertStringContainsString('200', (string) $request->getResponse()->getHeader('0'));
+        $this->assertStringContainsString('200', $request->getResponse()->getHeader('0')); // @phpstan-ignore-line
         $this->assertNull($request->getResponse()->getCookies());
     }
 
@@ -42,7 +42,7 @@ class RequestTest extends \PHPUnit\Framework\TestCase
         $request = new Client($url);
         $request
             ->setDefaultGetOptions()
-            ->setDownloadOnlyIf('PiedWeb\Curl\Helper::checkContentType')
+            ->setDownloadOnlyIf(\PiedWeb\Curl\Helper::class.'::checkContentType')
             ->setDesktopUserAgent()
             ->setEncodingGzip()
         ;
@@ -58,7 +58,7 @@ class RequestTest extends \PHPUnit\Framework\TestCase
         $request = new Client($url);
         $request
             ->setDefaultGetOptions()
-            ->setDownloadOnlyIf('PiedWeb\Curl\Helper::checkContentType')
+            ->setDownloadOnlyIf(\PiedWeb\Curl\Helper::class.'::checkContentType')
             ->setDesktopUserAgent()
             ->setEncodingGzip()
         ;
@@ -89,7 +89,7 @@ class RequestTest extends \PHPUnit\Framework\TestCase
         $request = new Client($url);
         $request
             ->setDefaultGetOptions()
-            ->setDownloadOnlyIf('PiedWeb\Curl\Helper::checkContentType')
+            ->setDownloadOnlyIf(\PiedWeb\Curl\Helper::class.'::checkContentType')
             ->setDesktopUserAgent()
             ->setEncodingGzip()
         ;

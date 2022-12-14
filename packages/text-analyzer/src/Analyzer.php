@@ -125,7 +125,7 @@ class Analyzer
 
                 if ('' === $expression
                     || (substr_count($expression, ' ') + 1 !== $wordNumber) // We avoid sur-pondération
-                    || ! preg_match('/[a-z]/', $expression) // We avoid number or symbol only result
+                    || ! preg_match('#[a-z]#', $expression) // We avoid number or symbol only result
                 ) {
                     if (1 === $wordNumber) {
                         $this->incrementWordNumber(-1);

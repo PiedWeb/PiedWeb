@@ -105,7 +105,7 @@ final class BreadcrumbExtractor
 
     private function extractHref(string $str): ?string
     {
-        $regex = ['href="([^"]*)"', 'href=\'([^\']*)\'', 'href=(\S+) '];
+        $regex = ['href="([^"]*)"', "href='([^']*)'", 'href=(\S+) '];
         foreach ($regex as $r) {
             if (! preg_match('/'.$r.'/siU', $str, $match)) {
                 continue;

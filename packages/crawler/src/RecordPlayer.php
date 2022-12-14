@@ -25,7 +25,7 @@ final class RecordPlayer
 
         $indexFilePath = $this->config->getDataFolder().'/index.csv';
         if (! file_exists($indexFilePath)) {
-            throw new \Exception('Previous crawl\'s data not found (index.csv)');
+            throw new \Exception("Previous crawl's data not found (index.csv)");
         }
 
         $csv = Reader::createFromPath($indexFilePath, 'r');
@@ -60,7 +60,7 @@ final class RecordPlayer
         $r = [];
         $dataFilePath = $this->config->getDataFolder().'/data.csv';
         if (! file_exists($dataFilePath)) {
-            throw new \Exception('Previous crawl\'s data not found (index.csv)');
+            throw new \Exception("Previous crawl's data not found (index.csv)");
         }
 
         $urls = [];

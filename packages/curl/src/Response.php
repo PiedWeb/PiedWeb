@@ -13,7 +13,7 @@ class Response
     protected string $content = '';
 
     /** @var array<string, int|string>  an associative array with the following elements (which correspond to opt): "url" "content_type" "http_code" "header_size" "client_size" "filetime" "ssl_verify_result" "redirect_count" "total_time" "namelookup_time" "connect_time" "pretransfer_time" "size_upload" "size_download" "speed_download" "speed_upload" "download_content_length" "upload_content_length" "starttransfer_time" "redirect_time" */
-    protected $info;
+    protected $info = [];
 
     protected int $error = 0;
 
@@ -33,7 +33,7 @@ class Response
             return $self;
         }
 
-        $self->headers = substr($content, 0, $sHeaders = (int) $client->getCurlInfo(\CURLINFO_HEADER_SIZE));
+        $self->headers = substr($content, 0, $sHeaders = (int) $client->getCurlInfo(\CURLINFO_HEADER_SIZE)); // @phpstan-ignore-line
         $self->content = substr($content, $sHeaders);
 
         return $self;

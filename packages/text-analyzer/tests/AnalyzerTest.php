@@ -17,6 +17,7 @@ class AnalyzerTest extends \PHPUnit\Framework\TestCase
 
         $result = $test->addContent('Text Analyser : Expression in a text per Usage.');
         $result = $test->addContent('Please check if test are still running without error (phpunit)');
+
         $results = $test->exec();
 
         $this->assertSame($results->getExpressions()['dolor sit amet'], 2);

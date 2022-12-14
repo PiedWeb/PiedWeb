@@ -49,7 +49,7 @@ final class CanonicalExtractor
             return true;
         }
 
-        $pregMatch = preg_match('/^.+?[^\/:](?=[?\/]|$)/', $this->urlRequested->__toString(), $match);
+        $pregMatch = preg_match('#^.+?[^\/:](?=[?\/]|$)#', $this->urlRequested->__toString(), $match);
 
         // check for http://example.tld or http://example.tld/
         return false !== $pregMatch

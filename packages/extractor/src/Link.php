@@ -68,7 +68,7 @@ final class Link implements \Stringable
     {
         $url = trim($url);
 
-        if ('' == preg_replace('@(.*\://?([^\/]+))@', '', $url)) {
+        if ('' == preg_replace('#(.*\://?([^\/]+))#', '', $url)) {
             $url .= '/';
         }
 
@@ -159,7 +159,11 @@ final class Link implements \Stringable
             return true;
         }
 
-        if ($this->element->getAttribute('rel') === '' || $this->element->getAttribute('rel') === '0') {
+        if ('' === $this->element->getAttribute('rel')) {
+            return true;
+        }
+
+        if ('0' === $this->element->getAttribute('rel')) {
             return true;
         }
 

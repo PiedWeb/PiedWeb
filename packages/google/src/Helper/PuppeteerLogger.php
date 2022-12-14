@@ -6,8 +6,14 @@ use Psr\Log\LoggerInterface;
 
 class PuppeteerLogger implements LoggerInterface
 {
+    /**
+     * @var string
+     */
     final public const TO_INDEX = 'TOINDEX: ';
 
+    /**
+     * @var string
+     */
     final public const KEY_VALUE_SEPARATOR = '::KEY%VALUE%SEPARATOR:: ';
 
     /** @var array<string, string> */

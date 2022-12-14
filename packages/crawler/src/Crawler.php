@@ -109,7 +109,7 @@ final class Crawler
      */
     private function getUrls(): array
     {
-        return array_filter($this->urls, fn ($url): bool => null !== $url);
+        return array_filter($this->urls, static fn ($url): bool => null !== $url);
     }
 
     private function crawlUrl(string $absoluteUri): void

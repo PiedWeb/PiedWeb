@@ -175,7 +175,7 @@ final class Url
         'updatedAt',
     ];
 
-    public function __toJson(): string
+    public function toJson(): string
     {
         $return = [];
         foreach (self::SERIALIZABLE as $name) {
@@ -247,7 +247,7 @@ final class Url
 
     public function setId(int|string $id): void
     {
-        $this->id = \intval($id);
+        $this->id = (int) $id;
     }
 
     public function getDiscovered(): int

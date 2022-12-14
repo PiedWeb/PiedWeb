@@ -11,3 +11,5 @@ parameters:
         - packages/crawler/src
         - packages/crawler/tests
         - rector.php
+    symfony:
+        consoleApplicationLoader: packages/crawler/bin/console-stan.php

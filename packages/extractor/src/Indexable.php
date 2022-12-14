@@ -10,6 +10,9 @@ final class Indexable
 {
     private readonly int $indexable;
 
+    /**
+     * @var array<string, int>
+     */
     public const NOT_INDEXABLE = [
         'robots' => 1,
         'header' => 2,

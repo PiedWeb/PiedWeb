@@ -112,9 +112,6 @@ class Puphpeteer
         return $this;
     }
 
-    /**
-     * @noRector
-     */
     public function getBrowserPage(bool $new = false): Page
     {
         if ('' === self::$currentKey || ! isset(self::$browser[self::$currentKey])) {
@@ -188,7 +185,7 @@ class Puphpeteer
 
     public function elementExists(string $selector): bool
     {
-        return \count($this->getBrowserPage()->querySelectorAll($selector)) > 0;
+        return [] !== $this->getBrowserPage()->querySelectorAll($selector);
     }
 
     public function close(): void

@@ -38,6 +38,7 @@ class LinksVisualizer
     {
         $csv = Reader::createFromPath($this->config->getDataFolder().Recorder::LINKS_DIR.'/Index.csv', 'r');
         $csv->setHeaderOffset(0);
+
         $records = $csv->getRecords();
         foreach ($records as $r) {
             if (! \is_array($r) || ! isset($r['To'])) {

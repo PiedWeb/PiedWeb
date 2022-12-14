@@ -16,6 +16,6 @@ final class ErrorDetector
 
         /* Captcha Google */
         /* RAS */
-        return str_contains($html, 'document.getElementById(\'captcha');
+        return str_contains($html, "document.getElementById('captcha");
     }
 }

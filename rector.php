@@ -32,18 +32,14 @@ return static function (RectorConfig $rectorConfig): void {
         SetList::CODE_QUALITY,
         LevelSetList::UP_TO_PHP_80,
         LevelSetList::UP_TO_PHP_81,
+        SetList::CODING_STYLE,
         SetList::EARLY_RETURN,
         SetList::TYPE_DECLARATION,
+        // SetList::DEAD_CODE,
         PHPUnitSetList::PHPUNIT_CODE_QUALITY,
         /*
-        SetList::DEAD_CODE,
-        LevelSetList::UP_TO_PHP_80,
-        SetList::CODING_STYLE,
-        SetList::TYPE_DECLARATION,
         SetList::NAMING,
         SetList::PRIVATIZATION,
-        SetList::EARLY_RETURN,
-        PHPUnitSetList::PHPUNIT_CODE_QUALITY,
         */
     ]);
 };

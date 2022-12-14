@@ -24,9 +24,10 @@ final class FollowExtractor
     public function mayFollow(): bool
     {
         $robotsHeaders = new RobotsHeaders(explode(\PHP_EOL, $this->headers));
-        if (!$robotsHeaders->mayFollow()) {
+        if (! $robotsHeaders->mayFollow()) {
             return false;
         }
+
         return ! $this->metaNofollow();
     }
 }

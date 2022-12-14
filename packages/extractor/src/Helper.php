@@ -13,12 +13,9 @@ class Helper
 
     public static function isWebLink(string $url): bool
     {
-        return 1 === preg_match('@^((?:(http:|https:)//([\w\d-]+\.)+[\w\d-]+){0,1}(/?[\w~,;\-\./?%&+#=]*))$@', $url);
+        return 1 === preg_match('#^((?:(http:|https:)//([\w\d-]+\.)+[\w\d-]+){0,1}(/?[\w~,;\-\./?%&+\#=]*))$#', $url);
     }
 
-    /**
-     * @noRector
-     */
     public static function htmlToPlainText(string $html, bool $keepN = false): string
     {
         $str = self::preg_replace_str('#<(style|script).*</(style|script)>#siU', ' ', $html);

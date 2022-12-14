@@ -8,27 +8,21 @@ class TrendsExtractor
     private array $interest = [];
 
     /**
-     * @noRector
-     *
      * @var array{}|array{'default': array{'timelineData': array<int,array{'time':int, 'value':int[]}>}}
      */
     public array $interestOverTime = [];
 
     /**
-     * @noRector
-     *
      * @var array{}|array{'default': array{'rankedList': array{0: array{'rankedKeyword': array{'topic': array{'mid':string, 'title': string, 'type': string}, 'value':int, 'link':string}[]}, 1: array{'rankedKeyword': array{'topic': array{'mid':string, 'title': string, 'type': string}, 'value':int, 'link':string}[]}}}}
      */
     public array $relatedTopics = [];
 
     /**
-     * @noRector
-     *
      * @var array{}|array{'default': array{'rankedList': array{0: array{'rankedKeyword': array{'query': string, 'value':int, 'link':string}[], 1: array{'rankedKeyword': array{'query': string, 'value':int, 'link':string}[]}}}}}
      */
     public array $relatedQueries = [];
 
-    public function __toJson(): string
+    public function toJson(): string
     {
         return \Safe\json_encode([
             'interest' => $this->interest,

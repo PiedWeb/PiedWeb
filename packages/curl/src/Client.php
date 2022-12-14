@@ -61,7 +61,7 @@ class Client
     public function setOpt(int $option, mixed $value): static
     {
         if (\CURLOPT_HEADER === $option) {
-            throw new \Exception('can\'t change CURLOPT_HEADER (always true)');
+            throw new \Exception("can't change CURLOPT_HEADER (always true)");
         }
 
         curl_setopt($this->getHandle(), $option, $value);
@@ -76,8 +76,6 @@ class Client
      *                 http://php.net/manual/en/function.curl-getinfo.php
      *
      * @psalm-suppress InvalidArgument (for $handle)
-     *
-     * @noRector
      */
     public function getCurlInfo(int $opt): mixed
     {
@@ -85,13 +83,9 @@ class Client
     }
 
     /**
-     * Undocumented function.
-     *
      * @return array<string, int|string> an associative array with the following elements (which correspond to opt): "url" "content_type" "http_code" "header_size" "request_size" "filetime" "ssl_verify_result" "redirect_count" "total_time" "namelookup_time" "connect_time" "pretransfer_time" "size_upload" "size_download" "speed_download" "speed_upload" "download_content_length" "upload_content_length" "starttransfer_time" "redirect_time"
      *
      * @psalm-suppress InvalidArgument (for $handle)
-     *
-     * @noRector
      */
     public function getCurlInfos(): array
     {

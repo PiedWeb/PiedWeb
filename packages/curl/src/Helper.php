@@ -12,7 +12,7 @@ class Helper
      */
     public static function getSchemeFrom(string &$proxy): string
     {
-        if (! preg_match('@^([a-z0-9]*)://@', $proxy, $match)) {
+        if (! preg_match('#^([a-z0-9]*)://#', $proxy, $match)) {
             return 'http://';
         }
 
@@ -47,12 +47,10 @@ class Helper
                 }
 
                 $key = $h[0];
-            } else {
-                if ("\t" == substr($h[0], 0, 1)) {
-                    $headers[$key] .= "\r\n\t".trim($h[0]);
-                } elseif (! $key) {
-                    $headers[0] = trim($h[0]);
-                }
+            } elseif ("\t" == substr($h[0], 0, 1)) {
+                $headers[$key] .= "\r\n\t".trim($h[0]);
+            } elseif (! $key) {
+                $headers[0] = trim($h[0]);
             }
         }
 
@@ -77,11 +75,12 @@ class Helper
     public static function parseHeader(array|string $header): array
     {
         static $trimmed = "\"'  \n\t\r";
-        $params = $matches = [];
+        $params = [];
+        $matches = [];
         foreach (self::normalizeHeader($header) as $val) {
             $part = [];
             foreach (\Safe\preg_split('/;(?=([^"]*"[^"]*")*[^"]*$)/', $val) as $kvp) {
-                if (preg_match_all('/<[^>]+>|[^=]+/', (string) $kvp, $matches)) {
+                if (preg_match_all('#<[^>]+>|[^=]+#', (string) $kvp, $matches)) {
                     $m = $matches[0];
                     if (isset($m[1])) {
                         $part[trim((string) $m[0], $trimmed)] = trim((string) $m[1], $trimmed);

@@ -125,7 +125,7 @@ final class Recorder
 
         if (false !== $dataCsv && false !== $indexCsv) {
             $header = array_map(
-                fn (string $name): Stringy => Stringy::create($name)->underscored(),
+                static fn (string $name): Stringy => Stringy::create($name)->underscored(),
                 Url::EXPORTABLE
             );
             fputcsv($dataCsv, $header);
@@ -176,7 +176,7 @@ final class Recorder
      */
     public function recordLinksIndex(string $base, Url $from, array $urls, array $links): void
     {
-        if (!$this->recordLinks) {
+        if (! $this->recordLinks) {
             return;
         }
 
@@ -209,7 +209,7 @@ final class Recorder
      */
     private function recordOutboundLink(Url $from, array $links): void
     {
-        $links = array_map(fn (Link $link): string => $link->getUrl().';'.$link->getAnchor().';'.((int) $link->mayFollow).';'.$link->getType(), $links);
+        $links = array_map(static fn (Link $link): string => $link->getUrl().';'.$link->getAnchor().';'.((int) $link->mayFollow).';'.$link->getType(), $links);
 
         \Safe\file_put_contents($this->folder.self::LINKS_DIR.'/From_'.(string) $from->getId(), implode(\PHP_EOL, $links));
     }

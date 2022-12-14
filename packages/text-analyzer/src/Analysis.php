@@ -38,7 +38,7 @@ final class Analysis
     {
         return $minFound ? array_filter(
             $this->getExpressions(),
-            fn ($value): bool => $value >= $minFound
+            static fn ($value): bool => $value >= $minFound
         ) : $this->expressions;
     }
 }

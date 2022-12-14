@@ -121,7 +121,7 @@ class CrawlerUrl
         $redirLink = (new RedirectionExtractor($this->url->getUrl(), $this->url->getParsedHeaders()))
             ->getRedirectionLink();
 
-        if (!$redirLink instanceof \PiedWeb\Extractor\Link) {
+        if (! $redirLink instanceof \PiedWeb\Extractor\Link) {
             return false;
         }
 

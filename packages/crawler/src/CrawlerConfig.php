@@ -171,7 +171,7 @@ final class CrawlerConfig
 
     public function getBase(): string
     {
-        return $this->base ??= preg_match('@^(http://|https://)?[^/\?#]+@', $url = $this->startUrl->get(), $match) ? $match[0] : $url;
+        return $this->base ??= preg_match('#^(http://|https://)?[^/\?\#]+#', $url = $this->startUrl->get(), $match) ? $match[0] : $url;
     }
 
     public function getUrl(Url $url): UrlManipuler

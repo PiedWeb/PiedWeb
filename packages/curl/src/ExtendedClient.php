@@ -182,8 +182,6 @@ class ExtendedClient extends Client
      * @param string $proxy [scheme]IP:PORT[:LOGIN:PASSWORD]
      *                      Eg. : socks5://98.023.023.02:1098:cUrlRequestProxId:SecretPassword
      *
-     * @noRector
-     *
      * @psalm-suppress RedundantCast
      */
     public function setProxy(string $proxy): self
@@ -195,8 +193,7 @@ class ExtendedClient extends Client
         }
 
         $scheme = Helper::getSchemeFrom($proxy);
-        /** @noRector */
-        $proxy = explode(':', $proxy);
+        $proxy = explode(':', (string) $proxy);
         $this->setOpt(\CURLOPT_HTTPPROXYTUNNEL, 1);
         $this->setOpt(\CURLOPT_PROXY, $scheme.$proxy[0].':'.$proxy[1]);
         if (isset($proxy[2])) {
@@ -230,7 +227,7 @@ class ExtendedClient extends Client
     {
         // $this->setOpt(CURLOPT_BUFFERSIZE, 128); // more progress info
         $this->setOpt(\CURLOPT_NOPROGRESS, false);
-        $this->setOpt(\CURLOPT_PROGRESSFUNCTION, function ($handle, $totalBytes, $receivedBytes) use ($maxBytes) {
+        $this->setOpt(\CURLOPT_PROGRESSFUNCTION, static function ($handle, $totalBytes, $receivedBytes) use ($maxBytes) {
             if ($totalBytes > $maxBytes) {
                 return 1;
             }
