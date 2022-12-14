@@ -24,29 +24,45 @@ final class CrawlerConfig
 
     public readonly string $dataDirectory;
 
+    public readonly string $userAgent;
+
+    public readonly int $cacheMethod;
+
+    public readonly int $sleepBetweenReqInMs;
+
+    public readonly string $virtualRobotsTxtRules;
+
+    public bool $executeJs = false;
+
+    /** @var string[] */
+    public readonly array $toHarvest;
+
     /**
-     * @param string[] $toHarvest
-     *                            param array<string, int|string|bool> $params
+     * @param string[]|null $toHarvest
      */
     public function __construct(
         public readonly int $depthLimit = 0,
-        public readonly string $userAgent = 'Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)',
-        public readonly int $cacheMethod = Recorder::CACHE_URI,
-        public readonly int $sleepBetweenReqInMs = 10000, // microseconds
-        public readonly string $virtualRobotsTxtRules = '',
-        public readonly bool $executeJs = false,
-        public readonly array $toHarvest = [
+        ?string $userAgent = null,
+        ?int $cacheMethod = null,
+        ?int $sleepBetweenReqInMs = null, // ms
+         ?string $virtualRobotsTxtRules = null,
+        ?array $toHarvest = null,
+        ?string $dataDirectory = null,
+        public readonly int $autosave = 500 // number of Urls we can crawled before saving (0 = autosaving disabled)
+    ) {
+        $this->userAgent = $userAgent ?? 'Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)';
+        $this->cacheMethod = $cacheMethod ?? Recorder::CACHE_URI;
+        $this->sleepBetweenReqInMs = $sleepBetweenReqInMs ?? 1000;
+        $this->virtualRobotsTxtRules = $virtualRobotsTxtRules ?? '';
+        $this->toHarvest = $toHarvest ?? [
             'indexable',
             'links',
             'textData',
             'title',
             'h1',
             'canonical',
-        ],
-        string $dataDirectory = '',
-        public readonly int $autosave = 500 // number of Urls we can crawled before saving (0 = autosaving disabled)
-    ) {
-        $this->dataDirectory = self::dataDirectory($dataDirectory);
+        ];
+        $this->dataDirectory = self::dataDirectory((string) $dataDirectory);
     }
 
     public function setStartUrl(string $startUrl): self
@@ -114,7 +130,7 @@ final class CrawlerConfig
             $config[3], // @phpstan-ignore-line
             $config[4],  // @phpstan-ignore-line
             $config[5], // @phpstan-ignore-line
-            $config[6], // @phpstan-ignore-line
+            // $config[6], // executeJs
             $config[7], // @phpstan-ignore-line
             $config[8], // @phpstan-ignore-line
             $dataDirectory
