@@ -64,8 +64,6 @@ class GoogleRequester
             \call_user_func($manageProxy, $this->getPuppeteerClient());
         }
 
-        $rawHtml = $this->getPuppeteerClient()->get($manager->generateGoogleSearchUrl());
-
-        return $rawHtml;
+        return $this->getPuppeteerClient()->get($manager->generateGoogleSearchUrl());
     }
 }

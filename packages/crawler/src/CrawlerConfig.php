@@ -118,7 +118,7 @@ final class CrawlerConfig
             $config[7], // @phpstan-ignore-line
             $config[8], // @phpstan-ignore-line
             $dataDirectory
-        ))->setStartUrl(\strval($config[1]))// @phpstan-ignore-line
+        ))->setStartUrl((string) $config[1])// @phpstan-ignore-line
             ->setId($config[0]); // @phpstan-ignore-line
     }
 

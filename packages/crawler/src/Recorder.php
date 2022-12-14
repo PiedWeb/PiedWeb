@@ -92,7 +92,7 @@ final class Recorder
 
         $urlPartLenght = \count($urlPart);
         for ($i = 0; $i < $urlPartLenght; ++$i) {
-            if ($i == $urlPartLenght - 1) {
+            if ($i === $urlPartLenght - 1) {
                 return $folder.'/'.('' === $urlPart[$i] ? 'index.html' : $urlPart[$i]);
             }
 
@@ -156,7 +156,7 @@ final class Recorder
         }
     }
 
-    private function recordInboundLink(Link $link, Url $from, Url $to): void
+    private function recordInboundLink(Link $link, Url $to): void
     {
         \Safe\file_put_contents(
             $this->folder.self::LINKS_DIR.'/To_'.(string) $to->getId().'_'.((int) $link->mayFollow),
@@ -176,7 +176,7 @@ final class Recorder
      */
     public function recordLinksIndex(string $base, Url $from, array $urls, array $links): void
     {
-        if (false === $this->recordLinks) {
+        if (!$this->recordLinks) {
             return;
         }
 
@@ -185,7 +185,7 @@ final class Recorder
 
         foreach ($links as $link) {
             $content .= $from->getId();
-            $uri = self::removeBase($base, $link->getPageUrl());
+            $uri = self::removeBase($base, (string) $link->getPageUrl());
             if (\in_array($link->getUrl(), $everAdded)) { // like Google, we sould not add duplicate link,
                 // so we say the juice is lost -1
                 $content .= ',-1'.\PHP_EOL;
@@ -195,7 +195,7 @@ final class Recorder
             }
 
             if (isset($urls[$uri])) {
-                $this->recordInboundLink($link, $from, $urls[$uri]);
+                $this->recordInboundLink($link, $urls[$uri]);
             }
         }
 

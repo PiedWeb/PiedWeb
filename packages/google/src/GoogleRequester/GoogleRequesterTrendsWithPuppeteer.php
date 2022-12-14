@@ -60,7 +60,7 @@ class GoogleRequesterTrendsWithPuppeteer extends GoogleRequester implements Goog
             \call_user_func($this->trendsManager->manageProxy, $this->getPuppeteerClient());
         }
 
-        if (true === $this->firstTrendsRequest) {
+        if ($this->firstTrendsRequest) {
             $this->getPuppeteerClient()->get('https://trends.google.com/trends/?geo=FR'); // load cookies
             sleep(2);
             $this->firstTrendsRequest = false;

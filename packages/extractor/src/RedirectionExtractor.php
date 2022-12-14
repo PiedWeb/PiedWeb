@@ -18,7 +18,7 @@ final class RedirectionExtractor
      */
     public function getRedirection(): ?string
     {
-        $headers = array_change_key_case([] !== $this->headers ? $this->headers : []);
+        $headers = array_change_key_case($this->headers);
         if (! isset($headers['location'])) {
             return null;
         }

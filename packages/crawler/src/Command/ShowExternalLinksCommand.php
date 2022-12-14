@@ -40,7 +40,7 @@ class ShowExternalLinksCommand extends Command
 
         $table->setHeaders($input->getOption('host') ? ['Host'] : ['url', 'from']);
 
-        $links = (new ExtractExternalLinks(\strval($input->getArgument('id'))))->get();
+        $links = (new ExtractExternalLinks((string) $input->getArgument('id')))->get();
         arsort($links);
         $ever = [];
         foreach ($links as $link => $from) {

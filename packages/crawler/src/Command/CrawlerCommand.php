@@ -117,12 +117,12 @@ final class CrawlerCommand extends Command
         if (null === $this->id) {
             return new Crawler(
                 (new CrawlerConfig(
-                    \intval($input->getOption('limit')),
-                    \strval($input->getOption('user-agent')),
-                    \intval($input->getOption('cache-method')),
-                    \intval($input->getOption('wait')),
+                    (int) $input->getOption('limit'),
+                    (string) $input->getOption('user-agent'),
+                    (int) $input->getOption('cache-method'),
+                    (int) $input->getOption('wait'),
                     $this->loadVirtualRobotsTxt($input)
-                ))->setStartUrl(\strval($input->getArgument('start'))),
+                ))->setStartUrl((string) $input->getArgument('start')),
                 ! $input->getOption('quiet')
             );
         }
@@ -130,7 +130,7 @@ final class CrawlerCommand extends Command
         if ($input->getOption('restart')) {
             return Crawler::restart(
                 $this->id,
-                2 == $input->getOption('restart') ? true : false, // $fromCache
+                2 == $input->getOption('restart'), // $fromCache
                 ! $input->getOption('quiet')
             );
         }
@@ -144,7 +144,7 @@ final class CrawlerCommand extends Command
             return '';
         }
 
-        $ignore = \strval($input->getOption('ignore'));
+        $ignore = (string) $input->getOption('ignore');
 
         if (filter_var($ignore, \FILTER_VALIDATE_URL)) {
             return StaticClient::request($ignore);

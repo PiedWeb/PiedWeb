@@ -45,7 +45,7 @@ final class CanonicalExtractor
             throw new \Exception('You must check if canonical exists before');
         }
 
-        if ($this->urlRequested->__toString() == $canonical) {
+        if ($this->urlRequested->__toString() === $canonical) {
             return true;
         }
 
@@ -54,6 +54,6 @@ final class CanonicalExtractor
         // check for http://example.tld or http://example.tld/
         return false !== $pregMatch
                 && $match[0] === ltrim($this->urlRequested->__toString(), '/')
-                && ($match[0] == $canonical || $match[0].'/' == $canonical);
+                && ($match[0] === $canonical || $match[0].'/' === $canonical);
     }
 }

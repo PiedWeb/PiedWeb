@@ -17,7 +17,8 @@
   ],
   "require": {
     "php": ">=8.1",
-    "piedweb/url-harvester": "*",
+    "piedweb/extractor": "*",
+    "piedweb/text-analyzer": "*",
     "league/csv": "^9.8",
     "piedweb/curl": "*",
     "symfony/console": "^6.1"

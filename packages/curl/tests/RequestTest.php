@@ -30,9 +30,9 @@ class RequestTest extends \PHPUnit\Framework\TestCase
 
         $this->assertSame('text/html; charset=UTF-8', $request->getResponse()->getContentType());
         $this->assertGreaterThan(10, \strlen($request->getResponse()->getContent()));
-        $this->assertStringContainsString('200', \strval($request->getResponse()->getHeaders()[0] ?? ''));
+        $this->assertStringContainsString('200', (string) ($request->getResponse()->getHeaders()[0] ?? ''));
         $this->assertStringContainsString('200', (string) $request->getResponse()->getHeaderLine('0'));
-        $this->assertStringContainsString('200', \strval($request->getResponse()->getHeader('0')));
+        $this->assertStringContainsString('200', (string) $request->getResponse()->getHeader('0'));
         $this->assertNull($request->getResponse()->getCookies());
     }
 

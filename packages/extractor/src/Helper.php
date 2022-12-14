@@ -26,9 +26,8 @@ class Helper
         $str = self::preg_replace_str('/<\/[a-z]+>/siU', ' ', $str);
         $str = str_replace(["\r", "\t"], ' ', $str);
         $str = strip_tags(self::preg_replace_str('/<[^<]+?>/', ' ', $str));
-        $str = self::preg_replace_str($keepN ? '/ {2,}/' : '/\s+/', ' ', $str);
 
-        return $str;
+        return self::preg_replace_str($keepN ? '/ {2,}/' : '/\s+/', ' ', $str);
     }
 
     public static function preg_replace_str(string $pattern, array|string $replacement, array|string $subject, int $limit = -1, int &$count = 0): string // @phpstan-ignore-line

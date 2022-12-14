@@ -104,13 +104,13 @@ class SERPExtractor
 
         foreach ($nodes as $k => $node) {
             // skip if you are in ads
-            $ads = null !== $nodes->eq($k)->closest('#tads, #bottomads') ? true : false;
+            $ads = null !== $nodes->eq($k)->closest('#tads, #bottomads');
             if ($organicOnly && $ads) {
                 continue;
             }
 
             $result = $this->extractResultFrom($node, $ads);
-            if (null === $result) {
+            if (!$result instanceof \PiedWeb\Google\Result\SearchResult) {
                 continue;
             }
 
@@ -195,7 +195,7 @@ class SERPExtractor
             ->filterXPath("//h2[text()='Extrait optimisé sur le Web']/ancestor::block-component//a[@class]")
             ->getNode(0);
 
-        if (null === $linkNodePositionZero || ! $linkNodePositionZero instanceof \DOMElement) {
+        if (!$linkNodePositionZero instanceof \DOMNode || ! $linkNodePositionZero instanceof \DOMElement) {
             file_put_contents('/tmp/debug.html', $this->html);
 
             throw new \LogicException('Google has changed its selector (position Zero)');
@@ -251,7 +251,7 @@ class SERPExtractor
     {
         foreach ($xpaths as $xpath) {
             $node = $this->domCrawler->filterXPath($xpath)->getNode(0);
-            if (null === $node) {
+            if (!$node instanceof \DOMNode) {
                 continue;
             }
 

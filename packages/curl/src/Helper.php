@@ -71,6 +71,8 @@ class Helper
      * @param string|string[] $header header to parse into components
      *
      * @return array<int, array<int|string, string>> returns the parsed header values
+     *
+     * @psalm-suppress RedundantCast
      */
     public static function parseHeader(array|string $header): array
     {

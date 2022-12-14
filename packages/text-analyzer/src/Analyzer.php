@@ -69,7 +69,7 @@ class Analyzer
     {
         arsort($this->expressions);
 
-        foreach ($this->expressions as $expression => $int) {
+        foreach (array_keys($this->expressions) as $expression) {
             $this->cleanSimilar($expression);
         }
     }
@@ -90,10 +90,11 @@ class Analyzer
 
     private function findSimilar(string $expressionToCompare): string
     {
-        foreach ($this->expressions as $expression => $int) {
+        foreach (array_keys($this->expressions) as $expression) {
             if ($expression === $expressionToCompare) {
                 continue;
             }
+
             if (! str_contains($expression, $expressionToCompare)) {
                 continue;
             }
@@ -123,7 +124,7 @@ class Analyzer
                 $expression = $this->cleanExpr($expression, $wordNumber);
 
                 if ('' === $expression
-                    || ((substr_count($expression, ' ') + 1) != $wordNumber) // We avoid sur-pondération
+                    || (substr_count($expression, ' ') + 1 !== $wordNumber) // We avoid sur-pondération
                     || ! preg_match('/[a-z]/', $expression) // We avoid number or symbol only result
                 ) {
                     if (1 === $wordNumber) {

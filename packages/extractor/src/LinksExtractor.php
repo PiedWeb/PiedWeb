@@ -112,7 +112,7 @@ class LinksExtractor
             }
         }
 
-        if (! $url) {
+        if ($url === '' || $url === '0') {
             return null;
         }
 

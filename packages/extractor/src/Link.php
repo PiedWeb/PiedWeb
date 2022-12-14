@@ -159,7 +159,7 @@ final class Link implements \Stringable
             return true;
         }
 
-        if (! $this->element->getAttribute('rel')) {
+        if ($this->element->getAttribute('rel') === '' || $this->element->getAttribute('rel') === '0') {
             return true;
         }
 
@@ -173,7 +173,7 @@ final class Link implements \Stringable
 
     public function isInternalLink(): bool
     {
-        return $this->url->getOrigin() == $this->getParentUrl()->getOrigin();
+        return $this->url->getOrigin() === $this->getParentUrl()->getOrigin();
     }
 
     public function isSubLink(): bool
@@ -182,7 +182,7 @@ final class Link implements \Stringable
             return false;
         }
 
-        return $this->url->getRegistrableDomain() == $this->parentUrl->getRegistrableDomain();
+        return $this->url->getRegistrableDomain() === $this->parentUrl->getRegistrableDomain();
         // && strtolower(substr($this->getHost(), -strlen($this->parentDomain))) === $this->parentDomain;
     }
 

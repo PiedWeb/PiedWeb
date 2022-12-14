@@ -87,7 +87,7 @@ final class BreadcrumbExtractor
     {
         foreach ($array as $a) {
             $link = $this->extractHref($a);
-            if (null === $link || $link == $this->parentUrl->get()) {
+            if (null === $link || $link === $this->parentUrl->get()) {
                 break;
             }
 

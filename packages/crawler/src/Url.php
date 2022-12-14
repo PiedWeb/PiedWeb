@@ -684,12 +684,8 @@ final class Url
     /**
      * @param Link[] $breadcrumb
      */
-    public function setBreadcrumb(array|string $breadcrumb): void
+    public function setBreadcrumb(array $breadcrumb): void
     {
-        if (\is_string($breadcrumb)) {
-            return;
-        }
-
         $this->breadcrumb = $breadcrumb;
     }
 

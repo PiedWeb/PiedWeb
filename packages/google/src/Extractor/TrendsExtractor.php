@@ -93,7 +93,7 @@ class TrendsExtractor
     {
         $interest = $this->getinterest();
 
-        return 0 === \count($interest) ? 1
+        return [] === $interest ? 1
             : (int) round(array_sum($interest) / \count($interest));
     }
 

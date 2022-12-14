@@ -36,9 +36,9 @@ final class Analysis
      */
     public function getExpressions(?int $minFound = null): array
     {
-        return ! $minFound ? $this->expressions : array_filter(
+        return $minFound ? array_filter(
             $this->getExpressions(),
             fn ($value): bool => $value >= $minFound
-        );
+        ) : $this->expressions;
     }
 }

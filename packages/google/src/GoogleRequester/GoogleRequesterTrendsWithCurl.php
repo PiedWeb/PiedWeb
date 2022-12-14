@@ -25,7 +25,7 @@ class GoogleRequesterTrendsWithCurl extends GoogleRequester implements GoogleReq
             \call_user_func($this->trendsManager->manageProxy, $this->getCurlClient());
         }
 
-        if (true === $this->firstTrendsRequest) {
+        if ($this->firstTrendsRequest) {
             $curlClient->request('https://trends.google.com/trends/?geo=FR'); // load cookies
             $this->firstTrendsRequest = false;
         }

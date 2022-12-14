@@ -94,7 +94,7 @@ final class RecordPlayer
             }
         }
 
-        $currentClick = \intval($r['click'] ?? 0);
+        $currentClick = (int) ($r['click'] ?? 0);
 
         return [
             'urls' => $urls,

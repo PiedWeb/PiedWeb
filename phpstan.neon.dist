@@ -10,3 +10,4 @@ parameters:
         - packages/extractor/src
         - packages/crawler/src
         - packages/crawler/tests
+        - rector.php

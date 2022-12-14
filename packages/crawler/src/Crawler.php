@@ -131,8 +131,7 @@ final class Crawler
             return;
         }
 
-        /** @var CrawlerUrl */
-        $crawlerUrl = new $this->harvester($url, $this->config);
+        new $this->harvester($url, $this->config); // CrawlerUrl
 
         $this->updateInboundLinksAndUrlsToParse($url, $url->getLinks());
         $url->setDiscovered(\count($this->urls));

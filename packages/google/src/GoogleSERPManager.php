@@ -49,9 +49,7 @@ final class GoogleSERPManager
             $this->setParameter('q', $this->q);
         }
 
-        $url = 'https://www.google.'.$this->tld.'/search?'.$this->generateParameters();
-
-        return $url;
+        return 'https://www.google.'.$this->tld.'/search?'.$this->generateParameters();
     }
 
     private function generateParameters(): string

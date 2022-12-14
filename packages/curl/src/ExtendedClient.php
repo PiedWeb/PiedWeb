@@ -183,6 +183,8 @@ class ExtendedClient extends Client
      *                      Eg. : socks5://98.023.023.02:1098:cUrlRequestProxId:SecretPassword
      *
      * @noRector
+     *
+     * @psalm-suppress RedundantCast
      */
     public function setProxy(string $proxy): self
     {
@@ -193,7 +195,8 @@ class ExtendedClient extends Client
         }
 
         $scheme = Helper::getSchemeFrom($proxy);
-        $proxy = explode(':', (string) $proxy);
+        /** @noRector */
+        $proxy = explode(':', $proxy);
         $this->setOpt(\CURLOPT_HTTPPROXYTUNNEL, 1);
         $this->setOpt(\CURLOPT_PROXY, $scheme.$proxy[0].':'.$proxy[1]);
         if (isset($proxy[2])) {
