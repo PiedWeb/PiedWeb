@@ -154,7 +154,7 @@ class CleanText
 
         $dom = new Crawler($html);
         if ('' === ($text = $dom->text(''))) { // If we failed to load the html in dom
-            $text = self::stripHtmlTagsOldWay($html);
+            return self::stripHtmlTagsOldWay($html);
         }
 
         return $text;

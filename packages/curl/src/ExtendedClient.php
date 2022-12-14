@@ -32,9 +32,9 @@ class ExtendedClient extends Client
      * A short way to set some classic options to cURL a web page.
      */
     public function setDefaultGetOptions(
-        int $connectTimeOut = 5,
-        int $timeOut = 10,
-        int $dnsCacheTimeOut = 600,
+        int $connectTimeOut = 10,
+        int $timeOut = 20,
+        int $dnsCacheTimeOut = 900,
         bool $followLocation = true,
         int $maxRedirs = 5,
         bool $autoReferer = true
@@ -54,11 +54,14 @@ class ExtendedClient extends Client
     /**
      * A short way to set some classic options to cURL a web page quickly.
      */
-    public function setDefaultSpeedOptions(): self
-    {
+    public function setDefaultSpeedOptions(
+        int $connectTimeOut = 5,
+        int $timeOut = 10,
+        int $dnsCacheTimeOut = 900
+    ): self {
         $this->setOpt(\CURLOPT_SSL_VERIFYHOST, 0);
         $this->setOpt(\CURLOPT_SSL_VERIFYPEER, 0);
-        $this->setDefaultGetOptions(5, 10, 600, true, 1);
+        $this->setDefaultGetOptions($connectTimeOut, $timeOut, $dnsCacheTimeOut, true, 1);
         $this->setEncodingGzip();
 
         return $this;
@@ -225,7 +228,11 @@ class ExtendedClient extends Client
         // $this->setOpt(CURLOPT_BUFFERSIZE, 128); // more progress info
         $this->setOpt(\CURLOPT_NOPROGRESS, false);
         $this->setOpt(\CURLOPT_PROGRESSFUNCTION, function ($handle, $totalBytes, $receivedBytes) use ($maxBytes) {
-            if ($totalBytes > $maxBytes || $receivedBytes > $maxBytes) {
+            if ($totalBytes > $maxBytes) {
+                return 1;
+            }
+
+            if ($receivedBytes > $maxBytes) {
                 return 1;
             }
         });
@@ -263,6 +270,8 @@ class ExtendedClient extends Client
 
         $request = parent::request($target);
 
+        // if ($this->getError() && !in_array($this->getError(), [18], true)) { return false; }
+
         // Permits to transform HEAD request in GET request
         if (1 === $this->optChangeDuringRequest) {
             return $this->request();
@@ -274,9 +283,15 @@ class ExtendedClient extends Client
             $this->setReferer($effectiveUrl);
         }
 
-        if ($updateRefererAndCookies && ($cookies = $this->getResponse()->getCookies()) !== null) {
-            $this->setCookie($cookies);
+        if (! $updateRefererAndCookies) {
+            return $request;
         }
+
+        if (($cookies = $this->getResponse()->getCookies()) === null) {
+            return $request;
+        }
+
+        $this->setCookie($cookies);
 
         return $request;
     }

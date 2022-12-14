@@ -10,6 +10,7 @@ final class GoogleSuggesterTest extends TestCase
     public function testGoogleSuggester(): void
     {
         $suggester = new GoogleSuggester('pizza');
-        $this->assertContains('pizza fromage', $suggester->extract());
+        // dump($suggester->extract());
+        $this->assertGreaterThan(10, count($suggester->extract()));
     }
 }

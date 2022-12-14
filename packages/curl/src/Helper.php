@@ -2,6 +2,9 @@
 
 namespace PiedWeb\Curl;
 
+/**
+ * @see \PiedWeb\Curl\Test\HelperTest
+ */
 class Helper
 {
     /**

@@ -3,6 +3,10 @@ parameters:
     paths:
         - packages/text-analyzer/src
         - packages/curl/src
+        - packages/curl/tests
         - packages/google/src
+        - packages/google/tests
         - packages/google-spreadsheet-seo-scraper/src
         - packages/extractor/src
+        - packages/crawler/src
+        - packages/crawler/tests

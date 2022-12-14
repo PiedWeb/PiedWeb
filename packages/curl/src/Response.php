@@ -110,7 +110,7 @@ class Response
     }
 
     /**
-     * @return string requested url
+     * @return string|null requested url
      */
     public function getUrl(): ?string
     {
@@ -142,7 +142,7 @@ class Response
     /**
      * Get information (curl info).
      *
-     * @param string $key to get
+     * @param string|null $key to get
      *
      * @return int|string|array<string, string|int>|null
      */

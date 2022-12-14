@@ -19,11 +19,19 @@ final class RedirectionExtractor
     public function getRedirection(): ?string
     {
         $headers = array_change_key_case([] !== $this->headers ? $this->headers : []);
-        if (isset($headers['location']) && \is_string($headers['location']) && Helper::isWebLink($headers['location'])) {
-            return $this->url->resolve($headers['location']);
+        if (! isset($headers['location'])) {
+            return null;
         }
 
-        return null;
+        if (! \is_string($headers['location'])) {
+            return null;
+        }
+
+        if (! Helper::isWebLink($headers['location'])) {
+            return null;
+        }
+
+        return $this->url->resolve($headers['location']);
     }
 
     public function getRedirectionLink(): ?Link

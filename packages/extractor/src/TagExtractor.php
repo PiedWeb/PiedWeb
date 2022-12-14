@@ -18,6 +18,24 @@ final class TagExtractor
         return $found->count() > 0 ? Helper::clean($found->text()) : null;
     }
 
+    public function getFirst(string $selector): ?string
+    {
+        $found = $this->crawler->filter($selector);
+
+        if (0 === $found->count()) {
+            return null;
+        }
+
+        return Helper::clean($found->eq(0)->text());
+    }
+
+    public function getCount(string $selector): int
+    {
+        $found = $this->crawler->filter($selector);
+
+        return $found->count();
+    }
+
     public function getUnique(string $selector = 'title'): ?string
     {
         $found = $this->crawler->filter($selector);

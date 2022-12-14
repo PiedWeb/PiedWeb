@@ -20,7 +20,7 @@ class GoogleRequester
             $this->client = new ExtendedClient();
             $this->client
                 ->setMobileUserAgent()
-                ->setDefaultSpeedOptions()
+                ->setDefaultSpeedOptions(20, 30, 2000)
                 ->setCookie('CONSENT=YES+')
                 ->fakeBrowserHeader();
         }
@@ -46,6 +46,7 @@ class GoogleRequester
         }
 
         $this->getCurlClient()->request($Google->generateGoogleSearchUrl());
+
         if (0 !== $this->getCurlClient()->getError()) {
             throw new \Exception($this->getCurlClient()->getErrorMessage());
         }

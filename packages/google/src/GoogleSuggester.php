@@ -39,7 +39,11 @@ class GoogleSuggester
 
         $content = $this->client->getResponse()->getContent();
         $data = json_decode($content, true, 512, \JSON_THROW_ON_ERROR);
-        if (! \is_array($data) || ! isset($data[1])) {
+        if (! \is_array($data)) {
+            return;
+        }
+
+        if (! isset($data[1])) {
             return;
         }
 

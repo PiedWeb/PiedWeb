@@ -15,11 +15,7 @@ final class ErrorDetector
         }
 
         /* Captcha Google */
-        elseif (str_contains($html, 'document.getElementById(\'captcha')) {
-            return true;
-        }
-
         /* RAS */
-        return false;
+        return str_contains($html, 'document.getElementById(\'captcha');
     }
 }

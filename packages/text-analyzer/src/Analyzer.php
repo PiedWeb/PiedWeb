@@ -4,6 +4,9 @@ namespace PiedWeb\TextAnalyzer;
 
 use PiedWeb\Extractor\Helper;
 
+/**
+ * @see \PiedWeb\TextAnalyzer\Test\AnalyzerTest
+ */
 class Analyzer
 {
     /**
@@ -20,7 +23,7 @@ class Analyzer
     ) {
         $this->text = CleanText::stripHtmlTags($this->text);
         $this->text = CleanText::fixEncoding($this->text);
-        $this->text = CleanText::removeDate($this->text);
+        // $this->text = CleanText::removeDate($this->text);
 
         if ($this->onlyInSentence) {
             $this->text = CleanText::keepOnlySentence($this->text);
@@ -57,9 +60,48 @@ class Analyzer
             $this->extract($sentence);
         }
 
-        arsort($this->expressions);
+        $this->cleanExpressions();
 
         return new Analysis($this->expressions, $this->wordNumber);
+    }
+
+    private function cleanExpressions(): void
+    {
+        arsort($this->expressions);
+
+        foreach ($this->expressions as $expression => $int) {
+            $this->cleanSimilar($expression);
+        }
+    }
+
+    private function cleanSimilar(string $expression): void
+    {
+        $similar = $this->findSimilar($expression);
+        if ('' === $similar) {
+            return;
+        }
+
+        if ($this->expressions[$similar] === $this->expressions[$expression]) {
+            unset($this->expressions[$expression]);
+        }
+
+        // return $this->cleanSimilar($expression);
+    }
+
+    private function findSimilar(string $expressionToCompare): string
+    {
+        foreach ($this->expressions as $expression => $int) {
+            if ($expression === $expressionToCompare) {
+                continue;
+            }
+            if (! str_contains($expression, $expressionToCompare)) {
+                continue;
+            }
+
+            return $expression;
+        }
+
+        return '';
     }
 
     private function extract(string $sentence): void
@@ -88,7 +130,7 @@ class Analyzer
                         $this->incrementWordNumber(-1);
                     }
                 } else {
-                    $plus = 1 + substr_count(CleanText::removeStopWords($expression), ' ');
+                    $plus = 1; // 1 + substr_count(CleanText::removeStopWords($expression), ' ');
                     $this->expressions[$expression] = ($this->expressions[$expression] ?? 0) + $plus;
                 }
             }
@@ -112,7 +154,7 @@ class Analyzer
         // Last Clean
         $expression = trim(Helper::preg_replace_str('/\s+/', ' ', $expression));
         if ('' == htmlentities($expression)) { // Avoid �
-            $expression = '';
+            return '';
         }
 
         return $expression;

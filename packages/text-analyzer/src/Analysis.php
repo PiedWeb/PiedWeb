@@ -34,8 +34,11 @@ final class Analysis
     /**
      * @return array<string, int>
      */
-    public function getExpressions(?int $number = null): array
+    public function getExpressions(?int $minFound = null): array
     {
-        return ! $number ? $this->expressions : \array_slice($this->getExpressions(), 0, $number);
+        return ! $minFound ? $this->expressions : array_filter(
+            $this->getExpressions(),
+            fn ($value): bool => $value >= $minFound
+        );
     }
 }

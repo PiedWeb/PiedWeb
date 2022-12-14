@@ -1,0 +1,41 @@
+
+
+    // could be add in an other class..
+    /**
+     * @var array<int, Url>
+     */
+    private array $index = [];
+
+    /**
+     * @return array<int, Url>
+     */
+    private function getIndexFromPreviousCrawl(): array
+    {
+        if ([] !== $this->index) {
+            return $this->index;
+        }
+
+        $indexFilePath = $this->getDataFolder().'/index.csv';
+        if (! file_exists($indexFilePath)) {
+            throw new \Exception('Previous crawl\'s data not found (index.csv)');
+        }
+
+        $csv = Reader::createFromPath($indexFilePath, 'r');
+        $csv->setHeaderOffset(0);
+
+        $records = $csv->getRecords();
+        foreach ($records as $r) {
+            if (!is_array($r) || !isset($r['id'])||!isset($r['uri'])) throw new LogicException();
+            $this->index[intval($r['id'])] = new Url($this->getBase().$r['uri'], 0);
+            $this->index[intval($r['id'])]->setId($r['id']);
+        }
+
+        return $this->index;
+    }
+
+    public function getUrlFromId(int $id, bool $addBase = true): ?string
+    {
+        $index = $this->getIndexFromPreviousCrawl();
+
+        return isset($index[$id]) ? ($addBase ? $this->getBase() : '').$index[$id]->getUri() : null;
+    }

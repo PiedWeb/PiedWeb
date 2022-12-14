@@ -6,49 +6,24 @@ use Spatie\Robots\RobotsHeaders;
 use Spatie\Robots\RobotsTxt;
 use Symfony\Component\DomCrawler\Crawler;
 
-class Indexable
+final class Indexable
 {
     private readonly int $indexable;
 
-    /**
-     * @var int
-     */
-    private const INDEXABLE = 0;
+    public const NOT_INDEXABLE = [
+        'robots' => 1,
+        'header' => 2,
+        'meta' => 3,
+        'canonical' => 4,
+        '4XX' => 5,
+        '5XX' => 6,
+        'redir' => 7,
+    ];
 
     /**
      * @var int
      */
-    private const NOT_INDEXABLE_ROBOTS = 1;
-
-    /**
-     * @var int
-     */
-    private const NOT_INDEXABLE_HEADER = 2;
-
-    /**
-     * @var int
-     */
-    private const NOT_INDEXABLE_META = 3;
-
-    /**
-     * @var int
-     */
-    private const NOT_INDEXABLE_CANONICAL = 4;
-
-    /**
-     * @var int
-     */
-    private const NOT_INDEXABLE_4XX = 5;
-
-    /**
-     * @var int
-     */
-    private const NOT_INDEXABLE_5XX = 6;
-
-    /**
-     * @var int
-     */
-    final public const NOT_INDEXABLE_REDIR = 9;
+    public const INDEXABLE = 0;
 
     public function __construct(
         private readonly Url $url,
@@ -100,38 +75,43 @@ class Indexable
 
     private function analyze(): int
     {
-        if ($this->robotsTxtAllows()) {
-            return self::NOT_INDEXABLE_ROBOTS;
+        if (! $this->robotsTxtAllows()) {
+            return self::NOT_INDEXABLE['robots'];
         }
 
-        if ($this->headersAllow()) {
-            return self::NOT_INDEXABLE_HEADER;
+        if (! $this->headersAllow()) {
+            return self::NOT_INDEXABLE['header'];
         }
 
         if (! $this->metaAllows()) {
-            return self::NOT_INDEXABLE_META;
+            return self::NOT_INDEXABLE['meta'];
         }
 
         // canonical
         if (! (new CanonicalExtractor($this->url, $this->crawler))->isCanonicalCorrect()) {
-            return self::NOT_INDEXABLE_CANONICAL;
+            return self::NOT_INDEXABLE['canonical'];
         }
 
         // status 4XX
         if ($this->statusCode < 500 && $this->statusCode > 399) {
-            return self::NOT_INDEXABLE_4XX;
+            return self::NOT_INDEXABLE['4XX'];
         }
 
         // status 5XX
         if ($this->statusCode < 600 && $this->statusCode > 499) {
-            return self::NOT_INDEXABLE_5XX;
+            return self::NOT_INDEXABLE['5XX'];
         }
 
         // status 3XX
-        if ($this->statusCode < 400 && $this->statusCode > 299) {
-            return self::NOT_INDEXABLE_REDIR;
+        if ($this->statusCode >= 400) {
+            // weird
+            return self::INDEXABLE;
         }
 
-        return self::INDEXABLE;
+        if ($this->statusCode <= 299) {
+            return self::INDEXABLE;
+        }
+
+        return self::NOT_INDEXABLE['redir'];
     }
 }

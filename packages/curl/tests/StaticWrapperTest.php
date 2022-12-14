@@ -8,10 +8,10 @@ use PiedWeb\Curl\StaticClient as Client;
 
 class StaticWrapperTest extends \PHPUnit\Framework\TestCase
 {
-    public function testStaticGet()
+    public function testStaticGet(): void
     {
         $url = 'https://dev.piedweb.com/robots.txt';
         $result = Client::request($url);
-        $this->assertTrue(\strlen($result) > 10);
+        $this->assertGreaterThan(10, \strlen($result));
     }
 }

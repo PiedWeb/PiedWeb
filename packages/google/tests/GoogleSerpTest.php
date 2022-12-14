@@ -21,7 +21,7 @@ final class GoogleSerpTest extends TestCase
         return $manager;
     }
 
-    private function extractSERP(string $rawHtml)
+    private function extractSERP(string $rawHtml): void
     {
         $extractor = new SERPExtractor($rawHtml);
         // $this->assertNotSame(0, $extractor->getNbrResults());
@@ -60,7 +60,7 @@ final class GoogleSerpTest extends TestCase
         return new SERPExtractorJsExtended($rawHtml);
     }
 
-    public function testExtractionPositionZero()
+    public function testExtractionPositionZero(): void
     {
         $extractor = $this->getExtractor('marmotte vercors'); // position Zero PiedVert.com, if test failed, check position Zero on SERP exists
 
@@ -71,6 +71,7 @@ final class GoogleSerpTest extends TestCase
 
             return;
         }
+
         $this->assertTrue($extractor->containsSerpFeature('PositionZero'));
         $this->assertStringContainsString('piedvert.com', $extractor->getPositionsZero()->url);
     }

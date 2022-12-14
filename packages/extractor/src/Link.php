@@ -6,54 +6,58 @@ use Symfony\Component\DomCrawler\Crawler as DomCrawler;
 
 final class Link implements \Stringable
 {
-    private readonly Url $url;
+    public readonly Url $url;
 
-    private ?string $anchor = null;
+    public readonly bool $mayFollow;
 
-    // wrapper related
-    /**
-     * @var int
-     */
+    public ?string $anchor;
+
+    /** @var int */
     public const LINK_A = 1;
 
-    /**
-     * @var int
-     */
+    /** @var int */
     public const LINK_SRC = 4;
 
-    /**
-     * @var int
-     */
+    /** @var int */
     public const LINK_3XX = 2;
 
-    /**
-     * @var int
-     */
+    /** @var int */
     public const LINK_301 = 3;
 
-    // type related
-    /**
-     * @var int
-     */
+    // ---
+    /** @var int */
     public const LINK_SELF = 1;
 
-    /**
-     * @var int
-     */
+    /** @var int */
     public const LINK_INTERNAL = 2;
 
-    /**
-     * @var int
-     */
+    /** @var int */
     public const LINK_SUB = 3;
 
-    /**
-     * @var int
-     */
+    /** @var int */
     public const LINK_EXTERNAL = 4;
+
+    /**
+     * Always submit absoute Url !
+     */
+    public function __construct(
+        string $url,
+        public readonly Url $parentUrl,
+        bool $parentMayFollow = true,
+        public readonly ?\DOMElement $element = null,
+        private ?int $wrapper = null
+    ) {
+        $this->mayFollow = $this->mayFollow($parentMayFollow);
+        $this->url = new Url(self::normalizeUrl($url));
+        $this->setAnchor();
+        if (null !== $this->element) {
+            $this->setWrapper($this->element);
+        }
+    }
 
     public function __toString(): string
     {
+        // return $link->getParentUrl().';'.$link->getAnchor().';'.((int) $link->mayFollow()).';'.$link->getType();
         return '['.$this->anchor.']('.$this->url->get().')';
     }
 
@@ -83,23 +87,6 @@ final class Link implements \Stringable
             $this->wrapper = self::LINK_SRC;
 
             return;
-        }
-    }
-
-    /**
-     * Always submit absoute Url !
-     */
-    public function __construct(
-        string $url,
-        private readonly Url $parentUrl,
-        private readonly bool $parentMayFollow = true,
-        private readonly ?\DOMElement $element = null,
-        private ?int $wrapper = null
-    ) {
-        $this->url = new Url(self::normalizeUrl($url));
-        $this->setAnchor();
-        if (null !== $this->element) {
-            $this->setWrapper($this->element);
         }
     }
 
@@ -160,26 +147,25 @@ final class Link implements \Stringable
         return $this->element;
     }
 
-    public function mayFollow(): bool
+    private function mayFollow(bool $parentMayFollow): bool
     {
         // check meta robots and headers
-        if (! $this->parentMayFollow) {
+        if (! $parentMayFollow) {
             return false;
         }
 
         // check "type" rel
-        if (null !== $this->element && $this->element->getAttribute('rel')) {
-            if (preg_match('(nofollow|sponsored|ugc)', $this->element->getAttribute('rel'))) {
-                return false;
-            }
+        if (null === $this->element) {
+            return true;
         }
 
-        return true;
+        if (! $this->element->getAttribute('rel')) {
+            return true;
+        }
+
+        return ! preg_match('(nofollow|sponsored|ugc)', $this->element->getAttribute('rel'));
     }
 
-    /**
-     * @return string
-     */
     public function getRelAttribute(): ?string
     {
         return null !== $this->element ? $this->element->getAttribute('rel') : null;
@@ -192,15 +178,21 @@ final class Link implements \Stringable
 
     public function isSubLink(): bool
     {
-        return ! $this->isInternalLink()
-            && $this->url->getRegistrableDomain() == $this->parentUrl->getRegistrableDomain();
+        if ($this->isInternalLink()) {
+            return false;
+        }
+
+        return $this->url->getRegistrableDomain() == $this->parentUrl->getRegistrableDomain();
         // && strtolower(substr($this->getHost(), -strlen($this->parentDomain))) === $this->parentDomain;
     }
 
     public function isSelfLink(): bool
     {
-        return $this->isInternalLink()
-            && $this->url->getDocumentUrl() == $this->parentUrl->getDocumentUrl();
+        if (! $this->isInternalLink()) {
+            return false;
+        }
+
+        return $this->url->getDocumentUrl() == $this->parentUrl->getDocumentUrl();
     }
 
     public function getType(): int

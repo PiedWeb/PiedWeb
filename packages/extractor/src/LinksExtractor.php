@@ -112,7 +112,11 @@ class LinksExtractor
             }
         }
 
-        if (! $url || ! Helper::isWebLink($url)) {
+        if (! $url) {
+            return null;
+        }
+
+        if (! Helper::isWebLink($url)) {
             return null;
         }
 

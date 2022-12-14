@@ -58,9 +58,14 @@ use Rector\Set\ValueObject\LevelSetList;
 return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->parallel();
 
+    $composerConfig = json_decode(file_get_contents('composer.json'), true);
+    $paths = array_merge(
+        array_values($composerConfig['autoload']['psr-4']),
+        array_values($composerConfig['autoload-dev']['psr-4'])
+    );
     $rectorConfig->paths(array_map(
             function ($path) { return __DIR__.'/'.$path; },
-            array_values(json_decode(file_get_contents('composer.json'), true)['autoload']['psr-4'])
+            $paths
         ));
 
     $rectorConfig->skip([
@@ -72,16 +77,17 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->sets([
         LevelSetList::UP_TO_PHP_80,
         LevelSetList::UP_TO_PHP_81,
+        SetList::EARLY_RETURN,
+        SetList::TYPE_DECLARATION,
+        SetList::TYPE_DECLARATION_STRICT,
+        PHPUnitSetList::PHPUNIT_CODE_QUALITY
         // SetList::CODE_QUALITY,
         // SetList::DEAD_CODE,
         // SetList::CODING_STYLE,
-        // SetList::TYPE_DECLARATION,
-        // SetList::TYPE_DECLARATION_STRICT,
-        // SetList::NAMING,
         // SetList::PRIVATIZATION,
-        // SetList::EARLY_RETURN,
         // PHPUnitSetList::PHPUNIT_CODE_QUALITY,
     ]);
+
     $rectorConfig->rule(CombinedAssignRector::class);
     $rectorConfig->rule(SimplifyConditionsRector::class);
     $rectorConfig->rule(SimplifyDeMorganBinaryRector::class);

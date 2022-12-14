@@ -1,0 +1,35 @@
+{
+  "name": "piedweb/crawler",
+  "type": "library",
+  "description": "Web Crawler to check few SEO basics.",
+  "keywords": [
+    "Pied Web",
+    "Crawler"
+  ],
+  "homepage": "https://dev.piedweb.com",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Robin D. (ak Pied Web)",
+      "email": "contact@robin-d.fr",
+      "homepage": "https://piedweb.com"
+    }
+  ],
+  "require": {
+    "php": ">=8.1",
+    "piedweb/url-harvester": "*",
+    "league/csv": "^9.8",
+    "piedweb/curl": "*",
+    "symfony/console": "^6.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "PiedWeb\\Crawler\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "PiedWeb\\Crawler\\": "tests"
+    }
+  }
+}

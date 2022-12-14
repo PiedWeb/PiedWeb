@@ -28,6 +28,29 @@ class TrendsExtractor
      */
     public array $relatedQueries = [];
 
+    public function __toJson(): string
+    {
+        return \Safe\json_encode([
+            'interest' => $this->interest,
+            'interestOverTime' => $this->interestOverTime,
+            'relatedTopics' => $this->relatedTopics,
+            'relatedQueries' => $this->relatedQueries,
+            'v' => 1,
+        ]);
+    }
+
+    public static function loadFromJson(string $json): self
+    {
+        $json = \Safe\json_decode($json, true);
+        $current = new self();
+        $current->interest = $json['interest']; // @phpstan-ignore-line
+        $current->interestOverTime = $json['interestOverTime']; // @phpstan-ignore-line
+        $current->relatedTopics = $json['relatedTopics']; // @phpstan-ignore-line
+        $current->relatedQueries = $json['relatedQueries']; // @phpstan-ignore-line
+
+        return $current;
+    }
+
     public function setRelatedTopics(string $relatedTopics): void
     {
         $this->relatedTopics = '' === $relatedTopics ? [] // @phpstan-ignore-line
@@ -49,7 +72,11 @@ class TrendsExtractor
     /** @return array<int, int> */
     public function getInterest(): array
     {
-        if ([] !== $this->interest || [] === $this->interestOverTime) {
+        if ([] !== $this->interest) {
+            return $this->interest;
+        }
+
+        if ([] === $this->interestOverTime) {
             return $this->interest;
         }
 

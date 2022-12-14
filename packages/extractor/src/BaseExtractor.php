@@ -18,10 +18,14 @@ final class BaseExtractor
         }
 
         $baseHref = (new Crawler($base))->attr('href');
-        if ($baseHref && filter_var($baseHref, \FILTER_VALIDATE_URL)) {
-            return new Url($baseHref);
+        if (! $baseHref) {
+            return null;
         }
 
-        return null;
+        if (! filter_var($baseHref, \FILTER_VALIDATE_URL)) {
+            return null;
+        }
+
+        return new Url($baseHref);
     }
 }

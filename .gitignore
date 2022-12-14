@@ -1,8 +1,8 @@
 # WiP
 /packages/perso
-/packages/seo-pocket-crawler
 
 # ...
+/packages/crawler/data
 build
 tmp.csv
 var

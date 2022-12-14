@@ -4,6 +4,8 @@ namespace PiedWeb\Extractor;
 
 use PiedWeb\Curl\ExtendedClient;
 use Spatie\Robots\RobotsTxt;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Contracts\Cache\ItemInterface;
 
 final class RobotsTxtExtractor
 {
@@ -14,10 +16,24 @@ final class RobotsTxtExtractor
 
     public function get(Url $url): RobotsTxt
     {
-        return self::$cache[$url->getOrigin()] ??= $this->directGet($url);
+        return self::$cache[$url->getOrigin()] ??= new RobotsTxt($this->getBodyFromCache($url));
     }
 
-    public function directGet(Url $url): RobotsTxt
+    private function getBodyFromCache(Url $url): string
+    {
+        $cache = new FilesystemAdapter();
+
+        /** @var string */
+        $body = $cache->get('robotstxt_'.$url->getOrigin(), function (ItemInterface $item) use ($url): string {
+            $item->expiresAfter(172800);
+
+            return $this->getBody($url);
+        });
+
+        return $body;
+    }
+
+    private function getBody(Url $url): string
     {
         $url = $url->getOrigin().'/robots.txt';
 
@@ -28,16 +44,15 @@ final class RobotsTxtExtractor
                 ->fakeBrowserHeader()
                 ->setDesktopUserAgent();
         if (! $request->request()) {
-            // todo log
-            return new RobotsTxt('');
+            return '';
         }
 
         $response = $request->getResponse();
 
         if (false === stripos($response->getContentType(), 'text/plain')) {
-            return new RobotsTxt('');
+            return '';
         }
 
-        return new RobotsTxt($response->getBody());
+        return $response->getBody();
     }
 }

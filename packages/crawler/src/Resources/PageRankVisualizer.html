@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <script src='https://d3js.org/d3.v5.min.js'></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <script src="//cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.20/css/dataTables.bootstrap4.min.css" crossorigin="anonymous">
+    <title>Crawler</title>
+</head>
+
+<body>
+    <div class="container-fluid mt-2">
+    <h1>Crawler : Page Rank Bubble Chart</h1>
+
+    <nav>
+      <div class="nav nav-tabs" id="nav-tab" role="tablist">
+        <a class="nav-item nav-link active" id="nav-vizu-tab" data-toggle="tab" href="#nav-vizu" role="tab" aria-controls="nav-vizu" aria-selected="true">Vizu</a>
+        <a class="nav-item nav-link" id="nav-data-tab" data-toggle="tab" href="#nav-data" role="tab" aria-controls="nav-data" aria-selected="false">Data</a>
+        <a class="nav-link" href="https://github.com/PiedWeb/Crawler">Source</a>
+        <a class="nav-link" href="https://piedweb.com/seo/crawler">Documentation</a>
+      </div>
+    </nav>
+    <div class="tab-content" id="nav-tabContent">
+      <div class="tab-pane fade show active" id="nav-vizu" role="tabpanel" aria-labelledby="nav-vizu-tab">
+
+        <div class="row mt-3">
+            <div class="col-md-7 col-xl-9">
+                <div style="width:99%; height:80vh;" class="border-right border-left rounded" id=vis> </div>
+            </div>
+            <div class="col-md-5 col-xl-3 d-none small" id="details">
+                <h2>Détails</h2>
+                <table class="table">
+                    <tr><th>Id</th><td id=id class=reset></td></tr>
+                    <tr><th>Uri</th><td id=uri class=reset></td></tr>
+                    <tr><th>Title</th><td id=title class="reset small"></td></tr>
+                    <tr><th>H1</th><td id=h1 class="reset small"></td></tr>
+                    <tr><th>Crawled at</th><td id=updated_at class=reset></td></tr>
+                    <tr><th>Depth</th><td id=click class=reset></td></tr>
+                    <tr><th>Page Rank</th><td id=pagerank class=reset></td></tr>
+                    <tr>
+                        <th>Internal Links<br><small>nofollow</small></th>
+                        <td><a href="#inboundlinks_list_modal" data-toggle="modal" id=inboundlinks class=reset></a><br><span id=inboundlinks_nofollow class=reset></span></td>
+                    </tr>
+                    <tr><th>Indexable</th><td id=indexable class=reset></td></tr>
+                    <tr>
+                        <th>Links<br><small>Self/Internal/External<br>Duplicate</small></th>
+                        <td>
+                            <a href="#links_list_modal" data-toggle="modal" id=links class=reset></a><br>
+                            <span id=links_self class=reset></span>
+                             / <span id=links_internal class=reset></span>
+                             / <span id=links_external class=reset></span>
+                             <br><span id=links_duplicate class=reset></span>
+                        </td>
+                    </tr>
+                    <tr><th>Content lenght</th><td><span id=words_count class=reset></span> words</td></tr>
+                    <tr><th>Load Time</th><td><span id=load_time class=reset></span> s</td></tr>
+                </table>
+                <div class="modal fade" tabindex="-1" role="dialog" id=inboundlinks_list_modal aria-hidden="true">
+                  <div class="modal-dialog modal-lg">
+                      <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Inboud Links List</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                              <span aria-hidden="true">&times;</span>
+                            </button>
+                          </div>
+                          <div class="modal-body" id="inboundlinks_list">
+                            ...
+                          </div>
+                      </div>
+                  </div>
+                </div>
+
+                <div class="modal fade" tabindex="-1" role="dialog" id="links_list_modal" aria-hidden="true">
+                  <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Links List</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                              <span aria-hidden="true">&times;</span>
+                            </button>
+                          </div>
+                          <div class="modal-body" id="links_list">
+                              ...
+                          </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+      </div>
+
+      <div class="tab-pane fade" id="nav-data" role="tabpanel" aria-labelledby="nav-data-tab">
+
+        <div class="row m-3">
+            <p class="mt-4 mb-4">Want more option ? Load <em>data.csv</em> in <code>libreoffice</code> or <code>excel</code>.</p>
+            <table id="datatable" class="table table-striped table-bordered" style="width:100%" width="100%"></table>
+        </div>
+      </div>
+    </div>
+
+    <footer class="container-fluid text-right"><a href="https://piedweb.com/">PoC by Pied Web</a></footer>
+
+<script>
+    // fork from https://bl.ocks.org/officeofjane/a70f4b44013d06b9c0a973f163d8ab7a/c5660429ab70f58ba18c6edc70f3a9ae92bcbf47
+function bubbleChart () {
+  const width = document.getElementById('vis').offsetWidth
+  const height = document.getElementById('vis').offsetHeight
+
+  const centre = { x: width / 2, y: height / 2 }
+
+  const forceStrength = 0.03
+
+  let svg = null
+  let bubbles = null
+  let labels = null
+  let nodes = []
+
+  function charge (d) {
+    return Math.pow(d.radius, 2.0) * 0.01
+  }
+
+  const simulation = d3.forceSimulation()
+    .force('charge', d3.forceManyBody().strength(charge))
+    .force('x', d3.forceX().strength(forceStrength).x(centre.x))
+    .force('y', d3.forceY().strength(forceStrength).y(centre.y))
+    .force('collision', d3.forceCollide().radius(d => d.radius + 1))
+
+  simulation.stop()
+
+  function createNodes (rawData) {
+    const maxSize = d3.max(rawData, d => +d.pagerank * 1000)
+
+    const radiusScale = d3.scaleSqrt()
+      .domain([0, maxSize])
+      .range([0, 80])
+
+    const myNodes = rawData.filter(d => d.mime_type == 1).map(d => ({
+      ...d,
+      radius: radiusScale(+d.pagerank * 1500),
+      size: +d.pagerank * 1500,
+      x: Math.random() * 900,
+      y: Math.random() * 800
+    }))
+
+    return myNodes
+  }
+
+  const chart = function chart (selector, rawData) {
+    nodes = createNodes(rawData)
+
+    svg = d3.select(selector)
+      .append('svg')
+      .attr('width', width)
+      .attr('height', height)
+
+    var container = svg.append('g')
+    svg.call(
+      d3.zoom()
+        .scaleExtent([0.1, 4])
+        .on('zoom', function () { container.attr('transform', d3.event.transform) })
+    )
+
+    const elements = container.selectAll('.bubble')
+      .data(nodes, d => d.id)
+      .enter()
+      .append('g')
+
+    bubbles = elements
+      .append('circle')
+      .classed('bubble', true)
+      .attr('r', d => d.radius)
+      .attr('fill', '#fbf0b6')
+
+    labels = elements
+      .append('text')
+      .attr('dy', '.3em')
+      .style('text-anchor', 'middle')
+      .style('font-size', 5)
+      .text(d => d.uri)
+
+    bubbles.on('click', focus)
+    labels.on('click', focus)
+
+    function updateDetails (index) {
+      document.querySelector('#details').classList.remove('d-none')
+
+      var Url = rawData[index]
+      for (var key in Url) {
+        if (document.querySelector('#' + key)) { document.querySelector('#' + key).innerHTML = Url[key] }
+      }
+      updateLinksDetails('From', Url.id);
+      updateLinksDetails('To', Url.id);
+    }
+    function updateLinksDetails(type = 'From', id) {
+      var client = new XMLHttpRequest();
+      client.open('GET', 'links/' + type +'_' + id + (type == 'To' ? '_1' : ''));
+      client.onreadystatechange = function() {
+        document.querySelector(type == 'From' ? '#links_list' : '#inboundlinks_list').innerHTML = '<pre>' + client.responseText + '</pre>';
+      }
+      client.send();
+    }
+
+    function resetDetails () {
+      document.querySelector('#details').classList.add('d-none')
+
+      document.querySelectorAll('.reset').forEach(function (element) { element.innerHTML = '' })
+    }
+
+    function focus (d) {
+      var index = d3.select(d3.event.target).datum().index
+      var isActive = (d3.event.target.getAttribute('stroke-width') == '2px' || d3.event.target.style.fontSize == '12px')
+
+      if (!isActive) {
+        updateDetails(d3.select(d3.event.target).datum().index)
+      } else {
+        resetDetails()
+      }
+      labels.attr('opacity', function (o) { return index != o.index && !isActive ? 0.3 : 1 })
+        .style('font-size', function (o) { return index == o.index ? (isActive ? 5 : 12) : 5 })
+      bubbles.style('opacity', function (o) {
+        return index != o.index && !isActive ? 0.3 : 1
+      })
+        .attr('stroke', '#b6e6fb')
+        .attr('stroke-width', function (o) {
+          return index == o.index ? (isActive ? '0' : '2px') : '0'
+        })
+    }
+
+    simulation.nodes(nodes)
+      .on('tick', ticked)
+      .restart()
+
+    function dataTables () {
+      var columns = []
+      for (var key in nodes[0]) {
+        if (key == 'radius') break
+        columns.push({ title: key })
+      }
+      var t = $('#datatable').DataTable({
+        columns: columns
+      })
+      for (var key in nodes) { t.row.add(Object.values(nodes[key])) }
+      t.draw();
+      $('#datatable thead tr').clone(true).appendTo( '#datatable thead' );
+      $('#datatable tr:eq(1) th').each( function (i) {
+        $(this).removeAttr('class').removeAttr('aria-controls').removeAttr('aria-label').removeAttr('aria-sort').removeAttr('style');
+        var title = $(this).text();
+        $(this).html( '<input type="text" placeholder="Search '+title+'" />' );
+        //$(this).replaceWith('<td><input type="text" placeholder="Search '+title+'" /></td>');
+        $('input', this).on('keyup change', function (event) {
+            console.log('het');
+          if (t.column(i).search() !== this.value) {
+            t
+              .column(i)
+              .search( this.value )
+              .draw();
+            }
+        });
+      });
+    }
+
+    dataTables()
+  }
+
+  function ticked () {
+    bubbles
+      .attr('cx', d => d.x)
+      .attr('cy', d => d.y)
+
+    labels
+      .attr('x', d => d.x)
+      .attr('y', d => d.y)
+  }
+
+  return chart
+}
+
+const myBubbleChart = bubbleChart()
+
+function display (data) {
+  myBubbleChart('#vis', data)
+}
+
+d3.csv('data.csv').then(display)
+</script>

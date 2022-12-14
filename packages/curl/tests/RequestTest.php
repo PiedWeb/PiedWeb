@@ -11,15 +11,13 @@ use PiedWeb\Curl\ResponseFromCache;
 
 class RequestTest extends \PHPUnit\Framework\TestCase
 {
-    public function testDownloadIfHtml()
+    public function testDownloadIfHtml(): void
     {
         $url = 'https://piedweb.com/';
         $request = new Client($url);
         $request
             ->setDefaultGetOptions()
-            ->setDownloadOnlyIf(function ($line) {
-                return 0 === stripos(trim($line), 'content-type') && false !== stripos($line, 'text/html');
-            })
+            ->setDownloadOnlyIf(fn ($line): bool => 0 === stripos(trim((string) $line), 'content-type') && false !== stripos((string) $line, 'text/html'))
             ->setDesktopUserAgent()
             ->setEncodingGzip()
         ;
@@ -31,14 +29,14 @@ class RequestTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue(\is_array($headers));
 
         $this->assertSame('text/html; charset=UTF-8', $request->getResponse()->getContentType());
-        $this->assertTrue(\strlen($request->getResponse()->getContent()) > 10);
-        $this->assertStringContainsString('200', $request->getResponse()->getHeaders()[0]);
-        $this->assertStringContainsString('200', $request->getResponse()->getHeaderLine('0'));
-        $this->assertStringContainsString('200', $request->getResponse()->getHeader('0'));
+        $this->assertGreaterThan(10, \strlen($request->getResponse()->getContent()));
+        $this->assertStringContainsString('200', \strval($request->getResponse()->getHeaders()[0] ?? ''));
+        $this->assertStringContainsString('200', (string) $request->getResponse()->getHeaderLine('0'));
+        $this->assertStringContainsString('200', \strval($request->getResponse()->getHeader('0')));
         $this->assertNull($request->getResponse()->getCookies());
     }
 
-    public function testNotDownload()
+    public function testNotDownload(): void
     {
         $url = 'https://piedweb.com/assets/img/xl/bg.jpg';
         $request = new Client($url);
@@ -54,7 +52,7 @@ class RequestTest extends \PHPUnit\Framework\TestCase
         $this->assertSame('', $request->getResponse()->getContent());
     }
 
-    public function testEffectiveUrl()
+    public function testEffectiveUrl(): void
     {
         $url = 'http://www.piedweb.com/';
         $request = new Client($url);
@@ -65,15 +63,15 @@ class RequestTest extends \PHPUnit\Framework\TestCase
             ->setEncodingGzip()
         ;
         $request->request();
-
+        // dump($request->getCurlInfos());
         $this->assertSame('https://piedweb.com/', $request->getResponse()->getUrl());
         $this->assertSame($url, $request->getTarget());
-        $this->assertTrue(\strlen($request->getResponse()->getContent()) > 10);
+        $this->assertGreaterThan(10, \strlen($request->getResponse()->getContent()));
     }
 
-    public function testCurlError()
+    public function testCurlError(): void
     {
-        $url = 'http://www.readze'.rand(100000, 99999999).'.com/';
+        $url = 'http://www.readze'.random_int(100000, 99_999_999).'.com/';
         $request = new Client($url);
         $request
             ->setDefaultGetOptions()
@@ -85,7 +83,7 @@ class RequestTest extends \PHPUnit\Framework\TestCase
         $this->assertSame(6, $request->getResponse()->getError());
     }
 
-    public function test404()
+    public function test404(): void
     {
         $url = 'https://piedweb.com/404-error';
         $request = new Client($url);
@@ -100,7 +98,7 @@ class RequestTest extends \PHPUnit\Framework\TestCase
         $this->assertSame(404, $request->getResponse()->getStatusCode());
     }
 
-    public function testAllMethods()
+    public function testAllMethods(): void
     {
         $checkHeaders = new MultipleCheckInHeaders();
 
@@ -117,7 +115,7 @@ class RequestTest extends \PHPUnit\Framework\TestCase
             ->setMobileUserAgent()
             ->setLessJsUserAgent()
             ->setTarget($url)
-            ->setDownloadOnlyIf([$checkHeaders, 'check'])
+            ->setDownloadOnlyIf($checkHeaders->check(...))
             ->setLanguage('en-US,en;q=0.9')
         ;
 
@@ -134,7 +132,7 @@ class RequestTest extends \PHPUnit\Framework\TestCase
 
         $this->assertSame('text/html; charset=UTF-8', $request->getResponse()->getContentType());
 
-        $this->assertTrue(\strlen($request->getResponse()->getContent()) > 100);
+        $this->assertGreaterThan(100, \strlen($request->getResponse()->getContent()));
         $this->assertSame('Upgrade-Insecure-Requests: 1
 User-Agent: '.$request->lessJsUserAgent.'
 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
@@ -150,7 +148,7 @@ Host: test.piedweb.com
 Content-Length: 0', trim(strip_tags($request->getResponse()->getBody())));
     }
 
-    public function testMultipleCheckInHeaders()
+    public function testMultipleCheckInHeaders(): void
     {
         $checkHeaders = new MultipleCheckInHeaders();
 
@@ -160,7 +158,7 @@ Content-Length: 0', trim(strip_tags($request->getResponse()->getBody())));
             ->setDefaultGetOptions()
             ->setDefaultSpeedOptions()
             ->setUserAgent('Hello :)')
-            ->setDownloadOnlyIf([$checkHeaders, 'check'])
+            ->setDownloadOnlyIf($checkHeaders->check(...))
             ->setPost('testpost')
         ;
 
@@ -170,7 +168,7 @@ Content-Length: 0', trim(strip_tags($request->getResponse()->getBody())));
         $this->assertSame(404, $request->getResponse()->getInfo('http_code'));
     }
 
-    public function testProxy()
+    public function testProxy(): void
     {
         $url = 'https://piedweb.com/404-error';
         $request = new Client($url);
@@ -183,11 +181,11 @@ Content-Length: 0', trim(strip_tags($request->getResponse()->getBody())));
 
         $request->request();
 
-        $this->assertTrue($request->getResponse()->getError() > 0);
+        $this->assertGreaterThan(0, $request->getResponse()->getError());
         $this->assertStringContainsString('timed out', $request->getResponse()->getErrorMessage());
     }
 
-    public function testAbortIfTooBig()
+    public function testAbortIfTooBig(): void
     {
         $url = 'https://piedweb.com';
         $request = new Client($url);
@@ -196,17 +194,17 @@ Content-Length: 0', trim(strip_tags($request->getResponse()->getBody())));
         $this->assertSame($request->getResponse()->getError(), 42);
     }
 
-    public function testDownloadOnlyFirstBytes()
+    public function testDownloadOnlyFirstBytes(): void
     {
         $url = 'https://piedweb.com';
         $request = new Client($url);
         $request->setDownloadOnly('0-199');
         $request->request();
 
-        $this->assertTrue(\strlen($request->getResponse()->getContent()) < 300);
+        $this->assertLessThan(300, \strlen($request->getResponse()->getContent()));
     }
 
-    public function testResponseFromCache()
+    public function testResponseFromCache(): void
     {
         $response = new ResponseFromCache(
             'HTTP/1.1 200 OK'.\PHP_EOL.\PHP_EOL.'<!DOCTYPE html><html><body><p>Tests</p></body>',

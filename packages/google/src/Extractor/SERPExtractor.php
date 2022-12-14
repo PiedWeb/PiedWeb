@@ -9,7 +9,7 @@ use Symfony\Component\DomCrawler\Crawler;
 
 class SERPExtractor
 {
-    public const SERP_FEATURE_SELECTORS = [
+    final public const SERP_FEATURE_SELECTORS = [
         'Ads' => ['.//*[@id="tads"]|.//*[@id="bottomads"]'],
         'ImagePack' => ["//span[text()='Images']", "//h3[starts-with(text(), 'Images correspondant')]"],
         'Local Pack' => ["//div[text()='Adresses']"],
@@ -24,29 +24,29 @@ class SERPExtractor
     /**
      * @var string[]
      */
-    public const RELATED = ["//a[@data-xbu][starts-with(@href, '/search')]/div/div/span"];
+    final public const RELATED = ["//a[@data-xbu][starts-with(@href, '/search')]/div/div/span"];
 
     /**
      * @var string[]
      */
-    public const RELATED_DESKTOP = ["//a[@data-xbu][starts-with(@href, '/search')]/div"];
+    final public const RELATED_DESKTOP = ["//a[@data-xbu][starts-with(@href, '/search')]/div"];
 
     /** @var string */
     // public const RESULT_SELECTOR = '//a[@role="presentation"]/parent::div/parent::div/parent::div';
-    public const RESULT_SELECTOR = '(//h2[text()=\'Extrait optimisé sur le Web\']/ancestor::block-component//a[@class])[1]|//a[@role="presentation"] ';
+    final public const RESULT_SELECTOR = '(//h2[text()=\'Extrait optimisé sur le Web\']/ancestor::block-component//a[@class])[1]|//a[@role="presentation"] ';
 
     // (//h2[text()='Extrait optimisé sur le Web']/ancestor::block-component//a[@class])[1]|//a[@role="presentation"]
     /**
      * @var string
      */
-    public const RESULT_SELECTOR_DESKTOP =
+    final public const RESULT_SELECTOR_DESKTOP =
         '//a[not(starts-with(@href, "/search"))]/parent::div/parent::div/parent::div[@data-hveid]
         |//a[not(starts-with(@href, "/search"))]/parent::div/parent::div/parent::div[@data-sokoban-container]';
 
     private readonly Crawler $domCrawler;
 
     /**
-     * @var SearchResult[]
+     * @var \PiedWeb\Google\Result\SearchResult[]|null
      */
     private ?array $results = null;
 
@@ -139,8 +139,11 @@ class SERPExtractor
         }
 
         // skip shopping Results
-        if (str_starts_with($linkNode->getAttribute('href'), 'https://www.google.')
-            || str_starts_with($linkNode->getAttribute('href'), '/aclk?')) {
+        if (str_starts_with($linkNode->getAttribute('href'), 'https://www.google.')) {
+            return null;
+        }
+
+        if (str_starts_with($linkNode->getAttribute('href'), '/aclk?')) {
             return null;
         }
 
@@ -248,9 +251,15 @@ class SERPExtractor
     {
         foreach ($xpaths as $xpath) {
             $node = $this->domCrawler->filterXPath($xpath)->getNode(0);
-            if (null !== $node && '' !== $node->nodeValue) {
-                return $node;
+            if (null === $node) {
+                continue;
             }
+
+            if ('' === $node->nodeValue) {
+                continue;
+            }
+
+            return $node;
         }
 
         throw new \LogicException('`'.implode('`, ', $xpaths).'` not found');

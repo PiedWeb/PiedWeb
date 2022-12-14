@@ -69,7 +69,7 @@ final class BreadcrumbExtractor
     }
 
     /**
-     * @return array<int, string>
+     * @return string[]|null
      */
     private function divideBreadcrumb(string $breadcrumb, string $divider): ?array
     {
@@ -107,9 +107,15 @@ final class BreadcrumbExtractor
     {
         $regex = ['href="([^"]*)"', 'href=\'([^\']*)\'', 'href=(\S+) '];
         foreach ($regex as $r) {
-            if (preg_match('/'.$r.'/siU', $str, $match) && Helper::isWebLink($match[1])) {
-                return $this->parentUrl->resolve($match[1]);
+            if (! preg_match('/'.$r.'/siU', $str, $match)) {
+                continue;
             }
+
+            if (! Helper::isWebLink($match[1])) {
+                continue;
+            }
+
+            return $this->parentUrl->resolve($match[1]);
         }
 
         return null;
