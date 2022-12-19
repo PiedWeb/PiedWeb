@@ -91,7 +91,8 @@ final class Indexable
         }
 
         // canonical
-        if (! (new CanonicalExtractor($this->url, $this->crawler))->isCanonicalCorrect()) {
+        $canonicalExtractor = new CanonicalExtractor($this->url, $this->crawler);
+        if ($canonicalExtractor->canonicalExists() && ! $canonicalExtractor->isCanonicalCorrect()) {
             return self::NOT_INDEXABLE['canonical'];
         }
 

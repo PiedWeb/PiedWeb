@@ -17,7 +17,7 @@ final class Url
 
     private string $uri;
 
-    private readonly UrlManipuler $url;
+    private UrlManipuler $url;
 
     private int $networkStatus = 0;
 
@@ -114,28 +114,7 @@ final class Url
         'expressions', 'breadcrumb',
     ];
 
-    /** @var string[] */
-    public const SERIALIZABLE = [
-        'stringUrl',
-        'updatedAt',
-        'statusCode',
-        'mimeType',
-        'links',
-        'duplicateLinks',
-        'externalLinks',
-        'indexable',
-        'indexableStatus',
-        'canonical',
-        'h1',
-        'flatContent',
-        'expressions',
-        'wordCount',
-        'textRatio',
-        'size',
-        'responseTime',
-        'metaDescription',
-        'hrefLangList',
-    ];
+    private int $click = 0;
 
     /**
      * @var string[]
@@ -175,17 +154,6 @@ final class Url
         'updatedAt',
     ];
 
-    public function toJson(): string
-    {
-        $return = [];
-        foreach (self::SERIALIZABLE as $name) {
-            $getter = 'get'.ucfirst($name);
-            $return[$name] = $this->$getter();
-        }
-
-        return \Safe\json_encode($return);
-    }
-
     /**
      * @return array<string, int|string>
      */
@@ -211,16 +179,23 @@ final class Url
         return $return;
     }
 
-    public function __construct(string $url, private int $click = 0, int $id = 0)
+    public static function initialize(string $url, int $click = 0, int $id = 0): self
     {
-        $this->id = 0 === $id ? $this->getId() : $id;
-        $this->url = new UrlManipuler($url);
-        if (($origin = $this->url->getOrigin()) === '') {
+        $self = new self();
+        $self->click = $click;
+
+        $self->url = new UrlManipuler($url);
+        if (($origin = $self->url->getOrigin()) === '') {
             throw new \LogicException('`$url` must contain origin (eg. : https://example.tld/my-page).');
         }
 
-        $this->uri = substr($url, \strlen($origin));
-        $this->updatedAt = new \DateTime('now');
+        $self->uri = substr($url, \strlen($origin));
+
+        $self->id = 0 === $id ? $self->getId() : $id;
+
+        $self->updatedAt = new \DateTime('now');
+
+        return $self;
     }
 
     public function getId(): int
@@ -270,9 +245,11 @@ final class Url
         return $this->click;
     }
 
-    public function setClick(int $click): void
+    public function setClick(int $click): self
     {
         $this->click = $click;
+
+        return $this;
     }
 
     public function getPagerank(): float
@@ -457,9 +434,14 @@ final class Url
         return $this->updatedAt;
     }
 
-    public function setUpdatedAt(string|\DateTimeInterface $updatedAt): void
+    public function setUpdatedAt(\DateTimeInterface $updatedAt): void
     {
-        $this->updatedAt = \is_string($updatedAt) ? \Safe\DateTime::createFromFormat('y-m-d H:i:s', $updatedAt) : $updatedAt;
+        $this->updatedAt = $updatedAt;
+    }
+
+    public function setUpdatedAtFromString(string $updatedAt): void
+    {
+        $this->updatedAt = \Safe\DateTime::createFromFormat('y-m-d H:i:s', $updatedAt);
     }
 
     public function getNetworkStatus(): int
@@ -693,7 +675,7 @@ final class Url
     {
         $return = '';
         foreach ($this->breadcrumb as $link) {
-            $return .= $link->__toString().\chr(10);
+            $return .= $link->toMarkdown().\chr(10);
         }
 
         return $return;

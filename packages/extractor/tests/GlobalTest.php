@@ -46,14 +46,21 @@ final class GlobalTest extends TestCase
         $url = new Url('https://piedweb.com');
         $canonical = new CanonicalExtractor($url, new Crawler($this->getPage()));
         $this->assertTrue($canonical->isCanonicalCorrect());
+        $this->assertTrue($canonical->ifCanonicalExistsIsItCorrectOrPartiallyCorrect());
         $canonical = new CanonicalExtractor($url, new Crawler(str_replace('<link rel="canonical" href="https://piedweb.com/" />', '<link rel="canonical" href="/" />', $this->getPage('https://piedweb.com/'))));
         $this->assertFalse($canonical->isCanonicalCorrect());
         $this->assertTrue($canonical->isCanonicalPartiallyCorrect());
+        $this->assertTrue($canonical->ifCanonicalExistsIsItCorrectOrPartiallyCorrect());
+        $canonical = new CanonicalExtractor($url, new Crawler(str_replace('<link rel="canonical" href="https://piedweb.com/" />', ' ', $this->getPage('https://piedweb.com/'))));
+        $this->assertTrue($canonical->ifCanonicalExistsIsItCorrectOrPartiallyCorrect());
+        $canonical = new CanonicalExtractor($url, new Crawler(str_replace('<link rel="canonical" href="https://piedweb.com/" />', '<link rel="canonical" href="/other-page" />', $this->getPage('https://piedweb.com/'))));
+        $this->assertFalse($canonical->ifCanonicalExistsIsItCorrectOrPartiallyCorrect());
 
         $url = new Url('https://piedweb.com/seo');
         $canonical = new CanonicalExtractor($url, new Crawler(str_replace('<link rel="canonical" href="https://piedweb.com/seo" />', '<link rel="canonical" href="/seo" />', $this->getPage('https://piedweb.com/seo'))));
         $this->assertFalse($canonical->isCanonicalCorrect());
         $this->assertTrue($canonical->isCanonicalPartiallyCorrect());
+        $this->assertTrue($canonical->ifCanonicalExistsIsItCorrectOrPartiallyCorrect());
     }
 
     public function testTextDataExtractor(): void

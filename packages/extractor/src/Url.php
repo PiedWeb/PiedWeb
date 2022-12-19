@@ -66,9 +66,15 @@ final class Url implements \Stringable
         return $this->http->withFragment('');
     }
 
-    public function getAbsoluteUri(): string
+    public function getAbsoluteUri(bool $withFragment = false, bool $ltrimSlash = false): string
     {
-        $absolute = substr($this->http->withFragment('')->__toString(), \strlen($this->getOrigin()));
+        $absolute = substr(
+            (string) ($withFragment ? $this->http : $this->http->withFragment('')),
+            \strlen($this->getOrigin())
+        );
+        if ($ltrimSlash) {
+            $absolute = ltrim($absolute, '/');
+        }
 
         return '' === $absolute ? '/' : $absolute;
     }

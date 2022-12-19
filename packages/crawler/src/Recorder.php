@@ -159,7 +159,7 @@ final class Recorder
     private function recordInboundLink(Link $link, Url $to): void
     {
         \Safe\file_put_contents(
-            $this->folder.self::LINKS_DIR.'/To_'.(string) $to->getId().'_'.((int) $link->mayFollow),
+            $this->folder.self::LINKS_DIR.'/To_'.(string) $to->getId().'_'.((int) $link->mayFollow()),
             $this->inboundLinkToStr($link).\PHP_EOL, // can use ->relativize to get only /uri
             \FILE_APPEND
         );
@@ -167,7 +167,7 @@ final class Recorder
 
     private function inboundLinkToStr(Link $link): string
     {
-        return $link->getParentUrl().';'.$link->getAnchor().';'.((int) $link->mayFollow).';'.$link->getType();
+        return $link->getParentUrl().';'.$link->getAnchor().';'.((int) $link->mayFollow()).';'.$link->getType();
     }
 
     /**
@@ -185,7 +185,7 @@ final class Recorder
 
         foreach ($links as $link) {
             $content .= $from->getId();
-            $uri = self::removeBase($base, (string) $link->getPageUrl());
+            $uri = self::removeBase($base, (string) $link->getUrlStd()->getDocumentUrl());
             if (\in_array($link->getUrl(), $everAdded)) { // like Google, we sould not add duplicate link,
                 // so we say the juice is lost -1
                 $content .= ',-1'.\PHP_EOL;
@@ -209,7 +209,7 @@ final class Recorder
      */
     private function recordOutboundLink(Url $from, array $links): void
     {
-        $links = array_map(static fn (Link $link): string => $link->getUrl().';'.$link->getAnchor().';'.((int) $link->mayFollow).';'.$link->getType(), $links);
+        $links = array_map(static fn (Link $link): string => $link->getUrl().';'.$link->getAnchor().';'.((int) $link->mayFollow()).';'.$link->getType(), $links);
 
         \Safe\file_put_contents($this->folder.self::LINKS_DIR.'/From_'.(string) $from->getId(), implode(\PHP_EOL, $links));
     }

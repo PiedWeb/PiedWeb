@@ -23,6 +23,7 @@ class Analyzer
     ) {
         $this->text = CleanText::stripHtmlTags($this->text);
         $this->text = CleanText::fixEncoding($this->text);
+        $this->text = CleanText::removeEmail($this->text);
         // $this->text = CleanText::removeDate($this->text);
 
         if ($this->onlyInSentence) {

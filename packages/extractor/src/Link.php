@@ -3,15 +3,10 @@
 namespace PiedWeb\Extractor;
 
 use Symfony\Component\DomCrawler\Crawler as DomCrawler;
+use Symfony\Component\Serializer\Annotation\Ignore;
 
-final class Link implements \Stringable
+final class Link
 {
-    public readonly Url $url;
-
-    public readonly bool $mayFollow;
-
-    public ?string $anchor;
-
     /** @var int */
     public const LINK_A = 1;
 
@@ -37,117 +32,106 @@ final class Link implements \Stringable
     /** @var int */
     public const LINK_EXTERNAL = 4;
 
+    private ?string $url = null;
+
+    private string $to;
+
+    private ?string $parentUrl = null;
+
+    private bool $mayFollow;
+
+    private ?string $anchor = null;
+
+    private bool $internal;
+
+    private int $wrapper;
+
+    private int $type;
+
+    #[Ignore]
+    private ?Url $urlStd = null;
+
+    #[Ignore]
+    private ?Url $parentUrlStd = null;
+
+    private ?\DOMElement $element = null;
+
     /**
      * Always submit absoute Url !
      */
-    public function __construct(
+    public static function initialize(
         string $url,
-        public readonly Url $parentUrl,
+        Url $parentUrl,
         bool $parentMayFollow = true,
-        public readonly ?\DOMElement $element = null,
-        private ?int $wrapper = null
-    ) {
-        $this->mayFollow = $this->mayFollow($parentMayFollow);
-        $this->url = new Url(self::normalizeUrl($url));
-        $this->setAnchor();
-        if (null !== $this->element) {
-            $this->setWrapper($this->element);
-        }
+        ?\DOMElement $element = null
+    ): self {
+        $self = new self();
+        $self->element = $element;
+        $self->mayFollow = $self->retrieveMayFollow($parentMayFollow);
+        $self->url = UrlNormalizer::normalizeUrl($url);
+        $self->urlStd = (new Url($self->url));
+        $self->parentUrl = $parentUrl->get();
+        $self->parentUrlStd = $parentUrl;
+        $self->internal = $self->urlStd->getHost() === $parentUrl->getHost();
+        $self->to = $self->internal ? $self->urlStd->getAbsoluteUri(true, true) : $self->url;
+        $self->wrapper = null !== $self->element ? $self->getWrapperFrom($self->element) : 0;
+        $self->type = $self->retrieveType();
+
+        return $self;
     }
 
-    public function __toString(): string
+    public static function createRedirection(string $url, Url $parentUrl): self
     {
-        // return $link->getParentUrl().';'.$link->getAnchor().';'.((int) $link->mayFollow()).';'.$link->getType();
-        return '['.$this->anchor.']('.$this->url->get().')';
+        $self = self::initialize($url, $parentUrl);
+        $self->wrapper = self::LINK_3XX;
+
+        return $self;
     }
 
-    /**
-     * Add trailing slash for domain. Eg: https://piedweb.com => https://piedweb.com/ and '/test ' = '/test'.
-     */
-    public static function normalizeUrl(string $url): string
+    public function toMarkdown(): string
     {
-        $url = trim($url);
-
-        if ('' == preg_replace('#(.*\://?([^\/]+))#', '', $url)) {
-            $url .= '/';
-        }
-
-        return $url;
+        return '['.$this->anchor.']('.$this->url.')';
     }
 
-    private function setWrapper(\DOMElement $element): void
+    private function getWrapperFrom(\DOMElement $element): int
     {
         if ('a' == $element->tagName && $element->getAttribute('href')) {
-            $this->wrapper = self::LINK_A;
-
-            return;
+            return self::LINK_A;
         }
 
         if ('' !== $element->getAttribute('src')) {
-            $this->wrapper = self::LINK_SRC;
-
-            return;
+            return self::LINK_SRC;
         }
+
+        return 0;
     }
 
-    public static function createRedirection(string $url, Url $parentUrl, int $redirType = self::LINK_3XX): self
+    public function getAnchor(): string
     {
-        return new self($url, $parentUrl, true,  null, $redirType);
-    }
+        if (null !== $this->anchor) {
+            return $this->anchor;
+        }
 
-    public function getWrapper(): ?int
-    {
-        return $this->wrapper;
-    }
-
-    private function setAnchor(): void
-    {
         if (null === $this->element) {
-            return;
+            return '';
         }
 
         // Get classic text anchor
-        $this->anchor = $this->element->textContent;
+        $anchor = $this->element->textContent;
 
         // If get nothing, then maybe we can get an alternative text (eg: img)
-        if ('' === $this->anchor) {
+        if ('' === $anchor) {
             $alt = (new DomCrawler($this->element))->filter('*[alt]');
             if ($alt->count() > 0) {
-                $this->anchor = $alt->eq(0)->attr('alt') ?? '';
+                $anchor = $alt->eq(0)->attr('alt') ?? '';
             }
         }
 
-        // Limit to 100 characters
-        // Totally subjective
-        $this->anchor = substr(Helper::clean($this->anchor), 0, 99);
+        // Limit to 50 chars -> Totally subjective
+        return $this->anchor = substr(Helper::clean($anchor), 0, 49);
     }
 
-    public function getUrl(): Url
-    {
-        return $this->url;
-    }
-
-    public function getPageUrl(): \League\Uri\Http
-    {
-        return $this->url->getDocumentUrl();
-    }
-
-    public function getParentUrl(): Url
-    {
-        return $this->parentUrl;
-    }
-
-    public function getAnchor(): ?string
-    {
-        return $this->anchor;
-    }
-
-    public function getElement(): ?\DOMElement
-    {
-        return $this->element;
-    }
-
-    private function mayFollow(bool $parentMayFollow): bool
+    private function retrieveMayFollow(bool $parentMayFollow): bool
     {
         // check meta robots and headers
         if (! $parentMayFollow) {
@@ -170,49 +154,144 @@ final class Link implements \Stringable
         return ! preg_match('(nofollow|sponsored|ugc)', $this->element->getAttribute('rel'));
     }
 
-    public function getRelAttribute(): ?string
-    {
-        return null !== $this->element ? $this->element->getAttribute('rel') : null;
-    }
-
-    public function isInternalLink(): bool
-    {
-        return $this->url->getOrigin() === $this->getParentUrl()->getOrigin();
-    }
-
+    #[Ignore]
     public function isSubLink(): bool
     {
-        if ($this->isInternalLink()) {
+        if ($this->internal) {
             return false;
         }
 
-        return $this->url->getRegistrableDomain() === $this->parentUrl->getRegistrableDomain();
-        // && strtolower(substr($this->getHost(), -strlen($this->parentDomain))) === $this->parentDomain;
+        return $this->getUrlStd()->getRegistrableDomain() === $this->getParentUrlStd()->getRegistrableDomain();
     }
 
+    #[Ignore]
     public function isSelfLink(): bool
     {
-        if (! $this->isInternalLink()) {
+        if (! $this->internal) {
             return false;
         }
 
-        return $this->url->getDocumentUrl() == $this->parentUrl->getDocumentUrl();
+        return $this->getUrlStd()->getDocumentUrl() == $this->getParentUrlStd()->getDocumentUrl();
     }
 
-    public function getType(): int
+    private function retrieveType(): int
     {
         if ($this->isSelfLink()) {
             return self::LINK_SELF;
         }
 
-        if ($this->isInternalLink()) {
+        if ($this->internal) {
             return self::LINK_INTERNAL;
         }
 
-        if ($this->isSubLink()) {
-            return self::LINK_SUB;
+        return self::LINK_EXTERNAL;
+    }
+
+    #[Ignore]
+    public function getUrl(): string
+    {
+        return $this->url ?? throw new \Exception();
+    }
+
+    public function getTo(): string
+    {
+        return $this->to;
+    }
+
+    #[Ignore]
+    public function getParentUrl(): string
+    {
+        return $this->parentUrl ?? throw new \Exception();
+    }
+
+    #[Ignore]
+    public function getUrlStd(): Url
+    {
+        if (null === $this->urlStd) {
+            $this->urlStd = (new Url($this->getUrl()));
         }
 
-        return self::LINK_EXTERNAL;
+        return $this->urlStd;
+    }
+
+    #[Ignore]
+    public function getParentUrlStd(): Url
+    {
+        if (null === $this->parentUrlStd) {
+            $this->parentUrlStd = (new Url($this->getParentUrl()));
+        }
+
+        return $this->parentUrlStd;
+    }
+
+    public function getWrapper(): int
+    {
+        return $this->wrapper;
+    }
+
+    public function mayFollow(): bool
+    {
+        return $this->mayFollow;
+    }
+
+    public function getMayFollow(): bool
+    {
+        return $this->mayFollow;
+    }
+
+    public function getInternal(): bool
+    {
+        return $this->internal;
+    }
+
+    public function getType(): int
+    {
+        return $this->type;
+    }
+
+    public function setType(int $type): void
+    {
+        $this->type = $type;
+    }
+
+    #[Ignore]
+    public function getElement(): \DOMElement
+    {
+        return $this->element ?? throw new \Exception();
+    }
+
+    public function setParentUrl(string $parentUrl): void
+    {
+        $this->parentUrl = $parentUrl;
+    }
+
+    public function setUrl(string $url): void
+    {
+        $this->url = $url;
+    }
+
+    public function setMayFollow(bool $mayFollow): void
+    {
+        $this->mayFollow = $mayFollow;
+    }
+
+    public function setTo(string $to): void
+    {
+        $this->to = $to;
+    }
+
+    public function setAnchor(string $anchor): void
+    {
+        $this->anchor = $anchor;
+    }
+
+    public function setWrapper(int $wrapper): void
+    {
+        $this->wrapper = $wrapper;
+    }
+
+    public function setInternal(bool $internal): void
+    {
+        $this->internal = $internal;
     }
 }

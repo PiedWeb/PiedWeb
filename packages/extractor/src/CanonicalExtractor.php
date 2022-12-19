@@ -37,6 +37,17 @@ final class CanonicalExtractor
         return $this->urlRequested->getAbsoluteUri() == $this->canonical;
     }
 
+    public function ifCanonicalExistsIsItCorrectOrPartiallyCorrect(): bool
+    {
+        if (! $this->canonicalExists()) {
+            return true;
+        }
+        if ($this->isCanonicalCorrect()) {
+            return true;
+        }
+        return $this->isCanonicalPartiallyCorrect();
+    }
+
     public function isCanonicalCorrect(): bool
     {
         $canonical = $this->canonical;

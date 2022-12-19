@@ -75,7 +75,7 @@ final class RecordPlayer
                 throw new \LogicException();
             }
 
-            $urls[$r['uri']] = new Url($this->config->getBase().$r['uri']);
+            $urls[$r['uri']] = Url::initialize($this->config->getBase().$r['uri']);
             if (! empty($r['can_be_crawled'] ?? '')
                  // we will retry network errror
                 && NetworkStatus::NETWORK_ERROR != ($r['network_status'] ?? true)

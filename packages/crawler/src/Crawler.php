@@ -3,6 +3,7 @@
 namespace PiedWeb\Crawler;
 
 use PiedWeb\Extractor\Link;
+use PiedWeb\Extractor\Url as ExtractorUrl;
 
 /**
  * @see \PiedWeb\Crawler\Test\CrawlerTest
@@ -33,8 +34,6 @@ final class Crawler
         public readonly bool $debug = false
     ) {
         $this->config = \is_string($config) ? (new CrawlerConfig())->setStartUrl($config) : $config;
-
-        $this->urls[$this->config->getStartUrl()->getAbsoluteUri()] = null;
     }
 
     public static function continue(
@@ -73,6 +72,8 @@ final class Crawler
 
     public function crawl(): bool
     {
+        $this->urls[$this->config->getStartUrl()->getAbsoluteUri()] = null;
+
         $this->debugInitCrawlLoop();
 
         $absoluteUriList = array_keys($this->urls);
@@ -101,13 +102,18 @@ final class Crawler
 
     private function getUrl(string $absoluteUri): Url
     {
-        return $this->urls[$absoluteUri] ?? $this->urls[$absoluteUri] = new Url($this->config->getBase().$absoluteUri, $this->currentClick);
+        return $this->urls[$absoluteUri] ?? $this->urls[$absoluteUri] = Url::initialize($this->config->getBase().$absoluteUri, $this->currentClick);
+    }
+
+    public function firstUrl(): Url
+    {
+        return $this->urls[key($this->urls)] ?? throw new \Exception();
     }
 
     /**
      * @return Url[]
      */
-    private function getUrls(): array
+    public function getUrls(): array
     {
         return array_filter($this->urls, static fn ($url): bool => null !== $url);
     }
@@ -167,9 +173,10 @@ final class Crawler
                 continue;
             }
 
-            $newUri = $link->getUrl()->getAbsoluteUri();
-            $this->urls[$newUri] ??= new Url(
-                $link->getPageUrl()->__toString(),
+            $newUrl = (new ExtractorUrl($link->getUrl()));
+            $newUri = $newUrl->getAbsoluteUri();
+            $this->urls[$newUri] ??= Url::initialize(
+                $newUrl->getDocumentUrl()->__toString(),
                 $this->currentClick + 1
             );
             if (isset($everAdd[$newUri])) {
@@ -177,7 +184,7 @@ final class Crawler
             }
 
             $everAdd[$newUri] = 1;
-            if (! $link->mayFollow) {
+            if (! $link->mayFollow()) {
                 $this->urls[$newUri]->incrementInboundLinksNofollow();
             } else {
                 $this->urls[$newUri]->incrementInboundLinks();

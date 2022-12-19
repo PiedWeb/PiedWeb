@@ -96,6 +96,11 @@ class CleanText
         return Helper::preg_replace_str('/,|\.|\(|\[|\]|\)|!|\?|;|…|\{|\}|"|«|»|:|\*|\/|\||>|<| - | + /', ' ', $text);
     }
 
+    public static function removeEmail(string $text): string
+    {
+        return Helper::preg_replace_str('/([a-zA-Z0-9._-]+(@|.at.)[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/i', ' ', $text);
+    }
+
     public static function removeDate(string $text): string
     {
         $month = '(janvier|january|février|february|mars|march|avril|april|mai|may|juin|june|juillet|july|août|august'

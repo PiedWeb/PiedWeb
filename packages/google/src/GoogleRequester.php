@@ -20,7 +20,7 @@ class GoogleRequester
             $this->client = new ExtendedClient();
             $this->client
                 ->setMobileUserAgent()
-                ->setDefaultSpeedOptions(20, 30, 2000)
+                ->setDefaultSpeedOptions(60, 120, 20000)
                 ->setCookie('CONSENT=YES+')
                 ->fakeBrowserHeader();
         }
