@@ -67,7 +67,7 @@ final class GoogleSerpTest extends TestCase
 
         $extractor->getBrowserPage()->screenshot(['path' => 'debug.png']);
         if (! $extractor->containsSerpFeature('PositionZero')) {
-            $this->assertStringContainsString('piedvert.com', 'https://piedweb.com/', $extractor->getResults()[0]->url);
+            $this->assertStringContainsString('piedvert.com',  $extractor->getResults()[0]->url);
             dump('Position Zero was not checked');
 
             return;
