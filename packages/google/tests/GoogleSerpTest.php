@@ -16,6 +16,7 @@ final class GoogleSerpTest extends TestCase
         $manager->language = 'fr-FR';
         $manager->tld = 'fr';
         $manager->q = $kw;
+        $manager->parameters['hl'] = 'fr';
         $manager->generateGoogleSearchUrl();
 
         return $manager;
