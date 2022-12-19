@@ -61,7 +61,7 @@ class LinksExtractor
         $links = $this->get();
         $u = [];
         foreach ($links as $link) {
-            $u[(string) $link->getUrl()] = 1;
+            $u[$link->getUrl()] = 1;
         }
 
         return \count($links) - \count($u);

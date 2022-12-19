@@ -42,9 +42,11 @@ final class CanonicalExtractor
         if (! $this->canonicalExists()) {
             return true;
         }
+
         if ($this->isCanonicalCorrect()) {
             return true;
         }
+
         return $this->isCanonicalPartiallyCorrect();
     }
 
