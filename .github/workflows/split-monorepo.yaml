@@ -1,11 +1,14 @@
 name: Split Monorepo
 
-on: push
+on:
+    push:
+        branches:
+            - main
+        tags:
+            - '*'
 
 jobs:
     provide_packages_json:
-        # see json juggling: https://docs.github.com/en/free-pro-team@latest/actions/reference/context-and-expression-syntax-for-github-actions#example-6
-        # see https://stackoverflow.com/a/62953566/1348344
         runs-on: ubuntu-latest
 
         steps:
@@ -20,12 +23,12 @@ jobs:
                 env:
                     COMPOSER_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 
-            -   uses: "ramsey/composer-install@v1"
+            -   uses: "ramsey/composer-install@v2"
 
             # get package json list
             -
                 id: output_data
-                run: echo "::set-output name=matrix::$(vendor/bin/monorepo-builder packages-json)"
+                run: echo "matrix=$(vendor/bin/monorepo-builder packages-json)" >> $GITHUB_OUTPUT
 
         # this step is needed, so the output gets to the next defined job
         outputs:
