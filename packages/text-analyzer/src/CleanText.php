@@ -60,13 +60,22 @@ class CleanText
     public static function fixEncoding(string $text): string
     {
         // fix encoding
+        $text = str_replace(mb_convert_encoding('’', 'ISO-8859-1'), "'", $text);
         $text = Encoding::toUTF8($text);
-        $text = html_entity_decode(html_entity_decode(htmlentities((string) $text)));
-        $text = htmlspecialchars_decode($text, \ENT_QUOTES);
-        $text = str_replace('’', "'", $text); // Unify '
-        $text = html_entity_decode(str_replace(['  ', '&nbsp;'], ' ', htmlentities($text)));
+        $text = html_entity_decode(htmlentities((string) $text), 0, 'UTF-8');
+        $text = preg_replace('#[\x00-\x1F\x7F\xA0]#u', '', $text) ?? throw new \Exception();
+        $text = html_entity_decode($text, \ENT_QUOTES | \ENT_XML1 | \ENT_HTML5, 'UTF-8');
+        $text = str_replace(['™', '©', '®'], ' ', $text);
+        $text = str_replace(['„', '”', '“', '»', '«'], '"', $text);
+        $text = str_replace(['’'], "'", $text);
+        $text = str_replace(['…'], '...', $text);
+        $text = str_replace(['–', '—', '\xC2\xAD'], ' - ', $text);
+        $text = preg_replace('#(,|\.|\(|\[|\]|\)|!|\?|;|\{|\}|"|:|\*|\/|\||>|<|-|\+)#', ' $0 ', $text) ?? throw new \Exception();
+        $text = preg_replace('#(\xE2\x80\xAF|\xC2\xAD|\xC2\xA0|\s)+#', ' ', $text) ?? throw new \Exception();
 
-        return $text;
+        $text = str_replace('', "'", $text);
+
+        return trim($text);
     }
 
     /**
@@ -78,7 +87,7 @@ class CleanText
         if (preg_match_all(self::REGEX_SENTENCE, $text, $matches, \PREG_SET_ORDER, 0)) {
             foreach ($matches as $m) {
                 if (\count(explode(' ', $m[0])) < 30) { // We keep only sentence with less than 30 words
-                    $sentences[] = Helper::preg_replace_str('/\s+/', ' ', $m[0]);
+                    $sentences[] = self::fixEncoding($m[0]);
                 }
             }
         }
@@ -93,7 +102,7 @@ class CleanText
 
     public static function removePunctuation(string $text): string
     {
-        return Helper::preg_replace_str('/,|\.|\(|\[|\]|\)|!|\?|;|…|\{|\}|"|«|»|:|\*|\/|\||>|<| - | + /', ' ', $text);
+        return Helper::preg_replace_str('/ ?(,|\.|\(|\[|\]|\)|!|\?|;|\{|\}|"|:|\*|\/|\||>|<|-|\+) ?/', ' ', $text);
     }
 
     public static function removeEmail(string $text): string

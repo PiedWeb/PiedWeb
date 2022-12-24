@@ -6,10 +6,11 @@ use ForceUTF8\Encoding;
 
 class Helper
 {
-    public static function clean(string $source): string
-    {
-        return trim(self::preg_replace_str('/\s{2,}/', ' ', Encoding::toUTF8($source)));
-    }
+    // public static function clean(string $source): string
+    // {
+    //     $source = Encoding::toUTF8($source);
+    //     return trim(self::preg_replace_str('/\s{2,}/', ' ', $source));
+    // }
 
     public static function isWebLink(string $url): bool
     {

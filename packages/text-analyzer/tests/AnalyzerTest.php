@@ -24,7 +24,7 @@ class AnalyzerTest extends \PHPUnit\Framework\TestCase
         $this->assertSame($results->getWordNumber(), 24);
 
         $content = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit'
-                    .' sed. Text Analyser : Expression in a text per Usage.';
+                    .' sed. Text Analyser : Expression&nbsp;in a text per Usage.';
 
         $kws = new Analyzer($content,  false,  1);
         $kws = $kws->exec();

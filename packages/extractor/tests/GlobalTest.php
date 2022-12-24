@@ -10,6 +10,7 @@ use PiedWeb\Extractor\CanonicalExtractor;
 use PiedWeb\Extractor\HrefLangExtractor;
 use PiedWeb\Extractor\TextData;
 use PiedWeb\Extractor\Url;
+use PiedWeb\TextAnalyzer\CleanText;
 use Symfony\Component\DomCrawler\Crawler;
 
 final class GlobalTest extends TestCase
@@ -39,6 +40,28 @@ final class GlobalTest extends TestCase
         }
 
         return $this->response[$url] = $client->getResponse()->getBody();
+    }
+
+    public function testEncoding(): void
+    {
+        $toTests = [
+            mb_convert_encoding('Nous n’avons pas encore', 'ISO-8859-1') => "Nous n'avons pas encore",
+            '&raquo; L’ombre  &laquo;' => '" L\'ombre "',
+            iconv('UTF-8', 'ISO-8859-1', 'supér\'') => 'supér\'',
+            iconv('UTF-8', 'ISO-8859-1', 'supér') => 'supér',
+            iconv('UTF-8', 'ISO-8859-1', 'supér  &nbsp;&laquo;') => 'supér "',
+            iconv('UTF-8', 'ISO-8859-15', 'supér') => 'supér',
+            mb_convert_encoding('supér',  'UTF-16LE') => 'supér',
+            'L’ombre' => "L'ombre",
+            'L’ombre&nbsp;&nbsp;' => "L'ombre",
+            'L&#39;ombre' => "L'ombre",
+            'L&apos;ombre' => "L'ombre",
+            'L&#x27;ombre' => "L'ombre",
+            'L&ocirc;mbre' => 'Lômbre',
+        ];
+        foreach ($toTests as $toFix => $same) {
+            $this->assertSame($same, CleanText::fixEncoding($toFix));
+        }
     }
 
     public function testCanonical(): void

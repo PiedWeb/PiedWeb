@@ -42,7 +42,7 @@ class Analyzer
     private function getSentences(): array
     {
         if (! $this->onlyInSentence) {
-            return explode(\chr(10), trim($this->text));
+            return explode(\chr(10), CleanText::fixEncoding($this->text));
         }
 
         $sentences = [];
@@ -58,7 +58,11 @@ class Analyzer
         $sentences = $this->getSentences();
 
         foreach ($sentences as $sentence) {
-            $this->extract($sentence);
+            $wordsGroups = \Safe\preg_split('/(,|\.|\(|\[|!|\?|;|\{|:)/', $sentence);
+            foreach ($wordsGroups as $wordsGroup) {
+                $wordsGroup = CleanText::removePunctuation($wordsGroup);
+                $this->extract($wordsGroup);
+            }
         }
 
         $this->cleanExpressions();
@@ -106,11 +110,9 @@ class Analyzer
         return '';
     }
 
-    private function extract(string $sentence): void
+    private function extract(string $words): void
     {
-        $sentence = CleanText::removePunctuation($sentence);
-
-        $words = explode(' ', trim(strtolower($sentence)));
+        $words = explode(' ', trim(strtolower($words)));
 
         $wordsKey = array_keys($words);
         foreach ($wordsKey as $key) {

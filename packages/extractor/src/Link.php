@@ -2,6 +2,7 @@
 
 namespace PiedWeb\Extractor;
 
+use PiedWeb\TextAnalyzer\CleanText;
 use Symfony\Component\DomCrawler\Crawler as DomCrawler;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
@@ -128,7 +129,7 @@ final class Link
         }
 
         // Limit to 50 chars -> Totally subjective
-        return $this->anchor = substr(Helper::clean($anchor), 0, 49);
+        return $this->anchor = mb_substr(CleanText::fixEncoding($anchor), 0, 49);
     }
 
     private function retrieveMayFollow(bool $parentMayFollow): bool

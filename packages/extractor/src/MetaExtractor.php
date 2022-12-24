@@ -2,6 +2,7 @@
 
 namespace PiedWeb\Extractor;
 
+use PiedWeb\TextAnalyzer\CleanText;
 use Symfony\Component\DomCrawler\Crawler;
 
 final class MetaExtractor
@@ -20,7 +21,7 @@ final class MetaExtractor
         }
 
         return $meta->count() > 0
-            ? (null !== $meta->attr('content') ? Helper::clean($meta->attr('content')) : '')
+            ? (null !== $meta->attr('content') ? CleanText::fixEncoding($meta->attr('content')) : '')
             : null;
     }
 }

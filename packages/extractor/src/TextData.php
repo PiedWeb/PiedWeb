@@ -4,6 +4,7 @@ namespace PiedWeb\Extractor;
 
 use PiedWeb\TextAnalyzer\Analysis;
 use PiedWeb\TextAnalyzer\Analyzer as TextAnalyzer;
+use PiedWeb\TextAnalyzer\CleanText;
 use Symfony\Component\DomCrawler\Crawler;
 
 final class TextData
@@ -35,7 +36,7 @@ final class TextData
         $this->text = '';
         $elements = $this->crawler->filterXPath(self::getXPathToSelectNodeContent());
         foreach ($elements as $element) {
-            $this->text .= ' '.Helper::clean($element->textContent);
+            $this->text .= ' '.CleanText::fixEncoding($element->textContent);
         }
 
         return $this->text;
@@ -69,7 +70,7 @@ final class TextData
         $elements = $this->crawler->filterXPath(self::getXPathToSelectNodeContent('p,h1,h2,h3,h4,h5,h6,li'));
 
         foreach ($elements as $node) {
-            $text = Helper::clean($node->textContent);
+            $text = CleanText::fixEncoding($node->textContent);
             if (isset($flatContent[$text])) {
                 continue;
             }
@@ -83,7 +84,7 @@ final class TextData
     public function getRatioTxtCode(): int
     {
         $textLenght = \strlen($this->getText());
-        $htmlLenght = \strlen(Helper::clean($this->html));
+        $htmlLenght = \strlen(CleanText::fixEncoding($this->html));
 
         return (int) ($htmlLenght > 0 ? round($textLenght / $htmlLenght * 100) : 0);
     }
