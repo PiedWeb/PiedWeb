@@ -9,10 +9,10 @@
     "php": ">=8.1",
     "ext-ctype": "*",
     "ext-iconv": "*",
+    "fylax/forceutf8": "^3.0",
     "jeremykendall/php-domain-parser": "^6.1",
     "league/csv": "^9.8",
     "league/uri": "^6.5",
-    "fylax/forceutf8": "^3.0",
     "nesk/puphpeteer": "dev-zoon",
     "spatie/robots-txt": "^2.0",
     "symfony/cache": "^6.1",
@@ -21,6 +21,7 @@
     "symfony/dom-crawler": "^6.1",
     "symfony/serializer": "^6.2",
     "thecodingmachine/safe": "^2.1",
+    "vierbergenlars/php-semver": "^3.0.3",
     "voku/stringy": "^6.5"
   },
   "require-dev": {

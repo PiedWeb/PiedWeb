@@ -20,7 +20,8 @@
     "piedweb/curl": "*",
     "piedweb/extractor": "*",
     "symfony/cache": "^6.1",
-    "nesk/puphpeteer": "dev-zoon"
+    "nesk/puphpeteer": "dev-zoon",
+    "vierbergenlars/php-semver": "^3.0.3"
   },
   "autoload": {
     "psr-4": {
