@@ -5,6 +5,7 @@ namespace PiedWeb\Crawler;
 use PiedWeb\Curl\Response;
 use PiedWeb\Extractor\Link;
 use Stringy\Stringy;
+use Symfony\Component\Filesystem\Filesystem;
 
 final class Recorder
 {
@@ -35,21 +36,25 @@ final class Recorder
 
     public bool $recordLinks = true;
 
+    private Filesystem $filesystem;
+
     public function __construct(
         private readonly string $folder,
         private readonly int $cacheMethod = self::CACHE_ID
     ) {
+        $this->filesystem = new Filesystem();
+
         if (! file_exists($this->folder)) {
-            mkdir($this->folder);
+            $this->filesystem->mkdir($this->folder);
         }
 
         if (! file_exists($folder.self::LINKS_DIR)) {
-            mkdir($folder.self::LINKS_DIR);
+            $this->filesystem->mkdir($folder.self::LINKS_DIR);
             $this->initLinksIndex();
         }
 
         if (! file_exists($this->folder.self::CACHE_DIR)) {
-            mkdir($this->folder.self::CACHE_DIR);
+            $this->filesystem->mkdir($this->folder.self::CACHE_DIR);
         }
     }
 
@@ -98,12 +103,12 @@ final class Recorder
 
             $folder .= '/'.$urlPart[$i];
             if (! file_exists($folder) || ! is_dir($folder)) {
-                mkdir($folder);
+                $this->filesystem->mkdir($folder);
             }
 
             $folder .= '/'.$urlPart[$i];
             if (! file_exists($folder) || ! is_dir($folder)) {
-                mkdir($folder);
+                $this->filesystem->mkdir($folder);
             }
         }
 
