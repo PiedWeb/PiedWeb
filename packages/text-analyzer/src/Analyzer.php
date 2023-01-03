@@ -82,13 +82,23 @@ class Analyzer
     private function cleanSimilar(string $expression): void
     {
         $similar = $this->findSimilar($expression);
+        // can return énergies for énergie or énergie bio for énergie
         if ('' === $similar) {
             return;
         }
 
-        if ($this->expressions[$similar] === $this->expressions[$expression]) {
-            unset($this->expressions[$expression]);
+        // if we find énergie and énergie bio autant de fois
+        // on supprime le plus court
+        if ($this->expressions[$similar] === $this->expressions[$expression] && substr_count($expression, ' ') > 0) {
+            unset($this->expressions[\strlen($similar) < \strlen($expression) ? $similar : $expression]);
+
+            return;
         }
+
+        // if (strlen($similar) < strlen($expression)
+        //     && $this->expressions[$similar] <= $this->expressions[$expression]) {
+        //     unset($this->expressions[$similar]);
+        // }
 
         // return $this->cleanSimilar($expression);
     }
@@ -112,7 +122,7 @@ class Analyzer
 
     private function extract(string $words): void
     {
-        $words = explode(' ', trim(strtolower($words)));
+        $words = explode(' ', trim(mb_strtolower($words)));
 
         $wordsKey = array_keys($words);
         foreach ($wordsKey as $key) {
@@ -145,6 +155,10 @@ class Analyzer
 
     private function cleanExpr(string $expression, int $wordNumber): string
     {
+        if (1 === \strlen($expression)) {
+            return '';
+        }
+
         if ($wordNumber <= 2) {
             $expression = trim(CleanText::removeStopWords(' '.$expression.' '));
         } else {

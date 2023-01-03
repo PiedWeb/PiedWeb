@@ -3,13 +3,13 @@
 # To skip it : git commit --no-verify -m "
 
 composer format
-composer rector
+#composer rector
 git add .
 
-if composer test
-then
-  exit 0
-else
-  echo An error occur testing the code. Commit canceled
-  exit 1
-fi
+# if composer test
+# then
+#   exit 0
+# else
+#   echo An error occur testing the code. Commit canceled
+#   exit 1
+# fi

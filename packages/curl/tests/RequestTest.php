@@ -38,7 +38,7 @@ class RequestTest extends \PHPUnit\Framework\TestCase
 
     public function testNotDownload(): void
     {
-        $url = 'https://piedweb.com/assets/img/xl/bg.jpg';
+        $url = 'https://altimood.com/media/default/rando-alpine-coucher-de-soleil.jpg';
         $request = new Client($url);
         $request
             ->setDefaultGetOptions()

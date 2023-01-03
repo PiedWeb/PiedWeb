@@ -124,6 +124,10 @@ class LinksExtractor
             return null;
         }
 
+        if (str_starts_with($url, '////')) {
+            return null;
+        }
+
         return $this->requestedUrl->resolve($url);
     }
 }

@@ -29,16 +29,20 @@ class CleanText
         'too', 'twas', 'us', 'wants', 'was', 'we', 'were', 'what', 'when', 'where',    'which', 'while', 'who',
         'whom', 'why', 'will', 'with', 'would', 'yet', 'you', 'your',
 
+        'cookielawinfo', 'checkbox',
         // French Stop words
         'au', 'aux', 'avec', 'ce', 'ces', 'dans', 'de', 'des', 'du', 'elle', 'en', 'et', 'eux', 'il', 'je', 'la',
         'le', 'leur', 'lui', 'plus', 'ma', 'mais', 'me', 'même', 'mes', 'moi', 'mon', 'ne', 'nos', 'notre', 'nous',
         'on', 'ou', 'par', 'pas', 'pour', 'qu', 'que', 'qui', 'sa', 'se', 'ses', 'son', 'sur', 'ta', 'te', 'tes',
-        'toi', 'ton', 'tu', 'un', 'une', 'vos', 'votre', 'vous', 'puis', 'aussi', 'comme',
+        'toi', 'ton', 'tu', 'un', 'une', 'vos', 'votre', 'vous', 'puis', 'aussi', 'comme', 'pourquoi', 'alors', 'si',
+        'chaque', 'mentions légales', 'entre', 'autre', 'comment', 'là', 'après', 'principalement',
+        'certains', 'parfois', 'ensuite', 'article', 'etc', 'où', 'également', 'site', 'mieux', 'ainsi', 'fois', 'encore',
+        'selon', 'afin', 'blog', 'user', 'certaines', 'avoir', 'autres', 'souvent', '★★★★★', '★', 'propose',
 
-        'c', 'd', 'j', 'l', 'à', 'm', 'n', 's', 't', 'y',
+        'c', 'd', 'j', 'l', 'à', 'm', 'n', 's', 't', 'y', 'e',
 
         'ceci', 'cela', 'celà', 'cet', 'cette', 'ici', 'ils', 'les', 'leurs', 'quel', 'quels', 'quelle', 'quelles',
-        'sans', 'soi', 'très', 'tout', 'toutes', 'tous', 'bien', 'bonne', 'peu', 'ça', 'car',
+        'sans', 'soi', 'très', 'tout', 'toutes', 'tous', 'bien', 'bonne', 'peu', 'ça', 'car', 'selon', 'lequel',
 
         'été', 'étée', 'étées', 'étés', 'étant', 'suis', 'es', 'est', 'sommes', 'êtes', 'sont', 'serai', 'seras',
         'sera', 'serons', 'serez', 'seront', 'serais', 'serait', 'serions', 'seriez', 'seraient', 'étais', 'était',
@@ -70,8 +74,9 @@ class CleanText
         $text = str_replace(['’'], "'", $text);
         $text = str_replace(['…'], '...', $text);
         $text = str_replace(['–', '—', '\xC2\xAD'], ' - ', $text);
-        $text = preg_replace('#(,|\.|\(|\[|\]|\)|!|\?|;|\{|\}|"|:|\*|\/|\||>|<|-|\+)#', ' $0 ', $text) ?? throw new \Exception();
-        $text = preg_replace('#(\xE2\x80\xAF|\xC2\xAD|\xC2\xA0|\s)+#', ' ', $text) ?? throw new \Exception();
+        $text = preg_replace('#(,|\.|\(|\[|\]|\)|!|\?|;|\{|\}|"|:|\*|\/|\||>|<|-|\+)#', ' $0 ', $text) ?? throw new \Exception(preg_last_error_msg());
+        $text = preg_replace('#(\xE2\x80\xAF|\xC2\xAD|\xC2\xA0)+#', ' ', $text) ?? throw new \Exception(preg_last_error_msg());
+        $text = preg_replace('#\s+#', ' ', $text) ?? throw new \Exception(preg_last_error_msg());
 
         $text = str_replace('', "'", $text);
 

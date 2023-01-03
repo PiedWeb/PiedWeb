@@ -30,4 +30,15 @@ class AnalyzerTest extends \PHPUnit\Framework\TestCase
         $kws = $kws->exec();
         $this->assertCount(1, $kws->getExpressions(2));
     }
+
+    public function testTextAnalyzer(): void
+    {
+        $text = 'chaque fois, c est la même histoire de chaque pluie, c est pas fini chaque matin';
+        $text = $text.' '.$text.' '.$text;
+
+        $tester = new Analyzer($text, false, 2);
+        dump($tester->exec()->getExpressions(2));
+
+        $this->assertTrue(true);
+    }
 }

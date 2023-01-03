@@ -25,9 +25,11 @@ class CleanTextTest extends \PHPUnit\Framework\TestCase
         $this->assertSame('savoir', CleanText::removeStopWordsAtExtremity('savoir plus '));
     }
 
-    public function testremoveStopWords(): void
+    public function testRemoveStopWords(): void
     {
         $this->assertSame('', CleanText::removeStopWords(' http//www '));
+        $this->assertSame('', CleanText::removeStopWords(' ainsi '));
+        $this->assertSame('', CleanText::removeStopWords(' chaque '));
     }
 
     public function testStripTags(): void

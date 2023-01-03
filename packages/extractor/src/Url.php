@@ -31,7 +31,7 @@ final class Url implements \Stringable
 
     public function resolve(string $url): string
     {
-        $resolved = UriResolver::resolve(Http::createFromString($url), $this->http);
+        $resolved = UriResolver::resolve(Http::createFromString(trim($url)), $this->http);
 
         return $resolved->__toString();
     }

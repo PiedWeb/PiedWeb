@@ -434,8 +434,14 @@ final class Url
         return $this->updatedAt;
     }
 
-    public function setUpdatedAt(\DateTimeInterface $updatedAt): void
+    public function setUpdatedAt(\DateTimeInterface|string $updatedAt): void
     {
+        if (\is_string($updatedAt)) {
+            $this->setUpdatedAtFromString($updatedAt);
+
+            return;
+        }
+
         $this->updatedAt = $updatedAt;
     }
 
@@ -690,6 +696,17 @@ final class Url
     public function getFlatContent(): array
     {
         return $this->flatContent;
+    }
+
+    public function getFlatContentString(): string
+    {
+        $toReturn = '';
+
+        foreach (array_keys($this->flatContent) as $partContent) {
+            $toReturn .= $partContent.\chr(10).\chr(10);
+        }
+
+        return $toReturn;
     }
 
     /** @param array<string, string> $flatContent */
