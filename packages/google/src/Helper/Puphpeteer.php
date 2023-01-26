@@ -6,6 +6,7 @@ use Exception;
 use Nesk\Puphpeteer\Puppeteer;
 use Nesk\Puphpeteer\Resources\Browser;
 use Nesk\Puphpeteer\Resources\Page;
+use Nesk\Rialto\Data\BasicResource;
 use PiedWeb\Google\Logger;
 
 class Puphpeteer
@@ -98,7 +99,12 @@ class Puphpeteer
 
         Logger::log('launching new Puppeteer instance `'.self::$currentKey.'`');
         self::$puppeteer[self::$currentKey] = new Puppeteer($userOptions);
-        self::$browser[self::$currentKey] = self::$puppeteer[self::$currentKey]->launch([] !== $emulateOptions ? $emulateOptions : self::EMULATE_OPTIONS_MOBILE);
+        self::$browser[self::$currentKey] = self::$puppeteer[self::$currentKey]->launch(
+            array_merge(
+                [] !== $emulateOptions ? $emulateOptions : self::EMULATE_OPTIONS_MOBILE,
+                // ['executablePath' => '/snap/bin/chromium',]
+            )
+        );
         self::$browserPage[self::$currentKey] = $this->getBrowserPage(true);
         self::$browserPage[self::$currentKey]->emulate([] !== $emulateOptions ? $emulateOptions : self::EMULATE_OPTIONS_MOBILE);
 
@@ -120,6 +126,14 @@ class Puphpeteer
 
         if ($new || ! isset(self::$browserPage[self::$currentKey])) {
             self::$browserPage[self::$currentKey] = (self::$browser[self::$currentKey] ?? throw new \LogicException())->newPage();
+        }
+
+        if (self::$browserPage[self::$currentKey]::class === BasicResource::class) {
+            dump($new);
+            dump(self::$browser[self::$currentKey]::class);
+            dump(self::$browserPage[self::$currentKey]::class);
+            // self::$browserPage[self::$currentKey] = self::$browserPage[self::$currentKey]->newPage();
+            dd(self::$browserPage[self::$currentKey]::class);
         }
 
         return self::$browserPage[self::$currentKey];
