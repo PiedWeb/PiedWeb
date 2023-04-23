@@ -7,11 +7,12 @@ on:
         tags:
             - '*'
 
+env:
+    GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+
 jobs:
 
     split_monorepo:
-        needs: provide_packages_json
-
         runs-on: ubuntu-latest
         strategy:
             fail-fast: false
