@@ -32,7 +32,10 @@ jobs:
                         package: 'text-analyzer'
 
         steps:
-            -   uses: actions/checkout@v3
+            -
+                uses: actions/checkout@v3
+                with:
+                    set-safe-directory: '/tmp/monorepo_split/build_directory'
 
             # no tag
             -
