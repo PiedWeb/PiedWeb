@@ -104,7 +104,6 @@ class SERPExtractor
             }
 
             $pI = $i - 1;
-
             if ($pI >= 0 && $node->getAttribute('data-rc_ludocids') === $mapsResults[$pI]->cid) {
                 unset($mapsResults[$pI]);
                 --$i;
