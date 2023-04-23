@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Rector\CodeQuality\Rector\Identical\FlipTypeControlToUseExclusiveTypeRector;
 use Rector\Config\RectorConfig;
 use Rector\Core\Configuration\Option;
 use Rector\Core\ValueObject\PhpVersion;
@@ -24,6 +25,7 @@ return static function (RectorConfig $rectorConfig): void {
 
     $rectorConfig->skip([
         __DIR__.'packages/*/var/*',
+        FlipTypeControlToUseExclusiveTypeRector::class,
     ]);
 
     // $parameters->rule(Option::PHP_VERSION_FEATURES, PhpVersion::PHP_80);

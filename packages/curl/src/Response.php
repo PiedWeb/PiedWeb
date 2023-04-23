@@ -85,7 +85,7 @@ class Response
     /**
      * @return string|string[]|null
      */
-    public function getHeader(string $name)
+    public function getHeader(string $name): string|array|null
     {
         return ($headers = $this->getHeaders()) !== null
             && isset($headers[$name]) ? $headers[$name] : null;
@@ -146,7 +146,7 @@ class Response
      *
      * @return int|string|array<string, string|int>|null
      */
-    public function getInfo(?string $key = null)
+    public function getInfo(?string $key = null): int|string|array|null
     {
         return null !== $key && '' !== $key ? ($this->info[$key] ?? null) : $this->info;
     }

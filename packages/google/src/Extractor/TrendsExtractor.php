@@ -129,7 +129,7 @@ class TrendsExtractor
             $this->getRelatedTopics(1 === $inProgression ? 1 : 0)
         );
         foreach ($related as $r) {
-            $return[$r['topic']['mid']] = array_merge($r['topic'], ['value' => $r['value']]);
+            $return[$r['topic']['mid']] = [...$r['topic'], 'value' => $r['value']];
         }
 
         return $return;

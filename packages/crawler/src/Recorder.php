@@ -36,7 +36,7 @@ final class Recorder
 
     public bool $recordLinks = true;
 
-    private Filesystem $filesystem;
+    private readonly Filesystem $filesystem;
 
     public function __construct(
         private readonly string $folder,

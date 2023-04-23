@@ -76,4 +76,14 @@ final class GoogleSerpTest extends TestCase
         $this->assertTrue($extractor->containsSerpFeature('PositionZero'));
         $this->assertStringContainsString('piedvert.com', $extractor->getPositionsZero()->url);
     }
+
+    public function testExtractMaps(): void
+    {
+        $extractor = $this->getExtractor('altimood');
+
+        $extractor->getBrowserPage()->screenshot(['path' => 'debug.png']);
+
+        $mapsResults = $extractor->extractMapsResults();
+        $this->assertArrayHasKey(0, $mapsResults);
+    }
 }

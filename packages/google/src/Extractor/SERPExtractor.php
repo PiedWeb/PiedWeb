@@ -4,6 +4,7 @@ namespace PiedWeb\Google\Extractor;
 
 use LogicException;
 use PiedWeb\Extractor\Helper;
+use PiedWeb\Google\Result\MapsResult;
 use PiedWeb\Google\Result\SearchResult;
 use Symfony\Component\DomCrawler\Crawler;
 
@@ -84,6 +85,46 @@ class SERPExtractor
         }
 
         return $alsoAsked;
+    }
+
+    /**
+     * @return MapsResult[]
+     */
+    public function extractMapsResults(): array
+    {
+        $selector = '[data-rc_ludocids]';
+
+        $nodes = $this->domCrawler->filter($selector);
+        $mapsResults = [];
+
+        $i = 0;
+        foreach ($nodes as $node) {
+            if (! $node instanceof \DOMElement) {
+                continue;
+            }
+
+            $pI = $i - 1;
+            if ($pI >= 0 && $node->getAttribute('data-rc_ludocids') === $mapsResults[$pI]->cid) {
+                unset($mapsResults[$pI]);
+                --$i;
+            }
+
+            $mapsResults[$i] = new MapsResult();
+            $mapsResults[$i]->cid = $node->getAttribute('data-rc_ludocids');
+            $mapsResults[$i]->name = $this->extractBusinessName($node);
+            $mapsResults[$i]->position = $i + 1;
+            $mapsResults[$i]->pixelPos = $this->getPixelPosFor($node->getNodePath() ?? '');
+            ++$i;
+        }
+
+        return $mapsResults;
+    }
+
+    private function extractBusinessName(\DOMElement $node): string
+    {
+        $nameNode = (new Crawler($node))->filter('span')->getNode(0);
+
+        return null !== $nameNode ? $nameNode->textContent : '';
     }
 
     /**

@@ -45,7 +45,7 @@ final class CrawlerConfig
         ?string $userAgent = null,
         ?int $cacheMethod = null,
         ?int $sleepBetweenReqInMs = null, // ms
-         ?string $virtualRobotsTxtRules = null,
+        ?string $virtualRobotsTxtRules = null,
         ?array $toHarvest = null,
         ?string $dataDirectory = null,
         public readonly int $autosave = 500 // number of Urls we can crawled before saving (0 = autosaving disabled)
