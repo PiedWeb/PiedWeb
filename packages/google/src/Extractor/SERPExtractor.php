@@ -4,7 +4,7 @@ namespace PiedWeb\Google\Extractor;
 
 use LogicException;
 use PiedWeb\Extractor\Helper;
-use PiedWeb\Google\Result\MapsResult;
+use PiedWeb\Google\Result\BusinessResult;
 use PiedWeb\Google\Result\SearchResult;
 use Symfony\Component\DomCrawler\Crawler;
 
@@ -88,9 +88,9 @@ class SERPExtractor
     }
 
     /**
-     * @return MapsResult[]
+     * @return BusinessResult[]
      */
-    public function extractMapsResults(): array
+    public function extractBusinessResults(): array
     {
         $selector = '[data-rc_ludocids]';
 
@@ -109,10 +109,11 @@ class SERPExtractor
                 --$i;
             }
 
-            $mapsResults[$i] = new MapsResult();
+            $mapsResults[$i] = new BusinessResult();
             $mapsResults[$i]->cid = $node->getAttribute('data-rc_ludocids');
             $mapsResults[$i]->name = $this->extractBusinessName($node);
             $mapsResults[$i]->position = $i + 1;
+            $mapsResults[$i]->organicPos = $i + 1;
             $mapsResults[$i]->pixelPos = $this->getPixelPosFor($node->getNodePath() ?? '');
             ++$i;
         }
@@ -316,6 +317,7 @@ class SERPExtractor
             'relatedSearches' => $this->getRelatedSearches(),
             'results' => $this->getResults(false),
             'alsoAsked' => $this->getAlsoAsked(),
+            'businessResults' => $this->extractBusinessResults(),
         ]);
     }
 }

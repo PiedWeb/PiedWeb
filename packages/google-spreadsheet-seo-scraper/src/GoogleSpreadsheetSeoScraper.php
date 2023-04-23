@@ -260,11 +260,9 @@ class GoogleSpreadsheetSeoScraper
         foreach ($results as $r) {
             $host = parse_url($r->url, \PHP_URL_HOST);
             if (('' !== $kw['domain'] && $kw['domain'] == $host) || \in_array($host, $this->domain)) {
-                $result = array_merge($result, [
-                    'pos' => $r->organicPos,
-                    'pixelPos' => $r->pixelPos,
-                    'url' => $r->url,
-                ]);
+                $result['pos'] = $r->organicPos;
+                $result['pixelPos'] = $r->pixelPos;
+                $result['url'] = $r->url;
 
                 break;
             }
