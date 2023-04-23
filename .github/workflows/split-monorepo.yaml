@@ -8,31 +8,6 @@ on:
             - '*'
 
 jobs:
-    provide_packages_json:
-        runs-on: ubuntu-latest
-
-        steps:
-            -
-                uses: actions/checkout@v2
-
-            # required for matrix of packages set
-            -   uses: shivammathur/setup-php@v2
-                with:
-                    php-version: 8.1
-                    coverage: none
-                env:
-                    COMPOSER_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-
-            -   uses: "ramsey/composer-install@v2"
-
-            # get package json list
-            -
-                id: output_data
-                run: echo "matrix=$(vendor/bin/monorepo-builder packages-json)" >> $GITHUB_OUTPUT
-
-        # this step is needed, so the output gets to the next defined job
-        outputs:
-            matrix: ${{ steps.output_data.outputs.matrix }}
 
     split_monorepo:
         needs: provide_packages_json
@@ -41,7 +16,19 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                package: ${{fromJson(needs.provide_packages_json.outputs.matrix)}}
+                package:
+                    -
+                        package: 'crawler'
+                    -
+                        package: 'curl'
+                    -
+                        package: 'extractor'
+                    -
+                        package: 'google'
+                    -
+                        package: 'google-spreedsheet-seo-scraper'
+                    -
+                        package: 'text-analyzer'
 
         steps:
             -   uses: actions/checkout@v2

@@ -1,18 +1,16 @@
 <?php
 
-declare(strict_types=1);
-
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-use Symplify\ComposerJsonManipulator\ValueObject\ComposerJsonSection;
+use Symplify\MonorepoBuilder\ComposerJsonManipulator\ValueObject\ComposerJsonSection;
+use Symplify\MonorepoBuilder\Config\MBConfig;
 use Symplify\MonorepoBuilder\ValueObject\Option;
 
-return static function (ContainerConfigurator $containerConfigurator): void {
-    $parameters = $containerConfigurator->parameters();
-    // for "merge" command
-    $parameters->set(Option::PACKAGE_DIRECTORIES, array_map(function($row) { return 'packages/'.$row; }, array_diff(scandir('packages'), array('..', '.'))));
-    $parameters->set(Option::DATA_TO_APPEND, [
-        ComposerJsonSection::REQUIRE_DEV => [
-            'phpunit/phpunit' => '^9.5',
-        ],
+return static function (MBConfig $mbConfig): void {
+    // where are the packages located?
+    $mbConfig->packageDirectories([
+        __DIR__ . '/packages',
     ]);
+
+    // how to skip packages in loaded directories?
+    //$mbConfig->packageDirectoriesExcludes([__DIR__ . '/packages/secret-package']);
+
 };
