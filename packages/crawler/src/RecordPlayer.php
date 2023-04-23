@@ -33,7 +33,7 @@ final class RecordPlayer
 
         $records = $csv->getRecords();
         foreach ($records as $r) {
-            if (! \is_array($r) || ! isset($r['id']) || ! isset($r['uri']) || ! \is_string($r['uri'])) {
+            if (! \is_array($r) || ! isset($r['id']) || ! isset($r['uri']) || ! \is_string($r['uri'])) { // @phpstan-ignore-line
                 throw new \LogicException();
             }
 
