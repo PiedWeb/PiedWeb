@@ -13,7 +13,7 @@ class SERPExtractor
     final public const SERP_FEATURE_SELECTORS = [
         'Ads' => ['.//*[@id="tads"]|.//*[@id="bottomads"]'],
         'ImagePack' => ["//span[text()='Images']", "//h3[starts-with(text(), 'Images correspondant')]"],
-        'Local Pack' => ["//div[text()='Adresses']"],
+        'Local Pack' => ["//div[text()='Adresses']", "//div[text()='Entreprises']"],
         'PositionZero' => ["//h2[text()='Extrait optimisé sur le Web']"],
         'KnowledgePanel' => ['//div[contains(concat(" ",normalize-space(@class)," ")," kp-wholepage ")]'],
         'News' => ['//span[text()="À la une"]'],
@@ -136,6 +136,7 @@ class SERPExtractor
             if (! $node instanceof \DOMElement) {
                 continue;
             }
+
             if ('' === $node->textContent) {
                 continue;
             }
