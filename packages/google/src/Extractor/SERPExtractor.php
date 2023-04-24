@@ -93,10 +93,8 @@ class SERPExtractor
     public function extractBusinessResults(): array
     {
         $selector = '[data-rc_ludocids]';
-
         $nodes = $this->domCrawler->filter($selector);
         $mapsResults = [];
-
         $i = 0;
         foreach ($nodes as $node) {
             if (! $node instanceof \DOMElement) {
@@ -118,6 +116,39 @@ class SERPExtractor
             ++$i;
         }
 
+        if (\count($mapsResults) < 1) {
+            return $this->extractLocalServiceResults();
+        }
+
+        return $mapsResults;
+    }
+
+    /**
+     * @return BusinessResult[]
+     */
+    private function extractLocalServiceResults(): array
+    {
+        $selector = '.rllt__details [role="heading"]';
+        $nodes = $this->domCrawler->filter($selector);
+        $mapsResults = [];
+        $i = 0;
+        foreach ($nodes as $node) {
+            if (! $node instanceof \DOMElement) {
+                continue;
+            }
+            if ('' === $node->textContent) {
+                continue;
+            }
+
+            $mapsResults[$i] = new BusinessResult();
+            $mapsResults[$i]->cid = '0';
+            $mapsResults[$i]->name = trim(Helper::htmlToPlainText($node->textContent));
+            $mapsResults[$i]->position = $i + 1;
+            $mapsResults[$i]->organicPos = $i + 1;
+            $mapsResults[$i]->pixelPos = $this->getPixelPosFor($node->getNodePath() ?? '');
+            ++$i;
+        }
+
         return $mapsResults;
     }
 
@@ -125,7 +156,7 @@ class SERPExtractor
     {
         $nameNode = (new Crawler($node))->filter('span')->getNode(0);
 
-        return null !== $nameNode ? $nameNode->textContent : '';
+        return null !== $nameNode ? trim(Helper::htmlToPlainText($nameNode->textContent)) : '';
     }
 
     /**
