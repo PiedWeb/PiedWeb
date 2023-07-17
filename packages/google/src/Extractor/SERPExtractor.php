@@ -307,7 +307,7 @@ class SERPExtractor
     /**
      * @param string[] $xpaths
      */
-    public function exists(array $xpaths, ?\DOMNode &$node = null): bool
+    public function exists(array $xpaths, \DOMNode &$node = null): bool
     {
         try {
             $node = $this->getNode($xpaths);

@@ -18,7 +18,7 @@
     "symfony/cache": "^6.1",
     "symfony/console": "^6.1",
     "symfony/css-selector": "^6.1",
-    "symfony/dom-crawler": "^6.2",
+    "symfony/dom-crawler": "^6.3",
     "symfony/serializer": "^6.2",
     "thecodingmachine/safe": "^2.1",
     "vierbergenlars/php-semver": "^3.0.3",
@@ -49,7 +49,8 @@
       "PiedWeb\\GoogleSpreadsheetSeoScraper\\": "packages/google-spreadsheet-seo-scraper/src",
       "PiedWeb\\Extractor\\": "packages/extractor/src",
       "PiedWeb\\Crawler\\": "packages/crawler/src",
-      "PiedWeb\\TextAnalyzer\\": "packages/text-analyzer/src"
+      "PiedWeb\\TextAnalyzer\\": "packages/text-analyzer/src",
+      "PiedWeb\\Perso\\": "packages/perso"
     }
   },
   "autoload-dev": {
@@ -63,11 +64,11 @@
   },
   "scripts": {
     "stan": "vendor/bin/phpstan analyze packages/*/src",
+    "format": "vendor/bin/php-cs-fixer fix && vendor/bin/php-cs-fixer fix rector.php",
     "psalm": "vendor/bin/psalm --no-suggestions --no-cache",
     "rector": "vendor/bin/rector process",
     "test": "vendor/bin/phpunit --stop-on-failure",
-    "test-google": "vendor/bin/phpunit --stop-on-failure --testsuite google",
-    "format": "vendor/bin/php-cs-fixer fix && vendor/bin/php-cs-fixer fix rector.php"
+    "test-google": "vendor/bin/phpunit --stop-on-failure --testsuite google"
   },
   "config": {
     "sort-packages": true,
@@ -80,7 +81,7 @@
   "repositories": [
     {
       "type": "vcs",
-      "url": "https://github.com/zoonru/puphpeteer.git"
+      "url": "https://github.com/RobinDev/puphpeteer.git"
     },
     {
       "type": "vcs",

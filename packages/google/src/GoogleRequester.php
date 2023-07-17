@@ -37,7 +37,7 @@ class GoogleRequester
         return $this->puppeteerClient;
     }
 
-    public function requestGoogleWithCurl(GoogleSERPManager $Google, ?callable $manageProxy = null): string
+    public function requestGoogleWithCurl(GoogleSERPManager $Google, callable $manageProxy = null): string
     {
         $this->getCurlClient()->setLanguage($Google->language.';q=0.9');
 
@@ -54,11 +54,13 @@ class GoogleRequester
         return $this->getCurlClient()->getResponse()->getBody();
     }
 
-    public function requestGoogleWithPuppeteer(GoogleSERPManager $manager, ?callable $manageProxy = null): string
+    public function requestGoogleWithPuppeteer(GoogleSERPManager $manager, callable $manageProxy = null): string
     {
-        $this->getPuppeteerClient()
-            ->instantiate(Puphpeteer::EMULATE_OPTIONS_MOBILE, $manager->language)
-            ->setCookie('CONSENT', 'YES+', '.google.fr');
+        $pClient = $this->getPuppeteerClient();
+
+        $pClient->instantiate(Puphpeteer::EMULATE_OPTIONS_MOBILE, $manager->language);
+
+        $pClient->setCookie('CONSENT', 'YES+', '.google.fr');
 
         if (null !== $manageProxy) {
             \call_user_func($manageProxy, $this->getPuppeteerClient());

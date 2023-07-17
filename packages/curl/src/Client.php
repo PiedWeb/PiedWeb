@@ -14,7 +14,7 @@ class Client
 
     protected Response $response;
 
-    public function __construct(?string $target = null)
+    public function __construct(string $target = null)
     {
         if (null !== $target) {
             $this->setTarget($target);
@@ -133,7 +133,7 @@ class Client
         $this->errorMessage = '';
     }
 
-    public function request(?string $target = null): bool
+    public function request(string $target = null): bool
     {
         if (null !== $target) {
             $this->setTarget($target);

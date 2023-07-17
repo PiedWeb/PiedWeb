@@ -64,7 +64,7 @@ final class Link
         string $url,
         Url $parentUrl,
         bool $parentMayFollow = true,
-        ?\DOMElement $element = null
+        \DOMElement $element = null
     ): self {
         $self = new self();
         $self->element = $element;

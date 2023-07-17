@@ -15,7 +15,7 @@ final class ExtractExternalLinks
 
     public function __construct(
         string $id,
-        ?string $dataDirectory = null
+        string $dataDirectory = null
     ) {
         $this->config = CrawlerConfig::loadFrom($id, $dataDirectory);
         $this->dir = $this->config->getDataFolder().'/links';

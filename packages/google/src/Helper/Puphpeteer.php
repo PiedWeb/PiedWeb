@@ -51,6 +51,7 @@ class Puphpeteer
             'isLandscape' => false,
         ],
         'userAgent' => 'Mozilla/5.0 (Linux; Android 10; SM-A305N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.210 Mobile Safari/537.36',
+        'headless' => 'new',
     ];
 
     /**
@@ -78,7 +79,7 @@ class Puphpeteer
         array $emulateOptions = [],
         string $language = '',
         array $userOptions = [
-            'headless' => true,
+            'headless' => 'new',
             'slowMo' => 250,
             'read_timeout' => 9000,
             'idle_timeout' => 9000, ]
@@ -97,7 +98,15 @@ class Puphpeteer
             return $this;
         }
 
+        $userOptions['js_extra'] = "
+            const puppeteer = require('puppeteer-extra');
+            const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+            puppeteer.use(StealthPlugin());
+            instruction.setDefaultResource(puppeteer);
+        ";
+
         Logger::log('launching new Puppeteer instance `'.self::$currentKey.'`');
+
         self::$puppeteer[self::$currentKey] = new Puppeteer($userOptions);
         self::$browser[self::$currentKey] = self::$puppeteer[self::$currentKey]->launch(
             array_merge(
@@ -105,6 +114,7 @@ class Puphpeteer
                 // ['executablePath' => '/snap/bin/chromium',]
             )
         );
+
         self::$browserPage[self::$currentKey] = $this->getBrowserPage(true);
         self::$browserPage[self::$currentKey]->emulate([] !== $emulateOptions ? $emulateOptions : self::EMULATE_OPTIONS_MOBILE);
 
@@ -131,8 +141,7 @@ class Puphpeteer
         if (self::$browserPage[self::$currentKey]::class === BasicResource::class) {
             dump($new);
             dump(self::$browser[self::$currentKey]::class);
-            dump(self::$browserPage[self::$currentKey]::class);
-            // self::$browserPage[self::$currentKey] = self::$browserPage[self::$currentKey]->newPage();
+            // self::$browserPage[self::$currentKey] = self::$browser[self::$currentKey]->newPage();
             dd(self::$browserPage[self::$currentKey]::class);
         }
 

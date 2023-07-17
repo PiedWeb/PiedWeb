@@ -13,7 +13,7 @@ class ExtendedClient extends Client
      */
     final public const DEFAULT_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.104 Safari/537.36';
 
-    private bool  $fakeBrowserHeader = false;
+    private bool $fakeBrowserHeader = false;
 
     public ?string $referer = null;
 
@@ -262,7 +262,7 @@ class ExtendedClient extends Client
     /**
      * Execute the request.
      */
-    public function request(?string $target = null, bool $updateRefererAndCookies = true): bool
+    public function request(string $target = null, bool $updateRefererAndCookies = true): bool
     {
         if ($this->fakeBrowserHeader) {
             $this->setBrowserHeader();

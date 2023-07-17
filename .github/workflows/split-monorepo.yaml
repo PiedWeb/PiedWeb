@@ -18,18 +18,12 @@ jobs:
             fail-fast: false
             matrix:
                 package:
-                    -
-                        package: 'crawler'
-                    -
-                        package: 'curl'
-                    -
-                        package: 'extractor'
-                    -
-                        package: 'google'
-                    -
-                        package: 'google-spreedsheet-seo-scraper'
-                    -
-                        package: 'text-analyzer'
+                    - crawler
+                    - curl
+                    - extractor
+                    - google
+                    - google-spreedsheet-seo-scraper
+                    - text-analyzer
 
         steps:
             -
@@ -39,14 +33,14 @@ jobs:
             -
                 if: "!startsWith(github.ref, 'refs/tags/')"
                 # Uses an action in the root directory
-                name: Monorepo Split of ${{ matrix.package.package }}
+                name: Monorepo Split of ${{ matrix.package }}
                 uses: danharrin/monorepo-split-github-action@v2.3.0
                 env:
                     GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
                 with:
-                    package_directory: 'packages/${{ matrix.package.package }}'
+                    package_directory: 'packages/${{ matrix.package }}'
                     repository_organization: 'piedweb'
-                    repository_name: '${{ matrix.package.package }}'
+                    repository_name: '${{ matrix.package }}'
                     user_name: "GitHub Action"
                     user_email: "action@github.com"
 
@@ -54,14 +48,14 @@ jobs:
             -
                 if: "startsWith(github.ref, 'refs/tags/')"
                 # Uses an action in the root directory
-                name: Monorepo Tagged Split of ${{ matrix.package.package }}
+                name: Monorepo Tagged Split of ${{ matrix.package }}
                 uses: danharrin/monorepo-split-github-action@v2.3.0
                 env:
                     GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
                 with:
                     tag: ${GITHUB_REF#refs/tags/}
-                    package_directory: 'packages/${{ matrix.package.package }}'
+                    package_directory: 'packages/${{ matrix.package }}'
                     repository_organization: 'piedweb'
-                    repository_name: '${{ matrix.package.package }}'
+                    repository_name: '${{ matrix.package }}'
                     user_name: "GitHub Action"
                     user_email: "action@github.com"

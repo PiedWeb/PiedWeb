@@ -34,7 +34,7 @@ final class GoogleSerpTest extends TestCase
         $manager = $this->getSerpManager();
 
         $googleRequester = new GoogleRequester();
-        $rawHtml = $manager->getCache() ?? $manager->setCache($googleRequester->requestGoogleWithPuppeteer($manager));
+        $rawHtml = $googleRequester->requestGoogleWithPuppeteer($manager); // $manager->getCache() ?? $manager->setCache($googleRequester->requestGoogleWithPuppeteer($manager));
         file_put_contents('debug.html', $rawHtml);
         $googleRequester->getPuppeteerClient()->getBrowserPage()->screenshot(['path' => 'debug.png']);
 

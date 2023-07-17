@@ -32,7 +32,7 @@ final class SimplePageRankCalculator
 
     private float $dampingFactor = 0.85;
 
-    public function __construct(string $id, ?string $dataDirectory = null)
+    public function __construct(string $id, string $dataDirectory = null)
     {
         $this->config = CrawlerConfig::loadFrom($id, $dataDirectory);
 
