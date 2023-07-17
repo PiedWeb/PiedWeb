@@ -65,7 +65,6 @@ class GoogleRequester
         if (null !== $manageProxy) {
             \call_user_func($manageProxy, $pClient);
         }
-        $pClient->getBrowserPage()->setOfflineMode(false);
 
         return $pClient->get($manager->generateGoogleSearchUrl());
     }
