@@ -28,10 +28,14 @@ class GoogleRequester
         return $this->client;
     }
 
-    public function getPuppeteerClient(): Puphpeteer
+    public function getPuppeteerClient(string $language = 'fr'): Puphpeteer
     {
         if (null === $this->puppeteerClient) {
             $this->puppeteerClient = new Puphpeteer();
+
+            $this->puppeteerClient->instantiate(Puphpeteer::EMULATE_OPTIONS_MOBILE, $language);
+
+            $this->puppeteerClient->setCookie('CONSENT', 'YES+', '.google.fr');
         }
 
         return $this->puppeteerClient;
@@ -56,16 +60,13 @@ class GoogleRequester
 
     public function requestGoogleWithPuppeteer(GoogleSERPManager $manager, callable $manageProxy = null): string
     {
-        $pClient = $this->getPuppeteerClient();
-
-        $pClient->instantiate(Puphpeteer::EMULATE_OPTIONS_MOBILE, $manager->language);
-
-        $pClient->setCookie('CONSENT', 'YES+', '.google.fr');
+        $pClient = $this->getPuppeteerClient($manager->language);
 
         if (null !== $manageProxy) {
-            \call_user_func($manageProxy, $this->getPuppeteerClient());
+            \call_user_func($manageProxy, $pClient);
         }
+        $pClient->getBrowserPage()->setOfflineMode(false);
 
-        return $this->getPuppeteerClient()->get($manager->generateGoogleSearchUrl());
+        return $pClient->get($manager->generateGoogleSearchUrl());
     }
 }
