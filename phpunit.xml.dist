@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit backupGlobals="false" backupStaticAttributes="false" colors="true" convertErrorsToExceptions="true" convertNoticesToExceptions="true" convertWarningsToExceptions="true" processIsolation="false" stopOnFailure="false" verbose="true">
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" backupGlobals="false" colors="true" processIsolation="false" stopOnFailure="false" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.2/phpunit.xsd" cacheDirectory=".phpunit.cache" backupStaticProperties="false">
   <php>
-    <ini name="display_errors" value="1" />
-    <ini name="error_reporting" value="-1" />
-    <server name="APP_ENV" value="test" force="true" />
-    <server name="SHELL_VERBOSITY" value="-1" />
+    <ini name="display_errors" value="1"/>
+    <ini name="error_reporting" value="-1"/>
+    <server name="APP_ENV" value="test" force="true"/>
+    <server name="SHELL_VERBOSITY" value="-1"/>
   </php>
   <testsuites>
     <testsuite name="all">
@@ -14,9 +14,10 @@
       <directory>packages/google/tests/</directory>
     </testsuite>
   </testsuites>
-  <coverage>
+  <coverage/>
+  <source>
     <include>
       <directory suffix=".php">packages/*/src/</directory>
     </include>
-  </coverage>
+  </source>
 </phpunit>

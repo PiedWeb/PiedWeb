@@ -20,8 +20,8 @@
   "require": {
     "php": ">=8.1",
     "fylax/forceutf8": "^3.0",
-    "symfony/dom-crawler": "^6.1",
-    "symfony/css-selector": "^6.1",
+    "symfony/dom-crawler": "^6.3",
+    "symfony/css-selector": "^6.3",
     "league/uri": "^6.5",
     "spatie/robots-txt": "^2.0",
     "jeremykendall/php-domain-parser": "^6.1"

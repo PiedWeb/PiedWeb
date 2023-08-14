@@ -22,7 +22,7 @@
     "league/csv": "^9.8",
     "piedweb/curl": "*",
     "voku/stringy": "^6.5",
-    "symfony/console": "^6.1"
+    "symfony/console": "^6.3"
   },
   "autoload": {
     "psr-4": {
