@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@nesk/puphpeteer": "https://github.com/zoonru/puphpeteer.git",
+    "@zoon/puphpeteer": "github:zoonru/puphpeteer",
     "puppeteer": "^20",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2"

@@ -2,7 +2,6 @@
 
 namespace PiedWeb\Google\GoogleRequester;
 
-use Exception;
 use PiedWeb\Google\GoogleRequester;
 use PiedWeb\Google\GoogleTrendsManager;
 
@@ -41,7 +40,7 @@ class GoogleRequesterTrendsWithCurl extends GoogleRequester implements GoogleReq
             try {
                 /** @var object|false */
                 $jsonResponse = json_decode($rawJson, null, 512, \JSON_THROW_ON_ERROR);
-            } catch (Exception) {
+            } catch (\Exception) {
                 sleep(1);
             }
 

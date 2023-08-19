@@ -23,6 +23,8 @@ class SERPExtractorJsExtended extends SERPExtractor
         $filePath = __DIR__.'/tmp.html';
         file_put_contents($filePath, $this->html);
         $this->browserPage->goto('file://'.$filePath);
+        $this->browserPage->setOfflineMode(false);
+
         // $this->getBrowserPage()->setContent($html); is failing
 
         return $this->browserPage;

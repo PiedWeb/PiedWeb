@@ -2,7 +2,6 @@
 
 namespace PiedWeb\Google\Extractor;
 
-use LogicException;
 use PiedWeb\Extractor\Helper;
 use PiedWeb\Google\Result\BusinessResult;
 use PiedWeb\Google\Result\SearchResult;
@@ -313,7 +312,7 @@ class SERPExtractor
             $node = $this->getNode($xpaths);
 
             return true;
-        } catch (LogicException) {
+        } catch (\LogicException) {
             return false;
         }
     }

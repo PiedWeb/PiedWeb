@@ -2,7 +2,6 @@
 
 namespace PiedWeb\Google\Helper;
 
-use Exception;
 use Nesk\Puphpeteer\Puppeteer;
 use Nesk\Puphpeteer\Resources\Browser;
 use Nesk\Puphpeteer\Resources\Page;
@@ -232,7 +231,7 @@ class Puphpeteer
         foreach (self::$browser as $b) {
             try {
                 $b->close();
-            } catch (Exception) {
+            } catch (\Exception) {
             }
         }
 
