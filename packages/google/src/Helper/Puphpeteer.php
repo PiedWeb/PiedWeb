@@ -192,6 +192,25 @@ class Puphpeteer
         return self::$pageContent;
     }
 
+    public function getInfiniteScrolled(string $url, int $maxScroll = 10): string
+    {
+        $this->get($url);
+
+        for ($i = 1; true; ++$i) {
+            $scrollHeight = $this->getBrowserPage()->evaluate('document.body.scrollHeight'); // @phpstan-ignore-line
+            $this->getBrowserPage()->evaluate('window.scrollTo(0, document.body.scrollHeight)'); // @phpstan-ignore-line
+            usleep(500000);
+            $isHeighten = $this->getBrowserPage()->evaluate('document.body.scrollHeight > '.$scrollHeight.''); // @phpstan-ignore-line
+            if (! $isHeighten || $i > $maxScroll) {
+                break;
+            }
+        }
+
+        self::$pageContent = $this->getBrowserPage()->content();
+
+        return self::$pageContent;
+    }
+
     /**
      * @psalm-suppress UndefinedMagicMethod
      */

@@ -58,7 +58,7 @@ class GoogleRequester
         return $this->getCurlClient()->getResponse()->getBody();
     }
 
-    public function requestGoogleWithPuppeteer(GoogleSERPManager $manager, callable $manageProxy = null): string
+    public function requestGoogleWithPuppeteer(GoogleSERPManager $manager, callable $manageProxy = null, int $infiniteScroll = 10): string
     {
         $pClient = $this->getPuppeteerClient($manager->language);
 
@@ -66,6 +66,8 @@ class GoogleRequester
             \call_user_func($manageProxy, $pClient);
         }
 
-        return $pClient->get($manager->generateGoogleSearchUrl());
+        return $infiniteScroll > 0
+            ? $pClient->getInfiniteScrolled($manager->generateGoogleSearchUrl(), $infiniteScroll)
+            : $pClient->get($manager->generateGoogleSearchUrl());
     }
 }
