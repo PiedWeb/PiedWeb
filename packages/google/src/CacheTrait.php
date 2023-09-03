@@ -32,18 +32,18 @@ trait CacheTrait
         @unlink($this->getCacheFilePath());
     }
 
-    public function setCache(string $html): string
+    public function setCache(string $html, string $filePath = null): string
     {
         if ('' !== $this->cacheFolder) {
-            (new Filesystem())->dumpFile($this->getCacheFilePath(), $html);
+            (new Filesystem())->dumpFile($filePath ?? $this->getCacheFilePath(), $html);
         }
 
         return $html;
     }
 
-    public function getCache(): ?string
+    public function getCache(string $filePath = null): ?string
     {
-        $cacheFilePath = $this->getCacheFilePath();
+        $cacheFilePath = $filePath ?? $this->getCacheFilePath();
 
         if (! file_exists($cacheFilePath)) {
             return null;
