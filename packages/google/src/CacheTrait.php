@@ -2,6 +2,8 @@
 
 namespace PiedWeb\Google;
 
+use function Safe\gzuncompress;
+
 use Symfony\Component\Filesystem\Filesystem;
 
 trait CacheTrait
@@ -35,7 +37,7 @@ trait CacheTrait
     public function setCache(string $html, string $filePath = null): string
     {
         if ('' !== $this->cacheFolder) {
-            (new Filesystem())->dumpFile($filePath ?? $this->getCacheFilePath(), $html);
+            (new Filesystem())->dumpFile($filePath ?? $this->getCacheFilePath(), gzcompress($html, 9));
         }
 
         return $html;
@@ -56,7 +58,7 @@ trait CacheTrait
             return null;
         }
 
-        return \Safe\file_get_contents($cacheFilePath);
+        return gzuncompress(\Safe\file_get_contents($cacheFilePath));
     }
 
     public function getExtractedAt(): int
