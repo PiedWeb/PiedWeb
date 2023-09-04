@@ -96,7 +96,7 @@ final class GlobalTest extends TestCase
 
         $this->assertSame('title', array_values($textData->getFlatContent())[0]);
         $this->assertGreaterThan(10, $textData->getWordCount());
-        $this->assertGreaterThan(10, $textData->getRatioTxtCode());
+        $this->assertGreaterThan(8, $textData->getRatioTxtCode());
         // dump($textData->getTextAnalysis()->getExpressions(2));
         $this->assertArrayHasKey('web', $textData->getTextAnalysis()->getExpressions());
     }

@@ -24,7 +24,7 @@ class SERPExtractor
     /**
      * @var string[]
      */
-    final public const RELATED = ["//a[@data-xbu][starts-with(@href, '/search')]/div/div/span"];
+    final public const RELATED = ['//span[text()="Recherches associées"]/ancestor::*[position() <  5]//a/div/div/span'];
 
     /**
      * @var string[]

@@ -90,4 +90,14 @@ final class GoogleSerpTest extends TestCase
         $mapsResults = $extractor->extractBusinessResults();
         $this->assertArrayHasKey(0, $mapsResults);
     }
+
+    public function testRelatedSearches(): void
+    {
+        $extractor = $this->getExtractor('randonnée valgaudemar');
+
+        $extractor->getBrowserPage()->screenshot(['path' => 'debug.png']);
+
+        $relatedSearches = $extractor->getRelatedSearches();
+        $this->assertContains('Rando Valgaudemar 3 jours', $relatedSearches);
+    }
 }
