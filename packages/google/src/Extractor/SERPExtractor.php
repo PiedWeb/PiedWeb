@@ -108,13 +108,18 @@ class SERPExtractor
 
             $mapsResults[$i] = new BusinessResult();
             $mapsResults[$i]->cid = $node->getAttribute('data-rc_ludocids');
+            $mapsResults[$i]->name = '';
 
             if ($node->childNodes->item(0)->nodeName ?? '' === 'i') {
-                $node = (new Crawler($node->parentNode))->filter('[data-attrid="title"]')->getNode(0);
-                $mapsResults[$i]->name = trim(Helper::htmlToPlainText($node->textContent ?? ''));
-            } else {
-                $mapsResults[$i]->name = $this->extractBusinessName($node);
+                $newNode = (new Crawler($node->parentNode))->filter('[data-attrid="title"]')->getNode(0);
+                if (null !== $newNode) {
+                    $mapsResults[$i]->name = trim(Helper::htmlToPlainText($newNode->textContent ?? ''));
+                    $node = $newNode;
+                }
             }
+
+            $mapsResults[$i]->name = $mapsResults[$i]->name ?: $this->extractBusinessName($node);
+
             $mapsResults[$i]->pixelPos = $this->getPixelPosFor($node->getNodePath() ?? '');
             $mapsResults[$i]->position = $i + 1;
             $mapsResults[$i]->organicPos = $i + 1;
