@@ -127,7 +127,7 @@ class SERPExtractor
      */
     private function extractLocalServiceResults(): array
     {
-        $selector = '.rllt__details [role="heading"]';
+        $selector = '.rllt__details [role="heading"] span';
         $nodes = $this->domCrawler->filter($selector);
         $mapsResults = [];
         $i = 0;
