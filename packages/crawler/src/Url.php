@@ -426,7 +426,7 @@ final class Url
 
     public function setTitle(string $title): void
     {
-        $this->title = $title;
+        $this->title = substr($title, 0, 300);
     }
 
     public function getUpdatedAt(): \DateTimeInterface
@@ -589,7 +589,7 @@ final class Url
 
     public function setMetaDescription(string $metaDescription): void
     {
-        $this->metaDescription = $metaDescription;
+        $this->metaDescription = substr($metaDescription, 0, 300);
     }
 
     public function getH1(): string
@@ -599,7 +599,7 @@ final class Url
 
     public function setH1(string $h1): void
     {
-        $this->h1 = $h1;
+        $this->h1 = substr($h1, 0, 300);
     }
 
     /**
