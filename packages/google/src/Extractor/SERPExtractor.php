@@ -111,7 +111,7 @@ class SERPExtractor
 
             if ($node->childNodes->item(0)->nodeName ?? '' === 'i') {
                 $node = (new Crawler($node->parentNode))->filter('[data-attrid="title"]')->getNode(0);
-                $mapsResults[$i]->name = trim(Helper::htmlToPlainText($node->textContent));
+                $mapsResults[$i]->name = trim(Helper::htmlToPlainText($node->textContent ?? ''));
             } else {
                 $mapsResults[$i]->name = $this->extractBusinessName($node);
             }
