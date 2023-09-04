@@ -88,6 +88,15 @@ final class GoogleSerpTest extends TestCase
         $extractor->getBrowserPage()->screenshot(['path' => 'debug.png']);
 
         $mapsResults = $extractor->extractBusinessResults();
+        dump($mapsResults);
+        $this->assertArrayHasKey(0, $mapsResults);
+
+        $extractor = $this->getExtractor('accompagnateur montagne');
+
+        $extractor->getBrowserPage()->screenshot(['path' => 'debug.png']);
+
+        $mapsResults = $extractor->extractBusinessResults();
+        dump($mapsResults);
         $this->assertArrayHasKey(0, $mapsResults);
     }
 

@@ -102,7 +102,7 @@ class SERPExtractor
 
             $pI = $i - 1;
             if ($pI >= 0 && $node->getAttribute('data-rc_ludocids') === $mapsResults[$pI]->cid) {
-                unset($mapsResults[$pI]);
+                continue; // unset($mapsResults[$pI]);
                 --$i;
             }
 
@@ -120,6 +120,17 @@ class SERPExtractor
         }
 
         return $mapsResults;
+    }
+
+    private function extractBusinessName(\DOMElement $node): string
+    {
+        if ($name = $node->getAttribute('data-ru_q')) {
+            return $name;
+        }
+
+        $nameNode = (new Crawler($node))->filter('span')->getNode(0);
+
+        return null !== $nameNode ? trim(Helper::htmlToPlainText($nameNode->textContent)) : '';
     }
 
     /**
@@ -150,13 +161,6 @@ class SERPExtractor
         }
 
         return $mapsResults;
-    }
-
-    private function extractBusinessName(\DOMElement $node): string
-    {
-        $nameNode = (new Crawler($node))->filter('span')->getNode(0);
-
-        return null !== $nameNode ? trim(Helper::htmlToPlainText($nameNode->textContent)) : '';
     }
 
     /**
