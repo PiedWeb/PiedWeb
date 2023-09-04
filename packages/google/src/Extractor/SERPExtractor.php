@@ -110,9 +110,9 @@ class SERPExtractor
             $mapsResults[$i]->cid = $node->getAttribute('data-rc_ludocids');
             $mapsResults[$i]->name = '';
 
-            if ($node->childNodes->item(0)->nodeName ?? '' === 'i') {
+            if (($node->childNodes->item(0)->nodeName ?? '') === 'i') {
                 $newNode = (new Crawler($node->parentNode))->filter('[data-attrid="title"]')->getNode(0);
-                if (null !== $newNode) {
+                if (null !== $newNode && $newNode instanceof \DOMElement) {
                     $mapsResults[$i]->name = trim(Helper::htmlToPlainText($newNode->textContent ?? ''));
                     $node = $newNode;
                 }
