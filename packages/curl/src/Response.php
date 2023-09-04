@@ -144,9 +144,9 @@ class Response
      *
      * @param string|null $key to get
      *
-     * @return int|string|array<string, string|int>|null
+     * @return int|float|string|array<string, string|int>|null
      */
-    public function getInfo(string $key = null): int|string|array|null
+    public function getInfo(string $key = null): int|string|array|null|float
     {
         return null !== $key && '' !== $key ? ($this->info[$key] ?? null) : $this->info;
     }
