@@ -61,6 +61,7 @@ final class CrawlerConfig
             'title',
             'h1',
             'canonical',
+            'hrefLang',
         ];
         $this->dataDirectory = self::dataDirectory((string) $dataDirectory);
     }

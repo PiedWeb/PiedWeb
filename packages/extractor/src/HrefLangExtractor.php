@@ -19,10 +19,6 @@ final class HrefLangExtractor
         $toReturn = [];
         $links = $this->crawler->filterXPath('//link[@hreflang]')->extract(['hreflang', 'href']);
         foreach ($links as $link) {
-            if ('x-default' === $link[0]) {
-                continue;
-            }
-
             if (isset($toReturn[$link[0]])) {
                 continue;
             }
