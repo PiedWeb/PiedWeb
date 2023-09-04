@@ -100,18 +100,24 @@ class SERPExtractor
                 continue;
             }
 
+            // Le second résultat correspond à un lien sur l'image à gauche (pour l'instant)
             $pI = $i - 1;
             if ($pI >= 0 && $node->getAttribute('data-rc_ludocids') === $mapsResults[$pI]->cid) {
                 continue; // unset($mapsResults[$pI]);
-                --$i;
             }
 
             $mapsResults[$i] = new BusinessResult();
             $mapsResults[$i]->cid = $node->getAttribute('data-rc_ludocids');
-            $mapsResults[$i]->name = $this->extractBusinessName($node);
+
+            if ($node->childNodes->item(0)->nodeName ?? '' === 'i') {
+                $node = (new Crawler($node->parentNode))->filter('[data-attrid="title"]')->getNode(0);
+                $mapsResults[$i]->name = trim(Helper::htmlToPlainText($node->textContent));
+            } else {
+                $mapsResults[$i]->name = $this->extractBusinessName($node);
+            }
+            $mapsResults[$i]->pixelPos = $this->getPixelPosFor($node->getNodePath() ?? '');
             $mapsResults[$i]->position = $i + 1;
             $mapsResults[$i]->organicPos = $i + 1;
-            $mapsResults[$i]->pixelPos = $this->getPixelPosFor($node->getNodePath() ?? '');
             ++$i;
         }
 
@@ -125,7 +131,7 @@ class SERPExtractor
     private function extractBusinessName(\DOMElement $node): string
     {
         if ($name = $node->getAttribute('data-ru_q')) {
-            return $name;
+            return trim(Helper::htmlToPlainText($name));
         }
 
         $nameNode = (new Crawler($node))->filter('span')->getNode(0);

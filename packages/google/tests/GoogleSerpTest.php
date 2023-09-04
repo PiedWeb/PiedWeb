@@ -81,7 +81,7 @@ final class GoogleSerpTest extends TestCase
         $this->assertStringContainsString('piedvert.com', $extractor->getPositionsZero()->url);
     }
 
-    public function testExtractMaps(): void
+    public function testExtractMapsB(): void
     {
         $extractor = $this->getExtractor('altimood');
 
@@ -90,7 +90,10 @@ final class GoogleSerpTest extends TestCase
         $mapsResults = $extractor->extractBusinessResults();
         dump($mapsResults);
         $this->assertArrayHasKey(0, $mapsResults);
+    }
 
+    public function testExtractMaps(): void
+    {
         $extractor = $this->getExtractor('accompagnateur montagne');
 
         $extractor->getBrowserPage()->screenshot(['path' => 'debug.png']);
