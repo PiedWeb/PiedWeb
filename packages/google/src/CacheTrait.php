@@ -37,7 +37,7 @@ trait CacheTrait
     public function setCache(string $html, string $filePath = null): string
     {
         if ('' !== $this->cacheFolder) {
-            (new Filesystem())->dumpFile($filePath ?? $this->getCacheFilePath(), gzcompress($html, 9));
+            (new Filesystem())->dumpFile($filePath ?? $this->getCacheFilePath(), \Safe\gzcompress($html, 9));
         }
 
         return $html;
