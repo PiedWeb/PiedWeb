@@ -4,6 +4,7 @@ namespace PiedWeb\Google\Helper;
 
 use Nesk\Puphpeteer\Puppeteer;
 use Nesk\Puphpeteer\Resources\Browser;
+use Nesk\Puphpeteer\Resources\ElementHandle;
 use Nesk\Puphpeteer\Resources\Page;
 use Nesk\Rialto\Data\BasicResource;
 use PiedWeb\Google\Logger;
@@ -192,14 +193,31 @@ class Puphpeteer
         return self::$pageContent;
     }
 
+    private function manageCookie(): void
+    {
+        $cookieAcceptBtn = $this->getBrowserPage()->querySelectorXPath("//div[text()='Tout accepter']/ancestor::button");
+        if (! isset($cookieAcceptBtn[0])) {
+            return;
+        }
+
+        Logger::log('Accept Cookie');
+        /** @var ElementHandle */
+        $cookieAcceptBtn = $cookieAcceptBtn[0];
+        $cookieAcceptBtn->scrollIntoView(); // @phpstan-ignore-line
+        $cookieAcceptBtn->click();
+        usleep(1_000_000);
+    }
+
     public function getInfiniteScrolled(string $url, int $maxScroll = 10): string
     {
         $this->get($url);
 
+        $this->manageCookie();
+
         for ($i = 1; true; ++$i) {
             $scrollHeight = $this->getBrowserPage()->evaluate('document.body.scrollHeight'); // @phpstan-ignore-line
             $this->getBrowserPage()->evaluate('window.scrollTo(0, document.body.scrollHeight)'); // @phpstan-ignore-line
-            usleep(500000);
+            usleep(700000);
             $isHeighten = $this->getBrowserPage()->evaluate('document.body.scrollHeight > '.$scrollHeight.''); // @phpstan-ignore-line
             if (! $isHeighten || $i > $maxScroll) {
                 break;
