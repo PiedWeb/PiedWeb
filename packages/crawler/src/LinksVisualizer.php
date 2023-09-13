@@ -45,11 +45,19 @@ class LinksVisualizer
                 throw new \LogicException();
             }
 
-            if ($r['To'] > 0 // pas de liens externe
-                && isset($this->results['nodes'][$r['From']]) && isset($this->results['nodes'][$r['To']])
-            ) {
-                $this->results['links'][] = ['target' => $r['From'], 'source' => $r['To']];
+            if ($r['To'] <= 0) {
+                continue;
             }
+
+            if (! isset($this->results['nodes'][$r['From']])) {
+                continue;
+            }
+
+            if (! isset($this->results['nodes'][$r['To']])) {
+                continue;
+            }
+
+            $this->results['links'][] = ['target' => $r['From'], 'source' => $r['To']];
         }
 
         $this->results['nodes'] = array_values($this->results['nodes']);

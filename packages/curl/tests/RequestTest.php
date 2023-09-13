@@ -6,7 +6,6 @@ namespace PiedWeb\Curl\Test;
 
 use PiedWeb\Curl\ExtendedClient as Client;
 use PiedWeb\Curl\MultipleCheckInHeaders;
-use PiedWeb\Curl\Response;
 use PiedWeb\Curl\ResponseFromCache;
 
 class RequestTest extends \PHPUnit\Framework\TestCase
@@ -212,7 +211,7 @@ Content-Length: 0', trim(strip_tags($request->getResponse()->getBody())));
             ['content_type' => 'text/html; charset=UTF-8']
         );
 
-        $this->assertTrue($response instanceof Response);
+        $this->assertInstanceOf(\PiedWeb\Curl\Response::class, $response);
         $this->assertSame($response->getMimeType(), 'text/html');
         $this->assertSame($response->getContent(), '<!DOCTYPE html><html><body><p>Tests</p></body>');
     }

@@ -34,7 +34,7 @@ class GoogleSuggester
     private function extractSuggests(string $url): void
     {
         if (! $this->client->request($url)) {
-            throw new GoogleException('kicked harvesting suggests');
+            throw new GoogleException('kicked harvesting suggests `'.$url.'`');
         }
 
         $content = $this->client->getResponse()->getContent();

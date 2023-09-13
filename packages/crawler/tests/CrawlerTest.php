@@ -21,7 +21,7 @@ class CrawlerTest extends \PHPUnit\Framework\TestCase
         $crawler->config->recordConfig();
         $crawler->crawl();
 
-        $this->assertTrue(file_exists($crawler->config->getDataFolder().'/index.csv'));
+        $this->assertFileExists($crawler->config->getDataFolder().'/index.csv');
 
         $id = $crawler->config->getId();
 
@@ -72,7 +72,7 @@ class CrawlerTest extends \PHPUnit\Framework\TestCase
         $crawler->config->recordConfig();
         $crawler->crawl();
 
-        $this->assertTrue(file_exists($crawler->config->getDataFolder().'/index.csv'));
+        $this->assertFileExists($crawler->config->getDataFolder().'/index.csv');
 
         $restart = Crawler::restart($crawler->config->getId());
         $restart->crawl();

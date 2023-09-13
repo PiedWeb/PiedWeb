@@ -135,7 +135,7 @@ class SERPExtractor
 
     private function extractBusinessName(\DOMElement $node): string
     {
-        if ($name = $node->getAttribute('data-ru_q')) {
+        if (($name = $node->getAttribute('data-ru_q')) !== '') {
             return trim(Helper::htmlToPlainText($name));
         }
 
