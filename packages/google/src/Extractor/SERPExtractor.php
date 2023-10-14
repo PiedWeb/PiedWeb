@@ -24,7 +24,7 @@ class SERPExtractor
     /**
      * @var string[]
      */
-    final public const RELATED = ['//span[text()="Recherches associées"]/ancestor::*[position() <  5]//a/div/div/span'];
+    final public const RELATED = ['//span[text()="Recherches associées"]/ancestor::*[position() <  5]//a'];
 
     /**
      * @var string[]
@@ -310,7 +310,7 @@ class SERPExtractor
             $nodes = $this->domCrawler->filterXPath($xpath);
             foreach ($nodes as $node) {
                 if ('' !== $node->textContent) {
-                    $kw[] = $node->textContent;
+                    $kw[] = trim($node->textContent);
                 }
             }
         }

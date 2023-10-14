@@ -35,6 +35,7 @@ final class GoogleTrendsTest extends TestCase
 
         $extractor = $manager->getExtractor();
         $this->assertGreaterThan(10, $extractor->getInterestAverage());
+        dump($extractor->getRelatedQueriesSimplified());
         $this->assertArrayHasKey('randonnée vtt', $extractor->getRelatedQueriesSimplified());
     }
 }
