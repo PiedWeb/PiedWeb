@@ -126,7 +126,7 @@ class CrawlerUrl
         }
 
         $this->links[] = $redirLink;
-
+        $this->url->setRedirectUrl($redirLink->getUrl());
         $this->url->setLinks([$redirLink]);
         $this->url->setIndexable(false);
         $this->url->setIndexableStatus(Indexable::NOT_INDEXABLE['redir']);

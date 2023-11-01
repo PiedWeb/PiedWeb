@@ -98,6 +98,8 @@ final class Url
 
     private ?string $canonical = null;
 
+    private string $redirectUrl = '';
+
     private \DateTimeInterface $updatedAt;
 
     /**
@@ -149,6 +151,7 @@ final class Url
         'metaDescription',
         'h1',
         'canonical',
+        'redirectUrl',
         'expressions',
         'expressionsHash',
         'updatedAt',
@@ -741,5 +744,15 @@ final class Url
     public function getExpressionsHash(): string
     {
         return $this->expressionsHash;
+    }
+
+    public function getRedirectUrl(): string
+    {
+        return $this->redirectUrl;
+    }
+
+    public function setRedirectUrl(string $redirectUrl): void
+    {
+        $this->redirectUrl = $redirectUrl;
     }
 }

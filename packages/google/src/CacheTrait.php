@@ -8,6 +8,8 @@ use Symfony\Component\Filesystem\Filesystem;
 
 trait CacheTrait
 {
+    public bool $disableCache = false;
+
     /** @var int Contain in seconds, the time cache is valid. Default 1 Day (86400). * */
     public int $cacheTime = 86400;
 
@@ -24,7 +26,7 @@ trait CacheTrait
 
         $cacheKey = $this->getRequestUid();
 
-        return $this->cacheFolder.'/gsc9_'.$cacheKey.'.html';
+        return $this->cacheFolder.'/gsc92_'.$cacheKey.'.html';
     }
 
     abstract public function getRequestUid(): string;
@@ -45,6 +47,10 @@ trait CacheTrait
 
     public function getCache(string $filePath = null): ?string
     {
+        if ($this->disableCache) {
+            return null;
+        }
+
         $cacheFilePath = $filePath ?? $this->getCacheFilePath();
 
         if (! file_exists($cacheFilePath)) {

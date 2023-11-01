@@ -65,7 +65,7 @@
     "format": "vendor/bin/php-cs-fixer fix && vendor/bin/php-cs-fixer fix rector.php",
     "psalm": "vendor/bin/psalm --no-suggestions --no-cache",
     "rector": "vendor/bin/rector process",
-    "test": "vendor/bin/phpunit --stop-on-failure",
+    "test": "vendor/bin/phpunit",
     "test-google": "vendor/bin/phpunit --stop-on-failure --testsuite google"
   },
   "config": {

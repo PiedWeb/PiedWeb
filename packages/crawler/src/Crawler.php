@@ -13,8 +13,6 @@ final class Crawler
     /** @var class-string<\PiedWeb\Crawler\CrawlerUrl> */
     private string $harvester = \PiedWeb\Crawler\CrawlerUrl::class;
 
-    private int $currentClick = 0;
-
     private int $counter = 0;
 
     /**
@@ -31,7 +29,8 @@ final class Crawler
 
     public function __construct(
         CrawlerConfig|string $config,
-        public readonly bool $debug = false
+        public readonly bool $debug = false,
+        private int $currentClick = 0, // = depth
     ) {
         $this->config = \is_string($config) ? (new CrawlerConfig())->setStartUrl($config) : $config;
     }

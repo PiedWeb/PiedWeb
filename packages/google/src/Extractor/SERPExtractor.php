@@ -149,7 +149,8 @@ class SERPExtractor
      */
     private function extractLocalServiceResults(): array
     {
-        $selector = '.rllt__details [role="heading"] span';
+        // [data-docid]
+        $selector = '[data-prvwid="HEADER"] [role="heading"]'; // '.rllt__details [role="heading"] span';
         $nodes = $this->domCrawler->filter($selector);
         $mapsResults = [];
         $i = 0;
@@ -163,7 +164,7 @@ class SERPExtractor
             }
 
             $mapsResults[$i] = new BusinessResult();
-            $mapsResults[$i]->cid = '0';
+            $mapsResults[$i]->cid = $this->getCidFromLocalServiceResult();
             $mapsResults[$i]->name = trim(Helper::htmlToPlainText($node->textContent));
             $mapsResults[$i]->position = $i + 1;
             $mapsResults[$i]->organicPos = $i + 1;
@@ -172,6 +173,16 @@ class SERPExtractor
         }
 
         return $mapsResults;
+    }
+
+    private function getCidFromLocalServiceResult(): string
+    {
+        $node = $this->domCrawler->filter('[data-docid]')->getNode(0);
+        if (! $node instanceof \DOMElement) {
+            return '0';
+        }
+
+        return $node->getAttribute('data-docid');
     }
 
     /**

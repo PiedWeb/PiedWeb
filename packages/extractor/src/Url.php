@@ -8,6 +8,7 @@
 
 namespace PiedWeb\Extractor;
 
+use League\Uri\BaseUri;
 use League\Uri\Http;
 use League\Uri\UriInfo;
 use League\Uri\UriResolver;
@@ -22,16 +23,17 @@ final class Url implements \Stringable
 
     public function __construct(string $url)
     {
-        $this->http = Http::createFromString($url);
+        $this->http = Http::new($url);
 
-        if (! UriInfo::isAbsolute($this->http)) {
+        if (! BaseUri::from($this->http)->isAbsolute()) {
             throw new \Exception('$url must be absolute (`'.$url.'`)');
         }
     }
 
     public function resolve(string $url): string
     {
-        $resolved = UriResolver::resolve(Http::createFromString(trim($url)), $this->http);
+        $resolved = BaseUri::from($this->http)->resolve(trim($url))->getUri();
+        // $resolved = UriResolver::resolve(Http::createFromString(trim($url)), $this->http);
 
         return $resolved->__toString();
     }
@@ -53,7 +55,8 @@ final class Url implements \Stringable
 
     public function getOrigin(): string
     {
-        return '' !== $this->origin ? $this->origin : ($this->origin = UriInfo::getOrigin($this->http) ?? '');
+        // return '' !== $this->origin ? $this->origin : ($this->origin = UriInfo::getOrigin($this->http) ?? '');
+        return '' !== $this->origin ? $this->origin : ($this->origin = BaseUri::from($this->http)->origin()?->__toString() ?? '');
     }
 
     public function getRegistrableDomain(): string

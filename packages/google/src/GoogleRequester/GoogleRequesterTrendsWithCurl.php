@@ -98,6 +98,7 @@ class GoogleRequesterTrendsWithCurl extends GoogleRequester implements GoogleReq
             'RELATED_TOPICS' => '',
             'RELATED_QUERIES' => '',
         ];
+
         foreach ($jsonResponse->widgets as $widget) {
             if ('RELATED_TOPICS' === $widget->id) {
                 $toReturn['RELATED_TOPICS'] = $this->requestWidget('/trends/api/widgetdata/relatedsearches', $widget->token, $widget->request);
