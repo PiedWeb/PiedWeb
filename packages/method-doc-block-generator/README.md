@@ -18,7 +18,7 @@
 Via [Packagist](https://img.shields.io/packagist/dt/piedweb/method-doc-block-generator.svg?style=flat)
 
 ```bash
-$ composer create-project piedweb/method-doc-block-generator
+$ composer req piedweb/method-doc-block-generator
 ```
 
 ## Usage
