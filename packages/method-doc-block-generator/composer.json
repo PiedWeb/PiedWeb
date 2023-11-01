@@ -1,0 +1,27 @@
+{
+  "name": "piedweb/method-doc-block-generator",
+  "type": "library",
+  "description": "Method DocBlock Generator",
+  "homepage": "https://dev.piedweb.com",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Robin D. (ak Pied Web)",
+      "email": "contact@robin-d.fr",
+      "homepage": "https://piedweb.com"
+    }
+  ],
+  "require": {
+    "php": ">=8.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "PiedWeb\\MethodDocBlockGenerator\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "PiedWeb\\MethodDocBlockGenerator\\": "tests"
+    }
+  }
+}
