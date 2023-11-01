@@ -4,7 +4,11 @@ namespace PiedWeb\MethodDocBlockGenerator;
 
 class MethodDocBlockGenerator
 {
-    public function run($extensionClassName)
+    public function __construct(private readonly bool $addLink = true)
+    {
+    }
+
+    public function run(string $extensionClassName): string
     {
         $reflectionClass = new \ReflectionClass($extensionClassName);
         $methods = $reflectionClass->getMethods(\ReflectionMethod::IS_PUBLIC);
@@ -31,14 +35,16 @@ class MethodDocBlockGenerator
             $returnType = $this->formatType($method->getReturnType());
 
             $phpDoc .= ' * @method '.('' === $returnType ? '' : $returnType.' ').$method->getName().'('.implode(', ', $paramStrings).')';
-            $phpDoc .= ' // LINK '.$reflectionClass->getFileName().':'.$method->getStartLine();
+            if ($this->addLink) {
+                $phpDoc .= ' // LINK '.$reflectionClass->getFileName().':'.$method->getStartLine();
+            }
             $phpDoc .= "\n";
         }
 
         return $phpDoc;
     }
 
-    private function formatType(\ReflectionType $returnType): string
+    private function formatType(\ReflectionType|null $returnType): string
     {
         if (null === $returnType) {
             return '';
