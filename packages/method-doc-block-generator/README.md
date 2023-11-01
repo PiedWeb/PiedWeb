@@ -4,9 +4,9 @@
 
 # Method Doc Block Generator
 
-[![Latest Version](https://img.shields.io/github/tag/PiedWeb/MethodDocBlockGenerator.svg?style=flat&label=release)](https://github.com/PiedWeb/MethodDocBlockGenerator/tags)
+[![Latest Version](https://img.shields.io/github/tag/PiedWeb/method-doc-block-generator.svg?style=flat&label=release)](https://github.com/PiedWeb/method-doc-block-generator/tags)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](LICENSE)
-[![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/PiedWeb/MethodDocBlockGenerator/Tests?label=tests)](https://github.com/PiedWeb/PiedWeb/actions)
+[![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/PiedWeb/method-doc-block-generator/Tests?label=tests)](https://github.com/PiedWeb/PiedWeb/actions)
 [![Quality Score](https://img.shields.io/scrutinizer/g/PiedWeb/PiedWeb.svg?style=flat)](https://scrutinizer-ci.com/g/PiedWeb/PiedWeb)
 [![Code Coverage](https://codecov.io/gh/PiedWeb/PiedWeb/branch/main/graph/badge.svg)](https://codecov.io/gh/PiedWeb/PiedWeb/branch/main)
 [![Type Coverage](https://shepherd.dev/github/PiedWeb/PiedWeb/coverage.svg)](https://shepherd.dev/github/PiedWeb/PiedWeb)

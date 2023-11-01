@@ -48,7 +48,8 @@
       "PiedWeb\\Extractor\\": "packages/extractor/src",
       "PiedWeb\\Crawler\\": "packages/crawler/src",
       "PiedWeb\\TextAnalyzer\\": "packages/text-analyzer/src",
-      "PiedWeb\\Perso\\": "packages/perso"
+      "PiedWeb\\Perso\\": "packages/perso",
+      "PiedWeb\\MethodDocBlockGenerator\\": "packages/method-doc-block-generator/src"
     }
   },
   "autoload-dev": {
@@ -57,7 +58,8 @@
       "PiedWeb\\Google\\Test\\": "packages/google/tests",
       "PiedWeb\\Extractor\\Test\\": "packages/extractor/tests",
       "PiedWeb\\Crawler\\Test\\": "packages/crawler/tests",
-      "PiedWeb\\TextAnalyzer\\Test\\": "packages/text-analyzer/tests"
+      "PiedWeb\\TextAnalyzer\\Test\\": "packages/text-analyzer/tests",
+      "PiedWeb\\MethodDocBlockGenerator\\Test\\": "packages/method-doc-block-generator/tests"
     }
   },
   "scripts": {
