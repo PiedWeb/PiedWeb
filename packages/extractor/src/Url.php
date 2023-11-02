@@ -11,7 +11,6 @@ namespace PiedWeb\Extractor;
 use League\Uri\BaseUri;
 use League\Uri\Http;
 use League\Uri\UriInfo;
-use League\Uri\UriResolver;
 
 final class Url implements \Stringable
 {
@@ -32,8 +31,7 @@ final class Url implements \Stringable
 
     public function resolve(string $url): string
     {
-        $resolved = BaseUri::from($this->http)->resolve(trim($url))->getUri();
-        // $resolved = UriResolver::resolve(Http::createFromString(trim($url)), $this->http);
+        $resolved = BaseUri::from($this->http)->resolve(Http::new(trim($url)))->getUri();
 
         return $resolved->__toString();
     }

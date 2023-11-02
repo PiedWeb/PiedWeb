@@ -276,11 +276,6 @@ final class Link
         $this->mayFollow = $mayFollow;
     }
 
-    public function setTo(string $to): void
-    {
-        $this->to = $to;
-    }
-
     public function setAnchor(string $anchor): void
     {
         $this->anchor = $anchor;
