@@ -35,7 +35,7 @@ abstract class AbstractPageRankCalculator
             foreach ($ids as $id) {
                 $sumPR = 0;
                 foreach ($this->getLinksTo($id) as $link) {
-                    $sumPR += $this->results[$link] ?? 0 / $this->getNbrLinksFrom($link);
+                    $sumPR += ($this->results[$link] ?? 0) / $this->getNbrLinksFrom($link);
                 }
 
                 $this->results[$id] = $this->dampingFactor * $sumPR + (1 - $this->dampingFactor) / $this->getPagesNbr();

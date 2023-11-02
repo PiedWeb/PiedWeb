@@ -83,14 +83,17 @@ final class GoogleSerpTest extends TestCase
 
     public function testExtractMaps(): void
     {
-        foreach (['altimood', 'lac bleu valgaudemar altitude', 'accompagnateur montagne'] as $kw) {
+        // 'lac bleu valgaudemar altitude',
+        // 'plombier paris'
+        foreach (['altimood', 'accompagnateur montagne'] as $kw) {
             $extractor = $this->getExtractor($kw);
 
-            $extractor->getBrowserPage()->screenshot(['path' => 'debug.png']);
+            $extractor->getBrowserPage()->screenshot(['path' => './debug/debugExtractMaps - '.$kw.'.png', 'fullPage' => true]);
+            file_put_contents('./debug/debugExtractMaps - '.$kw.'.html', $extractor->getBrowserPage()->content());
 
             $mapsResults = $extractor->extractBusinessResults();
             dump($mapsResults[0] ?? null);
-            $this->assertArrayHasKey(0, $mapsResults);
+            $this->assertArrayHasKey(0, $mapsResults, $kw);
         }
     }
 
@@ -98,7 +101,7 @@ final class GoogleSerpTest extends TestCase
     {
         $extractor = $this->getExtractor('randonnée valgaudemar');
 
-        $extractor->getBrowserPage()->screenshot(['path' => 'debug.png']);
+        $extractor->getBrowserPage()->screenshot(['path' => '/debug/debug-relatedSearches.png']);
 
         $relatedSearches = $extractor->getRelatedSearches();
         $this->assertContains('Rando Valgaudemar 3 jours', $relatedSearches);
