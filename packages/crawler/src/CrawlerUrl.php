@@ -87,7 +87,7 @@ class CrawlerUrl
         $this->url->setHeaders($response->getRawHeaders());
         $this->url->setStatusCode($response->getStatusCode());
         $this->url->setMimeType($response->getMimeType());
-        $this->url->setResponseTime((int) $response->getInfo('total_time'));
+        $this->url->setResponseTime((int) ((float) $response->getInfo('total_time') * 1000));
         $this->url->setSize((int) $response->getInfo('size_download'));
 
         if ('text/html' !== $response->getMimeType()) {

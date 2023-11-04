@@ -6,13 +6,23 @@ namespace PiedWeb\Crawler\Test;
 
 use PiedWeb\Crawler\Crawler;
 use PiedWeb\Crawler\CrawlerConfig;
+use PiedWeb\Crawler\CrawlerUrl;
 use PiedWeb\Crawler\Recorder;
 use PiedWeb\Crawler\SimplePageRankCalculator;
+use PiedWeb\Crawler\Url;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
 class CrawlerTest extends \PHPUnit\Framework\TestCase
 {
+    public function testCrawlerUrl(): void
+    {
+        $url = Url::initialize('https://dev.piedweb.com');
+        $crawlerUrl = new CrawlerUrl($url, (new CrawlerConfig())->setStartUrl('https://dev.piedweb.com/'));
+
+        $this->assertGreaterThan(0, $url->getResponseTime());
+    }
+
     public function testIt(): void
     {
         $crawler = new Crawler(
@@ -58,7 +68,7 @@ class CrawlerTest extends \PHPUnit\Framework\TestCase
         $this->assertStringContainsString('piedweb.com', $output);
     }
 
-    public function testWitchCachId(): void
+    public function testWithCachId(): void
     {
         $crawler = new Crawler(
             (new CrawlerConfig(

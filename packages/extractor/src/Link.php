@@ -8,29 +8,29 @@ use Symfony\Component\Serializer\Annotation\Ignore;
 
 final class Link
 {
-    /** @var int */
+    /** @var int wrapper */
     public const LINK_A = 1;
 
-    /** @var int */
+    /** @var int wrapper */
     public const LINK_SRC = 4;
 
-    /** @var int */
+    /** @var int wrapper */
     public const LINK_3XX = 2;
 
-    /** @var int */
+    /** @var int not used ?!! */
     public const LINK_301 = 3;
 
     // ---
-    /** @var int */
+    /** @var int type */
     public const LINK_SELF = 1;
 
-    /** @var int */
+    /** @var int type */
     public const LINK_INTERNAL = 2;
 
-    /** @var int */
+    /** @var int type not used */
     public const LINK_SUB = 3;
 
-    /** @var int */
+    /** @var int type */
     public const LINK_EXTERNAL = 4;
 
     private ?string $url = null;
