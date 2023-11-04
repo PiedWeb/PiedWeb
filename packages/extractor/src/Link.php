@@ -290,4 +290,9 @@ final class Link
     {
         $this->internal = $internal;
     }
+
+    public function setTo(string $to): void
+    {
+        $this->to = $to;
+    }
 }
