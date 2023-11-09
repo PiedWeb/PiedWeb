@@ -36,7 +36,10 @@ class MethodDocBlockGenerator
 
             $phpDoc .= ' * @method '.('' === $returnType ? '' : $returnType.' ').$method->getName().'('.implode(', ', $paramStrings).')';
             if ($this->addLink) {
-                $phpDoc .= ' // LINK '.$reflectionClass->getFileName().':'.$method->getStartLine();
+                $phpDoc .= "\n".' * '
+                    .ltrim(str_replace(preg_replace('#/vendor/.+$#', '', __DIR__), '', $reflectionClass->getFileName()), '/')
+                    .':'.$method->getStartLine()
+                    ."\n".' * ';
             }
             $phpDoc .= "\n";
         }

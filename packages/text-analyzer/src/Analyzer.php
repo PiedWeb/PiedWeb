@@ -47,7 +47,7 @@ class Analyzer
 
         $sentences = [];
         foreach (explode(\chr(10), $this->text) as $paragraph) {
-            $sentences = array_merge($sentences, CleanText::getSentences($paragraph));
+            $sentences = [...$sentences, ...CleanText::getSentences($paragraph)];
         }
 
         return $sentences;
