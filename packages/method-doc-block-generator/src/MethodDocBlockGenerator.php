@@ -10,6 +10,10 @@ class MethodDocBlockGenerator
 
     public function run(string $extensionClassName): string
     {
+        if (! class_exists($extensionClassName)) {
+            throw new \Exception();
+        }
+
         $reflectionClass = new \ReflectionClass($extensionClassName);
         $methods = $reflectionClass->getMethods(\ReflectionMethod::IS_PUBLIC);
         $phpDoc = '';
@@ -26,7 +30,7 @@ class MethodDocBlockGenerator
 
                 if ($parameter->isDefaultValueAvailable()) {
                     $defaultValue = $parameter->getDefaultValue();
-                    $paramString .= ' = '.str_replace(\chr(10), '', var_export($defaultValue, true));
+                    $paramString .= ' = '.str_replace("\n", '', var_export($defaultValue, true));
                 }
 
                 $paramStrings[] = $paramString;
@@ -37,7 +41,7 @@ class MethodDocBlockGenerator
             $phpDoc .= ' * @method '.('' === $returnType ? '' : $returnType.' ').$method->getName().'('.implode(', ', $paramStrings).')';
             if ($this->addLink) {
                 $phpDoc .= "\n".' * '
-                    .ltrim(str_replace(preg_replace('#/vendor/.+$#', '', __DIR__), '', $reflectionClass->getFileName()), '/')
+                    .ltrim(str_replace(\Safe\preg_replace('#/vendor/.+$#', '', __DIR__), '', $reflectionClass->getFileName() ?: ''), '/')
                     .':'.$method->getStartLine()
                     ."\n".' * ';
             }
@@ -54,7 +58,7 @@ class MethodDocBlockGenerator
         }
 
         if ($returnType instanceof \ReflectionNamedType) {
-            return false === $returnType?->isBuiltin() ?
+            return false === $returnType->isBuiltin() ?
                 (($returnType->allowsNull() ? '?' : '').'\\'.$returnType->getName())
                 : $returnType;
         }
@@ -67,8 +71,6 @@ class MethodDocBlockGenerator
 
             return implode('|', $toReturn);
         }
-
-        dd($returnType);
 
         throw new \Exception();
     }
