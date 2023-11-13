@@ -23,7 +23,7 @@ final class Indexable
         'redir' => 7,
     ];
 
-    public function notIndexableLabel(int $code): string
+    public static function notIndexableLabel(int $code): string
     {
         $labels = array_flip(self::NOT_INDEXABLE);
 
