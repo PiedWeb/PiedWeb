@@ -5,19 +5,16 @@ namespace PiedWeb\Crawler\Command;
 use PiedWeb\Crawler\Crawler;
 use PiedWeb\Crawler\CrawlerConfig;
 use PiedWeb\Curl\StaticClient;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(name: 'crawler:go')]
 final class CrawlerCommand extends Command
 {
-    /**
-     * @var string
-     */
-    protected static $defaultName = 'crawler:go';
-
     protected ?string $id = null;
 
     protected function configure(): void

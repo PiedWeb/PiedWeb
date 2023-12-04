@@ -4,18 +4,15 @@ namespace PiedWeb\Crawler\Command;
 
 use PiedWeb\Crawler\LinksVisualizer;
 use PiedWeb\Crawler\SimplePageRankCalculator;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(name: 'rawler:pagerank')]
 class PageRankCommand extends Command
 {
-    /**
-     * @var string
-     */
-    protected static $defaultName = 'crawler:pagerank';
-
     protected ?string $id = null;
 
     protected function configure(): void
