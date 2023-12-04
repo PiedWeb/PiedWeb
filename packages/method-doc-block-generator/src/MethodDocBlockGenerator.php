@@ -2,6 +2,9 @@
 
 namespace PiedWeb\MethodDocBlockGenerator;
 
+/**
+ * @see \PiedWeb\MethodDocBlockGenerator\Test\MethodDocBlockGeneratorTest
+ */
 class MethodDocBlockGenerator
 {
     public function __construct(private readonly bool $addLink = true)
@@ -45,6 +48,7 @@ class MethodDocBlockGenerator
                     .':'.$method->getStartLine()
                     ."\n".' * ';
             }
+
             $phpDoc .= "\n";
         }
 
