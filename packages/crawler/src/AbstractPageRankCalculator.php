@@ -14,17 +14,17 @@ abstract class AbstractPageRankCalculator
     protected ?int $pagesNbr = null;
 
     /**
-     * @var array<int, float> where key is url (id) and value page rank
+     * @var array<int|string, float> where key is url (id) and value page rank
      */
     protected array $results = [];
 
     /**
-     * @var array<int, array<int>> where key is destination (id) and value fromIdList
+     * @var array<int|string, array<int|string>> where key is destination (id) and value fromIdList
      */
     protected array $linksTo = [];
 
     /**
-     * @var array<int, int> where key is from (id) and value count
+     * @var array<int|string, int> where key is from (id) and value count
      */
     protected array $nbrLinksFrom = [];
 
@@ -49,14 +49,14 @@ abstract class AbstractPageRankCalculator
     }
 
     /**
-     * @return int[]
+     * @return int[]|string[]
      */
-    protected function getLinksTo(int $id): array
+    protected function getLinksTo(string|int $id): array
     {
         return $this->linksTo[$id];
     }
 
-    protected function getNbrLinksFrom(int $id): int
+    protected function getNbrLinksFrom(int|string $id): int
     {
         return $this->nbrLinksFrom[$id];
     }
