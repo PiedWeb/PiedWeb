@@ -6,7 +6,6 @@ use Nesk\Puphpeteer\Puppeteer;
 use Nesk\Puphpeteer\Resources\Browser;
 use Nesk\Puphpeteer\Resources\Page;
 use Nesk\Rialto\Data\BasicResource;
-use PiedWeb\Google\Logger;
 
 class Puphpeteer
 {
@@ -104,7 +103,7 @@ class Puphpeteer
             instruction.setDefaultResource(puppeteer);
         ";
 
-        Logger::log('launching new Puppeteer instance `'.self::$currentKey.'`');
+        $this->getLogger()->info('launching new Puppeteer instance `'.self::$currentKey.'`');
 
         self::$puppeteer[self::$currentKey] = new Puppeteer($userOptions);
         self::$browser[self::$currentKey] = self::$puppeteer[self::$currentKey]->launch(
@@ -202,7 +201,7 @@ class Puphpeteer
             return;
         }
 
-        Logger::log('Accept Cookie');
+        $this->getLogger()->info('Accept Cookie');
         $cookieAcceptBtn = $cookieAcceptBtn[0];
         $cookieAcceptBtn->scrollIntoView(); // @phpstan-ignore-line
         $cookieAcceptBtn->click();
@@ -241,7 +240,7 @@ class Puphpeteer
         if ($this->elementExists('[http-equiv=refresh]')) {
             // dd($this->getBrowserPage()->querySelectorEval('[http-equiv=refresh]', 'a => a.content'));
             $this->getBrowserPage()->waitForNavigation();
-            Logger::log('follow meta refresh');
+            $this->getLogger()->info('follow meta refresh');
             $this->manageMetaRefresh($base);
         }
     }
@@ -258,7 +257,7 @@ class Puphpeteer
             return;
         }
 
-        Logger::log('close chrome `'.$bKey.'`');
+        $this->getLogger()->info('close chrome `'.$bKey.'`');
         self::$browser[$bKey]->close();
         unset(self::$browser[$bKey]);
         unset(self::$browserPage[$bKey]);
@@ -268,7 +267,7 @@ class Puphpeteer
 
     public static function closeAll(): void
     {
-        Logger::log('close All Chrome');
+        // $this->getLogger()->info('close All Chrome');
         foreach (self::$browser as $b) {
             try {
                 $b->close();

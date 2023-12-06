@@ -39,7 +39,6 @@ final class Sleeper
         if (0 !== $this->sleep) {
             $sleep = $this->getSleep();
             usleep($sleep);
-            Logger::log('sleep '.($sleep / 1_000_000).'s');
         }
     }
 
@@ -53,7 +52,6 @@ final class Sleeper
         if (0 < $this->sleep) {
             $sleep = (int) round($this->getSleep() * $howMuch);
             usleep($sleep);
-            Logger::log('sleep '.($sleep / 1_000_000).'s');
         }
     }
 }
