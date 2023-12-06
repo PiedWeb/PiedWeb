@@ -64,7 +64,7 @@ class MethodDocBlockGenerator
         if ($returnType instanceof \ReflectionNamedType) {
             return false === $returnType->isBuiltin() ?
                 (($returnType->allowsNull() ? '?' : '').'\\'.$returnType->getName())
-                : $returnType;
+                : $returnType->getName();
         }
 
         if ($returnType instanceof \ReflectionUnionType) {

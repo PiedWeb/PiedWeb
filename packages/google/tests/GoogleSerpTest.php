@@ -39,8 +39,8 @@ final class GoogleSerpTest extends TestCase
 
         $googleRequester = new GoogleRequester();
         $rawHtml = $googleRequester->requestGoogleWithPuppeteer($manager); // $manager->getCache() ?? $manager->setCache($googleRequester->requestGoogleWithPuppeteer($manager));
-        file_put_contents('debug.html', $rawHtml);
-        $googleRequester->getPuppeteerClient()->getBrowserPage()->screenshot(['path' => 'debug.png']);
+        file_put_contents('./debug/debug-puphpeteer-mobile.html', $rawHtml);
+        $googleRequester->getPuppeteerClient()->getBrowserPage()->screenshot(['path' => './debug/debug-puphpeteer-mobile.png']);
 
         $this->extractSERP($rawHtml);
     }
@@ -67,18 +67,21 @@ final class GoogleSerpTest extends TestCase
 
     public function testExtractionPositionZero(): void
     {
-        $extractor = $this->getExtractor('marmotte vercors'); // position Zero PiedVert.com, if test failed, check position Zero on SERP exists
+        // This test is not working anymore
+        // Google deleted position zero on smartphone ???
 
-        $extractor->getBrowserPage()->screenshot(['path' => 'debug.png']);
+        $extractor = $this->getExtractor('liste meilleures randonnées alpes');
+
+        $extractor->getBrowserPage()->screenshot(['path' => './debug/debug-position-zero.png']);
         if (! $extractor->containsSerpFeature('PositionZero')) {
-            $this->assertStringContainsString('piedvert.com',  $extractor->getResults()[0]->url);
+            $this->assertStringContainsString('generationvoyage.fr',  $extractor->getResults()[0]->url);
             dump('Position Zero was not checked');
 
             return;
         }
 
         $this->assertTrue($extractor->containsSerpFeature('PositionZero'));
-        $this->assertStringContainsString('piedvert.com', $extractor->getPositionsZero()->url);
+        $this->assertStringContainsString('generationvoyage.fr', $extractor->getPositionsZero()->url);
     }
 
     public function testExtractMaps(): void
@@ -101,7 +104,7 @@ final class GoogleSerpTest extends TestCase
     {
         $extractor = $this->getExtractor('randonnée valgaudemar');
 
-        $extractor->getBrowserPage()->screenshot(['path' => '/debug/debug-relatedSearches.png']);
+        $extractor->getBrowserPage()->screenshot(['path' => './debug/debug-relatedSearches.png']);
 
         $relatedSearches = $extractor->getRelatedSearches();
         $this->assertContains('Rando Valgaudemar 3 jours', $relatedSearches);

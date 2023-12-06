@@ -4,7 +4,6 @@ namespace PiedWeb\Google\Helper;
 
 use Nesk\Puphpeteer\Puppeteer;
 use Nesk\Puphpeteer\Resources\Browser;
-use Nesk\Puphpeteer\Resources\ElementHandle;
 use Nesk\Puphpeteer\Resources\Page;
 use Nesk\Rialto\Data\BasicResource;
 use PiedWeb\Google\Logger;
@@ -193,6 +192,9 @@ class Puphpeteer
         return self::$pageContent;
     }
 
+    /**
+     * @psalm-suppress UndefinedMagicMethod
+     */
     private function manageCookie(): void
     {
         $cookieAcceptBtn = $this->getBrowserPage()->querySelectorXPath("//div[text()='Tout accepter']/ancestor::button");
@@ -201,13 +203,15 @@ class Puphpeteer
         }
 
         Logger::log('Accept Cookie');
-        /** @var ElementHandle */
         $cookieAcceptBtn = $cookieAcceptBtn[0];
         $cookieAcceptBtn->scrollIntoView(); // @phpstan-ignore-line
         $cookieAcceptBtn->click();
         usleep(1_000_000);
     }
 
+    /**
+     * @psalm-suppress InvalidArgument
+     */
     public function getInfiniteScrolled(string $url, int $maxScroll = 10): string
     {
         $this->get($url);

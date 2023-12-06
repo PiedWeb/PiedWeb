@@ -88,6 +88,8 @@ class SERPExtractor
 
     /**
      * @return BusinessResult[]
+     *
+     * @psalm-suppress InvalidArrayOffset
      */
     public function extractBusinessResults(): array
     {
@@ -113,7 +115,7 @@ class SERPExtractor
             if (($node->childNodes->item(0)->nodeName ?? '') === 'i') {
                 $newNode = (new Crawler($node->parentNode))->filter('[data-attrid="title"]')->getNode(0);
                 if (null !== $newNode && $newNode instanceof \DOMElement) {
-                    $mapsResults[$i]->name = trim(Helper::htmlToPlainText($newNode->textContent ?? ''));
+                    $mapsResults[$i]->name = trim(Helper::htmlToPlainText($newNode->textContent));
                     $node = $newNode;
                 }
             }
@@ -295,7 +297,7 @@ class SERPExtractor
             ->getNode(0);
 
         if (! $linkNodePositionZero instanceof \DOMNode || ! $linkNodePositionZero instanceof \DOMElement) {
-            file_put_contents('/tmp/debug.html', $this->html);
+            file_put_contents('./debug/debug-position-zero.html', $this->html);
 
             throw new \LogicException('Google has changed its selector (position Zero)');
         }

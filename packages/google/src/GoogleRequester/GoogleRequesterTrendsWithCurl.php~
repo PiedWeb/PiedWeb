@@ -50,9 +50,9 @@ class GoogleRequesterTrendsWithCurl extends GoogleRequester implements GoogleReq
         }
 
         if (! isset($jsonResponse) || ! $jsonResponse) {
-            file_put_contents('/tmp/debug.html', $response);
+            @file_put_contents('./debug/debug-trends-api.html', $response);
 
-            throw new \Exception('Google Trends Api Request to `'.$uri.'` failed... see /tmp/debug.html');
+            throw new \Exception('Google Trends Api Request to `'.$uri.'` failed... see debug.html');
         }
 
         return $jsonResponse;
