@@ -67,7 +67,7 @@ class CleanText
         $text = str_replace(mb_convert_encoding('’', 'ISO-8859-1'), "'", $text);
         /** @var string $text */
         $text = Encoding::toUTF8($text);
-        $text = html_entity_decode(htmlentities((string) $text), 0, 'UTF-8');
+        $text = html_entity_decode(htmlentities($text), 0, 'UTF-8');
         $text = preg_replace('#[\x00-\x1F\x7F\xA0]#u', '', $text) ?? throw new \Exception();
         $text = html_entity_decode($text, \ENT_QUOTES | \ENT_XML1 | \ENT_HTML5, 'UTF-8');
         $text = str_replace(['™', '©', '®'], ' ', $text);

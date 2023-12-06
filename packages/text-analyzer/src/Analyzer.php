@@ -58,6 +58,7 @@ class Analyzer
         $sentences = $this->getSentences();
 
         foreach ($sentences as $sentence) {
+            /** @var string[] */
             $wordsGroups = \Safe\preg_split('/(,|\.|\(|\[|!|\?|;|\{|:)/', $sentence);
             foreach ($wordsGroups as $wordsGroup) {
                 $wordsGroup = CleanText::removePunctuation($wordsGroup);

@@ -45,10 +45,12 @@ final class Sleeper
 
     /**
      * Exec a half sleep.
+     *
+     * @psalm-suppress ArgumentTypeCoercion
      */
     public function execPartialSleep(float $howMuch = 0.5): void
     {
-        if (0 !== $this->sleep) {
+        if (0 < $this->sleep) {
             $sleep = (int) round($this->getSleep() * $howMuch);
             usleep($sleep);
             Logger::log('sleep '.($sleep / 1_000_000).'s');

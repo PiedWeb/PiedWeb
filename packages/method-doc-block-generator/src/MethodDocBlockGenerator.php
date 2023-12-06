@@ -44,7 +44,7 @@ class MethodDocBlockGenerator
             $phpDoc .= ' * @method '.('' === $returnType ? '' : $returnType.' ').$method->getName().'('.implode(', ', $paramStrings).')';
             if ($this->addLink) {
                 $phpDoc .= "\n".' * '
-                    .ltrim(str_replace(\Safe\preg_replace('#/vendor/.+$#', '', __DIR__), '', $reflectionClass->getFileName() ?: ''), '/')
+                    .ltrim(str_replace($this->getDir(), '', $reflectionClass->getFileName() ?: ''), '/')
                     .':'.$method->getStartLine()
                     ."\n".' * ';
             }
@@ -53,6 +53,14 @@ class MethodDocBlockGenerator
         }
 
         return $phpDoc;
+    }
+
+    private function getDir(): string
+    {
+        /** @var string */
+        $dir = \Safe\preg_replace('#/vendor/.+$#', '', __DIR__);
+
+        return $dir;
     }
 
     private function formatType(\ReflectionType|null $returnType): string
