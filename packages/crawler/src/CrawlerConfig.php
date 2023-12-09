@@ -10,6 +10,7 @@ final class CrawlerConfig
 {
     private ?string $id = null;
 
+    /** @psalm-suppress PropertyNotSetInConstructor */
     private UrlManipuler $startUrl;
 
     private ?RobotsTxt $robotsTxt = null;
@@ -162,7 +163,7 @@ final class CrawlerConfig
 
     public function getDataFolder(): string
     {
-        return $this->dataDirectory.'/'.$this->id;
+        return $this->dataDirectory.'/'.($this->id ?? throw new \Exception());
     }
 
     public function getVirtualRobots(): RobotsTxt

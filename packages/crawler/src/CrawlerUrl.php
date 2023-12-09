@@ -82,6 +82,7 @@ class CrawlerUrl
         $this->url->setSource($this->config->getRecorder()->getCacheFilePath($this->url));
     }
 
+    /** @psalm-suppress RiskyCast */
     protected function setUrlDataFromResponse(Response $response): void
     {
         $this->url->setHeaders($response->getRawHeaders());

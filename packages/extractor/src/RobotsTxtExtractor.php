@@ -14,35 +14,37 @@ final class RobotsTxtExtractor
      */
     private static array $cache = [];
 
-    public function get(Url $url): RobotsTxt
+    public function get(Url|string $urlOrOrigin): RobotsTxt
     {
-        return self::$cache[$url->getOrigin()] ??= new RobotsTxt($this->getBodyFromCache($url));
+        $origin = \is_string($urlOrOrigin) ? $urlOrOrigin : $urlOrOrigin->getOrigin();
+
+        return self::$cache[$origin] ??= new RobotsTxt($this->getBodyFromCache($origin));
     }
 
-    private function getBodyFromCache(Url $url): string
+    private function getBodyFromCache(string $origin): string
     {
         $cache = new FilesystemAdapter();
 
         /** @var string */
-        $body = $cache->get('robotstxt_'.$url->getOrigin(), function (ItemInterface $item) use ($url): string {
+        $body = $cache->get('robotstxt_'.$origin, function (ItemInterface $item) use ($origin): string {
             $item->expiresAfter(172800);
 
-            return $this->getBody($url);
+            return $this->getBody($origin);
         });
 
         return $body;
     }
 
-    private function getBody(Url $url): string
+    private function getBody(string $origin): string
     {
-        $url = $url->getOrigin().'/robots.txt';
+        $url = $origin.'/robots.txt';
 
         $request = new ExtendedClient($url);
         $request
                 ->setDefaultSpeedOptions()
                 ->setDownloadOnly('0-500000')
                 ->fakeBrowserHeader()
-                ->setDesktopUserAgent();
+                ->setDesktopUserAgent(); // TODO : Use CrawlConfig UA ?!
         if (! $request->request()) {
             return '';
         }
