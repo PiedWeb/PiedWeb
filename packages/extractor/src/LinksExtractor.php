@@ -92,7 +92,7 @@ class LinksExtractor
             $url = $this->extractUrl($element);
             if (null !== $url) {
                 $url = $parentBase->resolve($url);
-                $links[] = Link::initialize($url, $this->requestedUrl, $parentMayFollow, $element);
+                $links[] = new Link($url, $this->requestedUrl, $parentMayFollow, $element);
             }
         }
 

@@ -82,6 +82,7 @@ final class Crawler
             }
 
             if (0 !== $i) {
+                /** @psalm-suppress ArgumentTypeCoercion */
                 usleep($this->config->sleepBetweenReqInMs);
             }
 
@@ -101,7 +102,7 @@ final class Crawler
 
     private function getUrl(string $absoluteUri): Url
     {
-        return $this->urls[$absoluteUri] ?? $this->urls[$absoluteUri] = Url::initialize($this->config->getBase().$absoluteUri, $this->currentClick);
+        return $this->urls[$absoluteUri] ?? $this->urls[$absoluteUri] = new Url($this->config->getBase().$absoluteUri, $this->currentClick);
     }
 
     public function firstUrl(): Url
@@ -140,6 +141,7 @@ final class Crawler
             return;
         }
 
+        /** @psalm-suppress UnsafeInstantiation */
         new $this->harvester($url, $this->config); // CrawlerUrl
 
         $this->updateInboundLinksAndUrlsToParse($url, $url->getLinks());
@@ -178,7 +180,7 @@ final class Crawler
 
             $newUrl = (new ExtractorUrl($link->getUrl()));
             $newUri = $newUrl->getAbsoluteUri();
-            $this->urls[$newUri] ??= Url::initialize(
+            $this->urls[$newUri] ??= new Url(
                 $newUrl->getDocumentUrl()->__toString(),
                 $this->currentClick + 1
             );

@@ -182,23 +182,20 @@ final class Url
         return $return;
     }
 
-    public static function initialize(string $url, int $click = 0, int $id = 0): self
+    public function __construct(string $url, int $click = 0, int $id = 0)
     {
-        $self = new self();
-        $self->click = $click;
+        $this->click = $click;
 
-        $self->url = new UrlManipuler($url);
-        if (($origin = $self->url->getOrigin()) === '') {
+        $this->url = new UrlManipuler($url);
+        if (($origin = $this->url->getOrigin()) === '') {
             throw new \LogicException('`$url` must contain origin (eg. : https://example.tld/my-page).');
         }
 
-        $self->uri = substr($url, \strlen($origin));
+        $this->uri = substr($url, \strlen($origin));
 
-        $self->id = 0 === $id ? $self->getId() : $id;
+        $this->id = 0 === $id ? $this->getId() : $id;
 
-        $self->updatedAt = new \DateTime('now');
-
-        return $self;
+        $this->updatedAt = new \DateTime('now');
     }
 
     public function getId(): int

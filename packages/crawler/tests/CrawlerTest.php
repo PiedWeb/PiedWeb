@@ -17,7 +17,7 @@ class CrawlerTest extends \PHPUnit\Framework\TestCase
 {
     public function testCrawlerUrl(): void
     {
-        $url = Url::initialize('https://dev.piedweb.com');
+        $url = new Url('https://dev.piedweb.com');
         $crawlerUrl = new CrawlerUrl($url, (new CrawlerConfig())->setStartUrl('https://dev.piedweb.com/'));
 
         $this->assertGreaterThan(0, $url->getResponseTime());

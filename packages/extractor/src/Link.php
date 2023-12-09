@@ -33,11 +33,11 @@ final class Link
     /** @var int type */
     public const LINK_EXTERNAL = 4;
 
-    private ?string $url = null;
+    private string $url;
 
     private string $to;
 
-    private ?string $parentUrl = null;
+    private string $parentUrl;
 
     private bool $mayFollow;
 
@@ -55,35 +55,30 @@ final class Link
     #[Ignore]
     private ?Url $parentUrlStd = null;
 
-    private ?\DOMElement $element = null;
-
     /**
      * Always submit absoute Url !
      */
-    public static function initialize(
+    public function __construct(
         string $url,
         Url $parentUrl,
         bool $parentMayFollow = true,
-        \DOMElement $element = null
-    ): self {
-        $self = new self();
-        $self->element = $element;
-        $self->mayFollow = $self->retrieveMayFollow($parentMayFollow);
-        $self->url = UrlNormalizer::normalizeUrl($url);
-        $self->urlStd = (new Url($self->url));
-        $self->parentUrl = $parentUrl->get();
-        $self->parentUrlStd = $parentUrl;
-        $self->internal = $self->urlStd->getHost() === $parentUrl->getHost();
-        $self->to = $self->internal ? $self->urlStd->getAbsoluteUri(true, true) : $self->url;
-        $self->wrapper = null !== $self->element ? $self->getWrapperFrom($self->element) : 0;
-        $self->type = $self->retrieveType();
-
-        return $self;
+        private ?\DOMElement $element = null
+    ) {
+        $this->element = $element;
+        $this->mayFollow = $this->retrieveMayFollow($parentMayFollow);
+        $this->url = UrlNormalizer::normalizeUrl($url);
+        $this->urlStd = (new Url($this->url));
+        $this->parentUrl = $parentUrl->get();
+        $this->parentUrlStd = $parentUrl;
+        $this->internal = $this->urlStd->getHost() === $parentUrl->getHost();
+        $this->to = $this->internal ? $this->urlStd->getAbsoluteUri(true, true) : $this->url;
+        $this->wrapper = null !== $this->element ? $this->getWrapperFrom($this->element) : 0;
+        $this->type = $this->retrieveType();
     }
 
     public static function createRedirection(string $url, Url $parentUrl): self
     {
-        $self = self::initialize($url, $parentUrl);
+        $self = new self($url, $parentUrl);
         $self->wrapper = self::LINK_3XX;
 
         return $self;
@@ -91,7 +86,7 @@ final class Link
 
     public function toMarkdown(): string
     {
-        return '['.$this->anchor.']('.$this->url.')';
+        return '['.($this->anchor ?? '').']('.$this->url.')';
     }
 
     private function getWrapperFrom(\DOMElement $element): int
@@ -191,7 +186,7 @@ final class Link
     #[Ignore]
     public function getUrl(): string
     {
-        return $this->url ?? throw new \Exception();
+        return $this->url;
     }
 
     public function getTo(): string
@@ -202,7 +197,7 @@ final class Link
     #[Ignore]
     public function getParentUrl(): string
     {
-        return $this->parentUrl ?? throw new \Exception();
+        return $this->parentUrl;
     }
 
     #[Ignore]
