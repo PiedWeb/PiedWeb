@@ -144,7 +144,7 @@ final class Crawler
         /** @psalm-suppress UnsafeInstantiation */
         new $this->harvester($url, $this->config); // CrawlerUrl
 
-        $this->updateInboundLinksAndUrlsToParse($url, $url->getLinks());
+        $this->updateInboundLinksAndUrlsToParse($url->getLinks());
         $url->setDiscovered(\count($this->urls));
 
         $this->config->getRecorder()->recordLinksIndex($this->config->getBase(), $url, $this->urls, $url->getLinks());
@@ -170,7 +170,7 @@ final class Crawler
     /**
      * @param Link[] $links
      */
-    public function updateInboundLinksAndUrlsToParse(Url $url, array $links): void
+    public function updateInboundLinksAndUrlsToParse(array $links): void
     {
         $everAdd = [];
         foreach ($links as $link) {

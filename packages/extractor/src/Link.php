@@ -33,11 +33,11 @@ final class Link
     /** @var int type */
     public const LINK_EXTERNAL = 4;
 
-    private string $url;
+    private ?string $url = null;
 
     private string $to;
 
-    private string $parentUrl;
+    private ?string $parentUrl = null;
 
     private bool $mayFollow;
 
@@ -59,11 +59,15 @@ final class Link
      * Always submit absoute Url !
      */
     public function __construct(
-        string $url,
-        Url $parentUrl,
+        string $url = null, // permit to maintain bc compatibility
+        Url $parentUrl = null,
         bool $parentMayFollow = true,
         private ?\DOMElement $element = null
     ) {
+        if (null === $url || null === $parentUrl) {
+            return;
+        }
+
         $this->element = $element;
         $this->mayFollow = $this->retrieveMayFollow($parentMayFollow);
         $this->url = UrlNormalizer::normalizeUrl($url);
@@ -86,7 +90,7 @@ final class Link
 
     public function toMarkdown(): string
     {
-        return '['.($this->anchor ?? '').']('.$this->url.')';
+        return '['.($this->anchor ?? '').']('.$this->getUrl().')';
     }
 
     private function getWrapperFrom(\DOMElement $element): int
@@ -186,7 +190,7 @@ final class Link
     #[Ignore]
     public function getUrl(): string
     {
-        return $this->url;
+        return $this->url ?? throw new \Exception();
     }
 
     public function getTo(): string
@@ -197,7 +201,7 @@ final class Link
     #[Ignore]
     public function getParentUrl(): string
     {
-        return $this->parentUrl;
+        return $this->parentUrl ?? throw new \Exception();
     }
 
     #[Ignore]

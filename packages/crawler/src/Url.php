@@ -17,7 +17,7 @@ final class Url
 
     private string $uri;
 
-    private UrlManipuler $url;
+    private readonly UrlManipuler $url;
 
     private int $networkStatus = 0;
 
@@ -116,8 +116,6 @@ final class Url
         'expressions', 'breadcrumb',
     ];
 
-    private int $click = 0;
-
     /**
      * @var string[]
      */
@@ -182,10 +180,8 @@ final class Url
         return $return;
     }
 
-    public function __construct(string $url, int $click = 0, int $id = 0)
+    public function __construct(string $url, private int $click = 0, int $id = 0)
     {
-        $this->click = $click;
-
         $this->url = new UrlManipuler($url);
         if (($origin = $this->url->getOrigin()) === '') {
             throw new \LogicException('`$url` must contain origin (eg. : https://example.tld/my-page).');
