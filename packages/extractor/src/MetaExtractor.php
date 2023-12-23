@@ -21,7 +21,7 @@ final class MetaExtractor
         }
 
         return $meta->count() > 0
-            ? (null !== $meta->attr('content') ? CleanText::fixEncoding($meta->attr('content')) : '')
+            ? (null !== ($t = $meta->attr('content')) ? CleanText::fixEncoding($t) : '')
             : null;
     }
 }

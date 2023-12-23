@@ -59,7 +59,7 @@ final class Link
      * Always submit absoute Url !
      */
     public function __construct(
-        string $url = null, // permit to maintain bc compatibility
+        string $url = null,
         Url $parentUrl = null,
         bool $parentMayFollow = true,
         private ?\DOMElement $element = null

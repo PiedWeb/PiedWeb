@@ -31,7 +31,11 @@ final class Url implements \Stringable
 
     public function resolve(string $url): string
     {
-        $resolved = BaseUri::from($this->http)->resolve(Http::new(trim($url)))->getUri();
+        try {
+            $resolved = BaseUri::from($this->http)->resolve(Http::new(trim($url)))->getUri();
+        } catch (\Exception) {
+            return $this->http.'#error-'.$url;
+        }
 
         return $resolved->__toString();
     }
