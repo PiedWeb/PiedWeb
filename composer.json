@@ -6,7 +6,7 @@
   "description": "Monorepo for PiedWeb's PHP Package.",
   "license": "MIT",
   "require": {
-    "php": ">=8.1",
+    "php": ">=8.2",
     "ext-ctype": "*",
     "ext-iconv": "*",
     "fylax/forceutf8": "^3.0",
