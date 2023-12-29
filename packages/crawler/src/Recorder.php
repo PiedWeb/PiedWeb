@@ -7,7 +7,7 @@ use PiedWeb\Extractor\Link;
 use Stringy\Stringy;
 use Symfony\Component\Filesystem\Filesystem;
 
-final class Recorder
+class Recorder
 {
     /**
      * @var string
@@ -18,6 +18,8 @@ final class Recorder
      * @var string
      */
     public const CACHE_DIR = '/cache';
+
+    public const RECORD_NOTHING = -1;
 
     /**
      * @var int
@@ -53,14 +55,14 @@ final class Recorder
             $this->initLinksIndex();
         }
 
-        if (! file_exists($this->folder.self::CACHE_DIR)) {
-            $this->filesystem->mkdir($this->folder.self::CACHE_DIR);
+        if (! file_exists($this->folder.static::CACHE_DIR)) {
+            $this->filesystem->mkdir($this->folder.static::CACHE_DIR);
         }
     }
 
     public function cache(mixed $response, Url $url): void
     {
-        if (self::CACHE_NONE === $this->cacheMethod) {
+        if (self::CACHE_NONE >= $this->cacheMethod) {
             return;
         }
 
@@ -93,7 +95,7 @@ final class Recorder
     {
         $url = trim($url->getUri(), '/').'/';
         $urlPart = explode('/', $url);
-        $folder = $this->folder.self::CACHE_DIR;
+        $folder = $this->folder.static::CACHE_DIR;
 
         $urlPartLenght = \count($urlPart);
         for ($i = 0; $i < $urlPartLenght; ++$i) {
@@ -117,7 +119,7 @@ final class Recorder
 
     private function getCacheFilePathWithIdAsFilename(Url $url): string
     {
-        return $this->folder.self::CACHE_DIR.'/'.(string) $url->getId();
+        return $this->folder.static::CACHE_DIR.'/'.(string) $url->getId();
     }
 
     /**
@@ -164,7 +166,7 @@ final class Recorder
     private function recordInboundLink(Link $link, Url $to): void
     {
         \Safe\file_put_contents(
-            $this->folder.self::LINKS_DIR.'/To_'.(string) $to->getId().'_'.((int) $link->mayFollow()),
+            $this->folder.static::LINKS_DIR.'/To_'.(string) $to->getId().'_'.((int) $link->mayFollow()),
             $this->inboundLinkToStr($link).\PHP_EOL, // can use ->relativize to get only /uri
             \FILE_APPEND
         );
@@ -216,6 +218,6 @@ final class Recorder
     {
         $links = array_map(static fn (Link $link): string => $link->getUrl().';'.$link->getAnchor().';'.((int) $link->mayFollow()).';'.$link->getType(), $links);
 
-        \Safe\file_put_contents($this->folder.self::LINKS_DIR.'/From_'.(string) $from->getId(), implode(\PHP_EOL, $links));
+        \Safe\file_put_contents($this->folder.static::LINKS_DIR.'/From_'.(string) $from->getId(), implode(\PHP_EOL, $links));
     }
 }

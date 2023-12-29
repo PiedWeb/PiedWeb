@@ -209,7 +209,8 @@ final class CrawlerConfig
     public function getRecorder(): Recorder
     {
         if (null === $this->recorder) {
-            $this->recorder = new Recorder($this->getDataFolder(), $this->cacheMethod);
+            $this->recorder = Recorder::RECORD_NOTHING === $this->cacheMethod ? new RecorderNothing()
+                : new Recorder($this->getDataFolder(), $this->cacheMethod);
         }
 
         return $this->recorder;
