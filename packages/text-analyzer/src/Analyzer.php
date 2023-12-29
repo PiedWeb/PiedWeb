@@ -5,7 +5,7 @@ namespace PiedWeb\TextAnalyzer;
 use PiedWeb\Extractor\Helper;
 
 /**
- * @see \PiedWeb\TextAnalyzer\Test\AnalyzerTest
+ * @see Test\AnalyzerTest
  */
 class Analyzer
 {

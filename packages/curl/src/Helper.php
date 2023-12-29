@@ -3,7 +3,7 @@
 namespace PiedWeb\Curl;
 
 /**
- * @see \PiedWeb\Curl\Test\HelperTest
+ * @see Test\HelperTest
  */
 class Helper
 {

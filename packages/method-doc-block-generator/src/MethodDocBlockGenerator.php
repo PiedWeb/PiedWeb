@@ -3,7 +3,7 @@
 namespace PiedWeb\MethodDocBlockGenerator;
 
 /**
- * @see \PiedWeb\MethodDocBlockGenerator\Test\MethodDocBlockGeneratorTest
+ * @see Test\MethodDocBlockGeneratorTest
  */
 class MethodDocBlockGenerator
 {

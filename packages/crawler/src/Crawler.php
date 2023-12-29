@@ -6,12 +6,12 @@ use PiedWeb\Extractor\Link;
 use PiedWeb\Extractor\Url as ExtractorUrl;
 
 /**
- * @see \PiedWeb\Crawler\Test\CrawlerTest
+ * @see Test\CrawlerTest
  */
 final class Crawler
 {
     /** @var class-string<\PiedWeb\Crawler\CrawlerUrl> */
-    private string $harvester = \PiedWeb\Crawler\CrawlerUrl::class;
+    private string $harvester = CrawlerUrl::class;
 
     private int $counter = 0;
 
@@ -60,7 +60,7 @@ final class Crawler
         $config = CrawlerConfig::loadFrom($id, $dataDirectory);
         $current = new self($config, $debug);
         if ($fromCache) {
-            $current->harvester = \PiedWeb\Crawler\CrawlerUrlFromCache::class;
+            $current->harvester = CrawlerUrlFromCache::class;
         }
 
         exec('rm -rf '.$current->config->getDataFolder().Recorder::LINKS_DIR); // reset Links

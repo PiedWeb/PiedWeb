@@ -46,7 +46,7 @@ class SERPExtractor
     private readonly Crawler $domCrawler;
 
     /**
-     * @var \PiedWeb\Google\Result\SearchResult[]|null
+     * @var SearchResult[]|null
      */
     private ?array $results = null;
 
