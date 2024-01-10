@@ -211,7 +211,7 @@ class SERPExtractor
             }
 
             $result = $this->extractResultFrom($node, $ads);
-            if (! $result instanceof \PiedWeb\Google\Result\SearchResult) {
+            if (! $result instanceof SearchResult) {
                 continue;
             }
 

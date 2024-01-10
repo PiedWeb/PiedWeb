@@ -204,6 +204,9 @@ class Puphpeteer
         $this->getLogger()->info('Accept Cookie');
         $cookieAcceptBtn = $cookieAcceptBtn[0];
         $cookieAcceptBtn->scrollIntoView(); // @phpstan-ignore-line
+        if (! $cookieAcceptBtn->isVisible()) {// @phpstan-ignore-line
+            return;
+        }
         $cookieAcceptBtn->click();
         usleep(1_000_000);
     }
@@ -214,7 +217,7 @@ class Puphpeteer
     public function getInfiniteScrolled(string $url, int $maxScroll = 10): string
     {
         $this->get($url);
-
+        file_put_contents('debug.html', $this->getBrowserPage()->content());
         $this->manageCookie();
 
         for ($i = 1; true; ++$i) {
