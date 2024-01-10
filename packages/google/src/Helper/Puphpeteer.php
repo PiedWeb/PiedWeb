@@ -207,6 +207,7 @@ class Puphpeteer
         if (! $cookieAcceptBtn->isVisible()) {// @phpstan-ignore-line
             return;
         }
+
         $cookieAcceptBtn->click();
         usleep(1_000_000);
     }
