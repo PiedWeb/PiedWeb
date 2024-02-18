@@ -1,4 +1,4 @@
-name: 'Static Code Analysis'
+name: "Static Code Analysis"
 
 on: [push, pull_request]
 
@@ -9,7 +9,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        php: [8.2]
+        php: [8.3]
         stability: [prefer-stable] #prefer-lowest,
 
     name: PHPStan - P${{ matrix.php }} - ${{ matrix.stability }} - ${{ matrix.os }}
@@ -45,7 +45,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.2
+          php-version: 8.3
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick
           coverage: none
         env:

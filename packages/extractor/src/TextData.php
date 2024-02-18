@@ -18,7 +18,7 @@ final class TextData
     /** @psalm-suppress RedundantPropertyInitializationCheck */
     public function getTextAnalysis(): Analysis
     {
-        return (new TextAnalyzer($this->getText(), false, 4))->exec();
+        return (new TextAnalyzer($this->getText(), false, 1))->exec();
     }
 
     private ?string $text = null;

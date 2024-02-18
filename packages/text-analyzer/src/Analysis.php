@@ -20,7 +20,7 @@ final class Analysis
     {
         $expressions = $this->expressions;
         foreach ($expressions as $k => $v) {
-            $expressions[$k] = round(($v / $this->getWordNumber()) * 10000) / 100;
+            $expressions[$k] = round(($v / $this->wordNumber) * 10000) / 100;
         }
 
         return $expressions;

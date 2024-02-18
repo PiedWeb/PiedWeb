@@ -31,8 +31,7 @@ use \PiedWeb\ExpressionHarvester\MultiAnalyzer;
 $test = new MultiAnalyzer($onlyInSentence = true, $expressionMaxWords = 5 );
 
 $result = $test->addContent("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed...");
-    $result->getExpressions();
-    $result->getWordNumber(); // @çeturn int
+$result->getExpressions();
 
 $results = $test->exec(); // @return \PiedWeb\TextAnalyzer\Analysis
     // same methods except in get expression, the value for each expression is not anymore his number
