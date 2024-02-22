@@ -9,14 +9,14 @@ use League\Csv\Reader;
  */
 class LinksVisualizer
 {
-    protected \PiedWeb\Crawler\CrawlerConfig $config;
+    protected CrawlerConfig $config;
 
     /**
      * @var array{'nodes': array<mixed>, 'links': array<mixed>}
      */
     protected array $results = ['nodes' => [], 'links' => []];
 
-    public function __construct(string $id, string $dataDirectory = null)
+    public function __construct(string $id, ?string $dataDirectory = null)
     {
         $this->config = CrawlerConfig::loadFrom($id, $dataDirectory);
 

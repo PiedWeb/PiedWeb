@@ -59,8 +59,8 @@ final class Link
      * Always submit absoute Url !
      */
     public function __construct(
-        string $url = null,
-        Url $parentUrl = null,
+        ?string $url = null,
+        ?Url $parentUrl = null,
         bool $parentMayFollow = true,
         private ?\DOMElement $element = null
     ) {

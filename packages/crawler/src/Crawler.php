@@ -38,7 +38,7 @@ final class Crawler
     public static function continue(
         string $id,
         bool $debug = true,
-        string $dataDirectory = null
+        ?string $dataDirectory = null
     ): self {
         $config = CrawlerConfig::loadFrom($id, $dataDirectory);
         $current = new self($config, $debug);
@@ -55,7 +55,7 @@ final class Crawler
         string $id,
         bool $fromCache = false,
         bool $debug = true,
-        string $dataDirectory = null
+        ?string $dataDirectory = null
     ): self {
         $config = CrawlerConfig::loadFrom($id, $dataDirectory);
         $current = new self($config, $debug);

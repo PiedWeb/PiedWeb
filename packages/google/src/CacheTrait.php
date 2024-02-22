@@ -36,7 +36,7 @@ trait CacheTrait
         @unlink($this->getCacheFilePath());
     }
 
-    public function setCache(string $html, string $filePath = null): string
+    public function setCache(string $html, ?string $filePath = null): string
     {
         if ('' !== $this->cacheFolder) {
             (new Filesystem())->dumpFile($filePath ?? $this->getCacheFilePath(), \Safe\gzcompress($html, 9));
@@ -45,7 +45,7 @@ trait CacheTrait
         return $html;
     }
 
-    public function getCache(string $filePath = null): ?string
+    public function getCache(?string $filePath = null): ?string
     {
         if ($this->disableCache) {
             return null;

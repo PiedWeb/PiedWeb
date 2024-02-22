@@ -30,8 +30,10 @@ class CleanText
         'whom', 'why', 'will', 'with', 'would', 'yet', 'you', 'your',
 
         'cookielawinfo', 'checkbox',
+
         // French Stop words
         'au', 'aux', 'avec', 'ce', 'ces', 'dans', 'de', 'des', 'du', 'elle', 'en', 'et', 'eux', 'il', 'je', 'la',
+        'depuis', 'quelques', 'être', 'travers', 'quelque', 'www', 'fr',
         'le', 'leur', 'lui', 'plus', 'ma', 'mais', 'me', 'même', 'mes', 'moi', 'mon', 'ne', 'nos', 'notre', 'nous',
         'on', 'ou', 'par', 'pas', 'pour', 'qu', 'que', 'qui', 'sa', 'se', 'ses', 'son', 'sur', 'ta', 'te', 'tes',
         'toi', 'ton', 'tu', 'un', 'une', 'vos', 'votre', 'vous', 'puis', 'aussi', 'comme', 'pourquoi', 'alors', 'si',
@@ -113,7 +115,7 @@ class CleanText
 
     public static function removeEmail(string $text): string
     {
-        return Helper::preg_replace_str('/([a-zA-Z0-9._-]+(@|.at.)[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/i', ' ', $text);
+        return Helper::preg_replace_str('/([a-zA-Z0-9._-]+(@|.at.)[a-zA-Z0-9._-] ?+\. ?[a-zA-Z0-9_-]+)/i', ' ', $text);
     }
 
     public static function removeDate(string $text): string

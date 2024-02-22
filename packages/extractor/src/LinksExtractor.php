@@ -35,7 +35,7 @@ class LinksExtractor
     /**
      * @return Link[]
      */
-    public function get(int $type = null): array
+    public function get(?int $type = null): array
     {
         if (null !== $type) {
             return $this->linksPerType[$type] ?? [];

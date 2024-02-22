@@ -34,7 +34,7 @@ final class Analysis
     /**
      * @return array<string, int>
      */
-    public function getExpressions(int $minFound = null): array
+    public function getExpressions(?int $minFound = null): array
     {
         return $minFound ? array_filter(
             $this->getExpressions(),

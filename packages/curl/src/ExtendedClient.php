@@ -262,7 +262,7 @@ class ExtendedClient extends Client
     /**
      * Execute the request.
      */
-    public function request(string $target = null, bool $updateRefererAndCookies = true): bool
+    public function request(?string $target = null, bool $updateRefererAndCookies = true): bool
     {
         if ($this->fakeBrowserHeader) {
             $this->setBrowserHeader();

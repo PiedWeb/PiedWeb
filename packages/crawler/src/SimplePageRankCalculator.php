@@ -9,9 +9,9 @@ use League\Csv\Reader;
  */
 final class SimplePageRankCalculator extends AbstractPageRankCalculator
 {
-    private readonly \PiedWeb\Crawler\CrawlerConfig $config;
+    private readonly CrawlerConfig $config;
 
-    public function __construct(string $id, string $dataDirectory = null)
+    public function __construct(string $id, ?string $dataDirectory = null)
     {
         $this->config = CrawlerConfig::loadFrom($id, $dataDirectory);
 

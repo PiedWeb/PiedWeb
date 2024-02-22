@@ -11,11 +11,11 @@ final class ExtractExternalLinks
      */
     private array $external = [];
 
-    private readonly \PiedWeb\Crawler\CrawlerConfig $config;
+    private readonly CrawlerConfig $config;
 
     public function __construct(
         string $id,
-        string $dataDirectory = null
+        ?string $dataDirectory = null
     ) {
         $this->config = CrawlerConfig::loadFrom($id, $dataDirectory);
         $this->dir = $this->config->getDataFolder().'/links';

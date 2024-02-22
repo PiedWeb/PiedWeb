@@ -43,12 +43,12 @@ final class CrawlerConfig
      */
     public function __construct(
         public readonly int $depthLimit = 0,
-        string $userAgent = null,
-        int $cacheMethod = null,
-        int $sleepBetweenReqInMs = null, // ms
-        string $virtualRobotsTxtRules = null,
-        array $toHarvest = null,
-        string $dataDirectory = null,
+        ?string $userAgent = null,
+        ?int $cacheMethod = null,
+        ?int $sleepBetweenReqInMs = null, // ms
+        ?string $virtualRobotsTxtRules = null,
+        ?array $toHarvest = null,
+        ?string $dataDirectory = null,
         public readonly int $autosave = 500 // number of Urls we can crawled before saving (0 = autosaving disabled)
     ) {
         $this->userAgent = $userAgent ?? 'Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)';
@@ -80,7 +80,7 @@ final class CrawlerConfig
         return $this->startUrl;
     }
 
-    public static function dataDirectory(string $dataDirectory = null): string
+    public static function dataDirectory(?string $dataDirectory = null): string
     {
         $dataDirectory = (string) $dataDirectory;
 
@@ -112,7 +112,7 @@ final class CrawlerConfig
         return $lastCrawl;
     }
 
-    public static function loadFrom(string $crawlId, string $dataDirectory = null): self
+    public static function loadFrom(string $crawlId, ?string $dataDirectory = null): self
     {
         $dataDirectory = self::dataDirectory($dataDirectory);
 

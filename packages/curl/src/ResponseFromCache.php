@@ -12,7 +12,7 @@ class ResponseFromCache extends Response
      */
     public function __construct(
         string $filePathOrContent,
-        string $url = null,
+        ?string $url = null,
         array $info = [],
         mixed $headersSeparator = \PHP_EOL.\PHP_EOL
     ) {
