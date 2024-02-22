@@ -34,7 +34,17 @@ final class TextData
         }
 
         $this->text = '';
-        $elements = $this->crawler->filterXPath(self::getXPathToSelectNodeContent());
+
+        $crawler = clone $this->crawler;
+
+        // remove notext block
+        $crawler->filter('script, style, iframe, noframe, noscript, object, embed, noembed')->each(static function (Crawler $crawler): void {
+            foreach ($crawler as $node) {
+                $node->parentNode?->removeChild($node);
+            }
+        });
+
+        $elements = $crawler->filterXPath(self::getXPathToSelectNodeContent());
         foreach ($elements as $element) {
             $this->text .= ' '.CleanText::fixEncoding($element->textContent);
         }
