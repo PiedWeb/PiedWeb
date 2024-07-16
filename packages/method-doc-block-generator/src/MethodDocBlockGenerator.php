@@ -63,7 +63,7 @@ class MethodDocBlockGenerator
         return $dir;
     }
 
-    private function formatType(\ReflectionType|null $returnType): string
+    private function formatType(?\ReflectionType $returnType): string
     {
         if (null === $returnType) {
             return '';

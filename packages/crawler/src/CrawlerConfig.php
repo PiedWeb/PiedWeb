@@ -49,7 +49,8 @@ final class CrawlerConfig
         ?string $virtualRobotsTxtRules = null,
         ?array $toHarvest = null,
         ?string $dataDirectory = null,
-        public readonly int $autosave = 500 // number of Urls we can crawled before saving (0 = autosaving disabled)
+        public readonly int $autosave = 500, // number of Urls we can crawled before saving (0 = autosaving disabled),
+        public readonly string $userPassword = ''
     ) {
         $this->userAgent = $userAgent ?? 'Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)';
         $this->cacheMethod = $cacheMethod ?? Recorder::CACHE_URI;

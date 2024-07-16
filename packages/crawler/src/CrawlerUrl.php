@@ -44,7 +44,7 @@ class CrawlerUrl
 
     protected function getCurlClient(): ExtendedClient
     {
-        return self::$curlClient ??= (new ExtendedClient())
+        self::$curlClient ??= (new ExtendedClient())
             ->setDefaultGetOptions()
             ->setDefaultSpeedOptions()
             ->setMaximumResponseSize(1_000_000) // 1Mo
@@ -55,6 +55,12 @@ class CrawlerUrl
             // ->setOpt(\CURLOPT_COOKIE, false)
             ->setOpt(\CURLOPT_CONNECTTIMEOUT, 20)
             ->setOpt(\CURLOPT_TIMEOUT, 80);
+
+        if ('' !== $this->config->userPassword) {
+            self::$curlClient->setOpt(\CURLOPT_USERPWD, $this->config->userPassword);
+        }
+
+        return self::$curlClient;
     }
 
     protected function request(): void
