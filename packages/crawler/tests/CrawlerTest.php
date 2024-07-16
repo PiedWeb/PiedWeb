@@ -92,4 +92,18 @@ class CrawlerTest extends \PHPUnit\Framework\TestCase
 
         $this->assertFileExists($crawler->config->getDataFolder().'/index.csv');
     }
+
+    public function testHttpAuth(): void
+    {
+        $crawler = new Crawler(
+            (new CrawlerConfig(
+                userPassword: 'test:test'
+            ))->setStartUrl(
+                'https://lab.piedweb.com/auth/test.html'
+            )
+        );
+        $crawler->config->recordConfig();
+        $crawler->crawl();
+        $this->assertSame('Hello Test', $crawler->firstUrl()->getH1());
+    }
 }

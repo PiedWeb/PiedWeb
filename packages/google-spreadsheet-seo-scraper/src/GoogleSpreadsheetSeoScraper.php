@@ -45,7 +45,7 @@ class GoogleSpreadsheetSeoScraper
     private SERPExtractor $extractor;
 
     /**
-     * @param array<mixed> $argv
+     * @param array<int, string> $argv
      */
     public function __construct(array $argv)
     {
@@ -56,7 +56,7 @@ class GoogleSpreadsheetSeoScraper
     }
 
     /**
-     * @param array<mixed> $argv
+     * @param array<int, string> $argv
      */
     protected function loadArgv(array $argv): void
     {
