@@ -222,8 +222,8 @@ class Puphpeteer
     {
         $blockContainingMoreResultsBtn = $this->getBrowserPage()->querySelectorXPath("//*[contains(text(), 'Page Navigation')]");
         if (isset($blockContainingMoreResultsBtn[0])) {
-            $blockContainingMoreResultsBtn[0]->scrollIntoView();
-        } // @phpstan-ignore-line
+            $blockContainingMoreResultsBtn[0]->scrollIntoView(); // @phpstan-ignore-line
+        }
 
         usleep(700000);
 
@@ -246,7 +246,7 @@ class Puphpeteer
 
         ++$this->clickForMoreResults;
 
-        if ($this->clickForMoreResults <= 3) {
+        if ($this->clickForMoreResults < 3) {
             $this->clickMoreResults();
         }
     }

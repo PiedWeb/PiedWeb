@@ -56,7 +56,7 @@ class GoogleSpreadsheetSeoScraper
     }
 
     /**
-     * @param array<int, string> $argv
+     * @param list<string> $argv
      */
     protected function loadArgv(array $argv): void
     {
