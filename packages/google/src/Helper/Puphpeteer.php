@@ -140,7 +140,10 @@ class Puphpeteer
             dump($new);
             dump(self::$browser[self::$currentKey]::class);
             // self::$browserPage[self::$currentKey] = self::$browser[self::$currentKey]->newPage();
-            dd(self::$browserPage[self::$currentKey]::class);
+            dump(self::$browserPage[self::$currentKey]::class);
+            self::$browserPage[self::$currentKey] = self::$browser[self::$currentKey]->newPage();
+            dd(self::$browser[self::$currentKey]::class);
+            // dd(self::$browserPage[self::$currentKey]);
         }
 
         return self::$browserPage[self::$currentKey];
@@ -212,6 +215,42 @@ class Puphpeteer
         usleep(1_000_000);
     }
 
+    private int $clickForMoreResults = 0;
+
+    /** @psalm-suppress UndefinedMagicMethod */
+    private function clickMoreResults(): void
+    {
+        $blockContainingMoreResultsBtn = $this->getBrowserPage()->querySelectorXPath("//*[contains(text(), 'Page Navigation')]");
+        if (isset($blockContainingMoreResultsBtn[0])) {
+            $blockContainingMoreResultsBtn[0]->scrollIntoView();
+        } // @phpstan-ignore-line
+
+        usleep(700000);
+
+        $btn = $this->getBrowserPage()->querySelector('a[aria-label="Autres résultats de recherche"]');
+        if (null === $btn) {
+            $this->getLogger()->info('Pas de boutons `Autres résultats`');
+
+            return;
+        }
+
+        $this->getLogger()->info('Click `Autres résultats de recherche`');
+
+        $btn->scrollIntoView(); // @phpstan-ignore-line
+        if (! $btn->isVisible()) {// @phpstan-ignore-line
+            return;
+        }
+
+        $btn->tap();
+        usleep(1_000_000);
+
+        ++$this->clickForMoreResults;
+
+        if ($this->clickForMoreResults <= 3) {
+            $this->clickMoreResults();
+        }
+    }
+
     /**
      * @psalm-suppress InvalidArgument
      */
@@ -230,6 +269,9 @@ class Puphpeteer
                 break;
             }
         }
+
+        $this->clickForMoreResults = 0;
+        $this->clickMoreResults();
 
         self::$pageContent = $this->getBrowserPage()->content();
 

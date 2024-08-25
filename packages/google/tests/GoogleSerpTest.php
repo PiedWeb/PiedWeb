@@ -22,15 +22,17 @@ final class GoogleSerpTest extends TestCase
         return $manager;
     }
 
-    private function extractSERP(string $rawHtml): void
+    private function extractSERP(string $rawHtml, string $expectedFirstResult = 'https://piedweb.com/'): SERPExtractor
     {
         $extractor = new SERPExtractor($rawHtml);
         // $this->assertNotSame(0, $extractor->getNbrResults());
-        if ('https://piedweb.com/' !== $extractor->getResults()[0]->url) {
+        if ($expectedFirstResult !== $extractor->getResults()[0]->url) {
             $this->markTestIncomplete('May google kick you, check /tmp/debug.html');
         }
 
         $this->assertTrue(true);
+
+        return $extractor;
     }
 
     public function testPuphpeteerMobile(): void
@@ -43,6 +45,23 @@ final class GoogleSerpTest extends TestCase
         $googleRequester->getPuppeteerClient()->getBrowserPage()->screenshot(['path' => './debug/debug-puphpeteer-mobile.png']);
 
         $this->extractSERP($rawHtml);
+    }
+
+    public function testPuphpeteerMobileClickMoreResult(): void
+    {
+        $manager = $this->getSerpManager('iphone');
+
+        $googleRequester = new GoogleRequester();
+        $rawHtml = $googleRequester->requestGoogleWithPuppeteer($manager); // $manager->getCache() ?? $manager->setCache($googleRequester->requestGoogleWithPuppeteer($manager));
+        file_put_contents('./debug/debug-puphpeteer-mobile-more-results.html', $rawHtml);
+        $googleRequester->getPuppeteerClient()->getBrowserPage()->screenshot([
+            'path' => './debug/debug-puphpeteer-mobile-more-results.png',
+            // 'fullPage' => true,
+        ]);
+
+        $extractor = $this->extractSERP($rawHtml, 'https://www.apple.com/fr/iphone/');
+        $resultsNbr = count($extractor->getResults());
+        $this->assertGreaterThanOrEqual(20, $resultsNbr, $resultsNbr.' results found');
     }
 
     public function testCurlMobile(): void

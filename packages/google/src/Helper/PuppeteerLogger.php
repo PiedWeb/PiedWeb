@@ -32,7 +32,7 @@ class PuppeteerLogger implements LoggerInterface
         return $this->index;
     }
 
-    public function log($level, string|\Stringable $message, array $context = []): void
+    public function log(mixed $level, string|\Stringable $message, array $context = []): void
     {
         $expectedStarting = "Received a Node log: \n".self::TO_INDEX;
 
