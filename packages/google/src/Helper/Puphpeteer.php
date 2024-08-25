@@ -6,6 +6,7 @@ use Nesk\Puphpeteer\Puppeteer;
 use Nesk\Puphpeteer\Resources\Browser;
 use Nesk\Puphpeteer\Resources\Page;
 use Nesk\Rialto\Data\BasicResource;
+use Nesk\Rialto\Exceptions\Node\FatalException;
 
 class Puphpeteer
 {
@@ -241,8 +242,11 @@ class Puphpeteer
             return;
         }
 
-        $btn->tap();
-        usleep(1_000_000);
+        try {
+            $btn->tap();
+        } catch (FatalException $e) {
+            $this->getLogger()->info('btn found but not clickable');
+        }
 
         ++$this->clickForMoreResults;
 
