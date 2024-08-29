@@ -66,7 +66,7 @@ final class CanonicalExtractor
 
         // check for http://example.tld or http://example.tld/
         return false !== $pregMatch
-                && $match[0] === ltrim($this->urlRequested->__toString(), '/')
+                && ($match[0] ?? throw new \Exception()) === ltrim($this->urlRequested->__toString(), '/')
                 && ($match[0] === $canonical || $match[0].'/' === $canonical);
     }
 }

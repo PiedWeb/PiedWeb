@@ -111,10 +111,11 @@ class Puphpeteer
             array_merge(
                 [] !== $emulateOptions ? $emulateOptions : self::EMULATE_OPTIONS_MOBILE,
                 // ['executablePath' => '/snap/bin/chromium',]
+                // ['headless' => false]
             )
         );
 
-        self::$browserPage[self::$currentKey] = $this->getBrowserPage(true);
+        self::$browserPage[self::$currentKey] = $this->getBrowserPage();
         self::$browserPage[self::$currentKey]->emulate([] !== $emulateOptions ? $emulateOptions : self::EMULATE_OPTIONS_MOBILE);
 
         return $this;
@@ -133,8 +134,15 @@ class Puphpeteer
             $this->instantiate();
         }
 
+        if (! isset(self::$browser[self::$currentKey])) {
+            throw new \LogicException();
+        }
+
+        [$currentPage] = self::$browser[self::$currentKey]->pages();
+        self::$browserPage[self::$currentKey] = $currentPage;
+
         if ($new || ! isset(self::$browserPage[self::$currentKey])) {
-            self::$browserPage[self::$currentKey] = (self::$browser[self::$currentKey] ?? throw new \LogicException())->newPage();
+            self::$browserPage[self::$currentKey] = self::$browser[self::$currentKey]->newPage();
         }
 
         if (self::$browserPage[self::$currentKey]::class === BasicResource::class) {
@@ -198,6 +206,26 @@ class Puphpeteer
     /**
      * @psalm-suppress UndefinedMagicMethod
      */
+    private function managePosition(): void
+    {
+        $btn = $this->getBrowserPage()->querySelectorXPath("//*[contains(text(), 'Pas maintenant')]");
+        if (! isset($btn[0])) {
+            return;
+        }
+
+        $this->getLogger()->info('Accept Cookie');
+        $btn = $btn[0];
+        if (! $btn->isVisible()) {// @phpstan-ignore-line
+            return;
+        }
+
+        $btn->tap();
+        usleep(500_000);
+    }
+
+    /**
+     * @psalm-suppress UndefinedMagicMethod
+     */
     private function manageCookie(): void
     {
         $cookieAcceptBtn = $this->getBrowserPage()->querySelectorXPath("//div[text()='Tout accepter']/ancestor::button");
@@ -226,7 +254,7 @@ class Puphpeteer
             $blockContainingMoreResultsBtn[0]->scrollIntoView(); // @phpstan-ignore-line
         }
 
-        usleep(700000);
+        usleep(350000);
 
         $btn = $this->getBrowserPage()->querySelector('a[aria-label="Autres résultats de recherche"]');
         if (null === $btn) {
@@ -259,11 +287,12 @@ class Puphpeteer
         $this->get($url);
         // file_put_contents('debug.html', $this->getBrowserPage()->content());
         $this->manageCookie();
+        $this->managePosition();
 
         for ($i = 1; true; ++$i) {
             $scrollHeight = $this->getBrowserPage()->evaluate('document.body.scrollHeight'); // @phpstan-ignore-line
             $this->getBrowserPage()->evaluate('window.scrollTo(0, document.body.scrollHeight)'); // @phpstan-ignore-line
-            usleep(700000);
+            usleep(350000);
             $isHeighten = $this->getBrowserPage()->evaluate('document.body.scrollHeight > '.$scrollHeight.''); // @phpstan-ignore-line
             if (! $isHeighten || $i > $maxScroll) {
                 break;
@@ -274,6 +303,7 @@ class Puphpeteer
 
         try {
             $this->clickMoreResults();
+            // utiliser la position exacte
         } catch (FatalException $e) {
             $this->getLogger()->info('btn found but not clickable');
         }

@@ -9,7 +9,7 @@ use Symfony\Contracts\Cache\ItemInterface;
 
 class SERPExtractorJsExtended extends SERPExtractor
 {
-    private ?Page $browserPage = null;
+    public ?Page $browserPage = null;
 
     public function getBrowserPage(): Page
     {
