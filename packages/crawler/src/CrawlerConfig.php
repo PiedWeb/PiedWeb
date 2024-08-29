@@ -13,7 +13,7 @@ final class CrawlerConfig
     /** @psalm-suppress PropertyNotSetInConstructor */
     private UrlManipuler $startUrl;
 
-    private ?RobotsTxt $robotsTxt = null;
+    public ?RobotsTxt $robotsTxt = null;
 
     private ?RobotsTxt $virtualRobots = null;
 
@@ -191,6 +191,11 @@ final class CrawlerConfig
     public function getBase(): string
     {
         return $this->base ??= preg_match('#^(http://|https://)?[^/\?\#]+#', $url = $this->startUrl->get(), $match) ? $match[0] : $url;
+    }
+
+    public function isSameHostThanStartUrl(string $url): bool
+    {
+        return str_starts_with($url, $this->getBase());
     }
 
     public function getUrl(Url $url): UrlManipuler
