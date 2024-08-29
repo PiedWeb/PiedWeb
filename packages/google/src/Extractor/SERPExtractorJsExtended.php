@@ -53,13 +53,16 @@ class SERPExtractorJsExtended extends SERPExtractor
         return $pixelPos;
     }
 
-    private function getPixelPosForWithoutCache(string|\DOMNode $element): int
+    /**
+     * @psalm-suppress InvalidArgument
+     */
+    private function getPixelPosForWithoutCache(string|\DOMNode $elementOrXpath): int
     {
-        if ($element instanceof \DOMNode) {
-            $element = $element->getNodePath() ?? throw new \LogicException();
+        if ($elementOrXpath instanceof \DOMNode) {
+            $elementOrXpath = $elementOrXpath->getNodePath() ?? throw new \LogicException();
         }
 
-        $element = $this->getBrowserPage()->querySelectorXPath($element);
+        $element = $this->getBrowserPage()->querySelectorXPath($elementOrXpath);
 
         if (isset($element[0]) && null !== $element[0]->boundingBox()) {
             $boundingBox = $element[0]->boundingBox();
@@ -75,7 +78,16 @@ class SERPExtractorJsExtended extends SERPExtractor
                 return 0;
             }
 
-            return \intval($boundingBox['y']);
+            $pixelPos = \intval($boundingBox['y']);
+
+            // handle when user has scroll on the page
+            if ($pixelPos < 0) {
+                $this->browserPage?->evaluate('window.scrollTo({top: 0})');  // @phpstan-ignore-line
+
+                return $this->getPixelPosFor($elementOrXpath); // potential infinite loop
+            }
+
+            return $pixelPos;
         }
 
         return 0;

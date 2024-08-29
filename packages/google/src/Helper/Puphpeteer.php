@@ -240,7 +240,7 @@ class Puphpeteer
             return;
         }
 
-        $cookieAcceptBtn->click();
+        $cookieAcceptBtn->tap();
         usleep(1_000_000);
     }
 
