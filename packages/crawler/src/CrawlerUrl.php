@@ -13,6 +13,7 @@ use PiedWeb\Extractor\RedirectionExtractor;
 use PiedWeb\Extractor\RobotsTxtExtractor;
 use PiedWeb\Extractor\TagExtractor;
 use PiedWeb\Extractor\TextData;
+use Spatie\Robots\RobotsTxt;
 
 class CrawlerUrl
 {
@@ -23,7 +24,8 @@ class CrawlerUrl
 
     public function __construct(
         protected Url $url,
-        protected CrawlerConfig $config
+        protected CrawlerConfig $config,
+        protected ?RobotsTxt $robotsTxt = null,
     ) {
         $this->harvest();
     }
@@ -145,7 +147,7 @@ class CrawlerUrl
     {
         $indexable = new Indexable(
             $this->url->getUrl(),
-            (new RobotsTxtExtractor())->get($this->url->getUrl()),
+            $this->robotsTxt ?? (new RobotsTxtExtractor())->get($this->url->getUrl()),
             $this->url->getDomCrawler(),
             $this->url->getStatusCode(),
             $this->url->getHeaders()
