@@ -223,11 +223,7 @@ class Puphpeteer
     {
         $blockContainingMoreResultsBtn = $this->getBrowserPage()->querySelectorXPath("//*[contains(text(), 'Page Navigation')]");
         if (isset($blockContainingMoreResultsBtn[0])) {
-            try {
-                $blockContainingMoreResultsBtn[0]->scrollIntoView(); // @phpstan-ignore-line
-            } catch (FatalException $e) {
-                // ...
-            }
+            $blockContainingMoreResultsBtn[0]->scrollIntoView(); // @phpstan-ignore-line
         }
 
         usleep(700000);
@@ -246,11 +242,7 @@ class Puphpeteer
             return;
         }
 
-        try {
-            $btn->tap();
-        } catch (FatalException $e) {
-            $this->getLogger()->info('btn found but not clickable');
-        }
+        $btn->tap();
 
         ++$this->clickForMoreResults;
 
@@ -265,7 +257,7 @@ class Puphpeteer
     public function getInfiniteScrolled(string $url, int $maxScroll = 10): string
     {
         $this->get($url);
-        file_put_contents('debug.html', $this->getBrowserPage()->content());
+        // file_put_contents('debug.html', $this->getBrowserPage()->content());
         $this->manageCookie();
 
         for ($i = 1; true; ++$i) {
@@ -279,7 +271,12 @@ class Puphpeteer
         }
 
         $this->clickForMoreResults = 0;
-        $this->clickMoreResults();
+
+        try {
+            $this->clickMoreResults();
+        } catch (FatalException $e) {
+            $this->getLogger()->info('btn found but not clickable');
+        }
 
         self::$pageContent = $this->getBrowserPage()->content();
 
