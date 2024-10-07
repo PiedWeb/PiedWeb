@@ -227,7 +227,7 @@ class Puphpeteer
      */
     private function manageCookie(): void
     {
-        $cookieAcceptBtn = $this->getBrowserPage()->querySelector('::-p-xpath('."//div[text()='Tout accepter']/ancestor::button".')');
+        $cookieAcceptBtn = $this->getBrowserPage()->querySelector('::-p-xpath(//div[text()=\'Tout accepter\']/ancestor::button)');
         if (null === $cookieAcceptBtn) {
             return;
         }
@@ -252,6 +252,7 @@ class Puphpeteer
         if (null !== $blockContainingMoreResultsBtn) {
             $blockContainingMoreResultsBtn->scrollIntoView($blockContainingMoreResultsBtn);
         }
+
         usleep(350000);
 
         // dump(null !== $blockContainingMoreResultsBtn ? 'moreResults not exists' : 'moreResults exists');
@@ -309,7 +310,7 @@ class Puphpeteer
         try {
             $this->clickMoreResults();
             // utiliser la position exacte
-        } catch (FatalException $e) {
+        } catch (FatalException) {
             $this->getLogger()->info('btn found but not clickable');
         }
 

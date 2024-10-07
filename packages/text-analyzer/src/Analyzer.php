@@ -172,7 +172,7 @@ class Analyzer
 
         // Last Clean
         $expression = trim(Helper::preg_replace_str('/\s+/', ' ', $expression));
-        if ('' == htmlentities($expression)) { // Avoid �
+        if ('' === htmlentities($expression)) { // Avoid �
             return '';
         }
 

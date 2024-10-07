@@ -89,7 +89,7 @@ final class GoogleSerpTest extends TestCase
         // This test is not working anymore
         // Google deleted position zero on smartphone ???
 
-        $extractor = $this->getExtractor('qu\'est ce que l\'effet streisand');
+        $extractor = $this->getExtractor("qu'est ce que l'effet streisand");
 
         $extractor->getBrowserPage()->screenshot(['path' => './debug/debug-position-zero.png']);
         if (! $extractor->containsSerpFeature('PositionZero')) {

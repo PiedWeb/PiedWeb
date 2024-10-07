@@ -95,7 +95,7 @@ final class Link
 
     private function getWrapperFrom(\DOMElement $element): int
     {
-        if ('a' == $element->tagName && $element->getAttribute('href')) {
+        if ('a' === $element->tagName && $element->getAttribute('href')) {
             return self::LINK_A;
         }
 
