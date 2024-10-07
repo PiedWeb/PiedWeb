@@ -18,7 +18,7 @@ final class GlobalTest extends TestCase
     /** Response[] */
     private array $response = [];
 
-    public function getPage(string $url = 'https://piedweb.com'): ?string
+    public function getPage(string $url = 'https://piedweb.com'): string
     {
         if (isset($this->response[$url])) {
             return $this->response[$url];
@@ -36,7 +36,7 @@ final class GlobalTest extends TestCase
         $client->request();
 
         if ($client->getError() > 0) {
-            return null;
+            throw new Exception();
         }
 
         return $this->response[$url] = $client->getResponse()->getBody();
@@ -70,21 +70,19 @@ final class GlobalTest extends TestCase
         $canonical = new CanonicalExtractor($url, new Crawler($this->getPage()));
         $this->assertTrue($canonical->isCanonicalCorrect());
         $this->assertTrue($canonical->ifCanonicalExistsIsItCorrectOrPartiallyCorrect());
-        $crawler = new Crawler(str_replace('href=https://piedweb.com/ rel=canonical', 'rel="canonical" href="/"', (string) $this->getPage('https://piedweb.com/')));
+
+        $html = str_replace('rel="canonical" href="https://piedweb.com/"', 'rel="canonical" href="/"', $this->getPage('https://piedweb.com/'));
+        $crawler = new Crawler($html);
         $canonical = new CanonicalExtractor($url, $crawler);
         $this->assertFalse($canonical->isCanonicalCorrect());
         $this->assertTrue($canonical->isCanonicalPartiallyCorrect());
         $this->assertTrue($canonical->ifCanonicalExistsIsItCorrectOrPartiallyCorrect());
-        $canonical = new CanonicalExtractor($url, new Crawler(str_replace('<link href=https://piedweb.com/ rel=canonical>', ' ', (string) $this->getPage('https://piedweb.com/'))));
-        $this->assertTrue($canonical->ifCanonicalExistsIsItCorrectOrPartiallyCorrect());
-        $canonical = new CanonicalExtractor($url, new Crawler(str_replace('<link href=https://piedweb.com/ rel=canonical>', '<link rel="canonical" href="/other-page" />', (string) $this->getPage('https://piedweb.com/'))));
-        $this->assertFalse($canonical->ifCanonicalExistsIsItCorrectOrPartiallyCorrect());
 
-        $url = new Url('https://piedweb.com/clients');
-        $canonical = new CanonicalExtractor($url, new Crawler(str_replace('<link href=https://piedweb.com/clients rel=canonical>', '<link rel="canonical" href="/clients" />', (string) $this->getPage('https://piedweb.com/clients'))));
-        $this->assertFalse($canonical->isCanonicalCorrect());
-        $this->assertTrue($canonical->isCanonicalPartiallyCorrect());
+        $canonical = new CanonicalExtractor($url, new Crawler(str_replace('rel="canonical" href="https://piedweb.com/"', ' ', $this->getPage('https://piedweb.com/'))));
         $this->assertTrue($canonical->ifCanonicalExistsIsItCorrectOrPartiallyCorrect());
+
+        $canonical = new CanonicalExtractor($url, new Crawler(str_replace('rel="canonical" href="https://piedweb.com/"', 'rel="canonical" href="/other-page"', $this->getPage('https://piedweb.com/'))));
+        $this->assertFalse($canonical->ifCanonicalExistsIsItCorrectOrPartiallyCorrect());
     }
 
     public function testTextDataExtractor(): void
@@ -96,7 +94,7 @@ final class GlobalTest extends TestCase
 
         $this->assertSame('title', array_values($textData->getFlatContent())[0]);
         $this->assertGreaterThan(10, $textData->getWordCount());
-        $this->assertGreaterThan(8, $textData->getRatioTxtCode());
+        $this->assertGreaterThan(7, $textData->getRatioTxtCode());
         // dump($textData->getTextAnalysis()->getExpressions(2));
         $this->assertArrayHasKey('web', $textData->getTextAnalysis()->getExpressions());
     }

@@ -9,11 +9,12 @@ use Symfony\Component\DomCrawler\Crawler;
 
 class SERPExtractor
 {
-    final public const SERP_FEATURE_SELECTORS = [
+    /** @var array<string, list<string>> */
+    final public const array SERP_FEATURE_SELECTORS = [
         'Ads' => ['.//*[@id="tads"]|.//*[@id="bottomads"]'],
         'ImagePack' => ["//span[text()='Images']", "//h3[starts-with(text(), 'Images correspondant')]"],
         'Local Pack' => ["//div[text()='Adresses']", "//div[text()='Entreprises']"],
-        'PositionZero' => ["//h2[text()='Extrait optimisé sur le Web']"],
+        'PositionZero' => ['div[data-md="471"]'],
         'KnowledgePanel' => ['//div[contains(concat(" ",normalize-space(@class)," ")," kp-wholepage ")]'],
         'News' => ['//span[text()="À la une"]'],
         'PeolpleAlsoAsked' => ['//span[text()="Autres questions posées"]'],
@@ -21,25 +22,17 @@ class SERPExtractor
         'Reviews' => ['//span[contains( @aria-label,"Note")]'],
     ];
 
-    /**
-     * @var string[]
-     */
-    final public const RELATED = ['//span[text()="Recherches associées"]/ancestor::*[position() <  5]//a'];
+    /** @var string[] */
+    final public const array RELATED = ['//span[text()="Recherches associées"]/ancestor::*[position() <  5]//a'];
 
-    /**
-     * @var string[]
-     */
-    final public const RELATED_DESKTOP = ["//a[@data-xbu][starts-with(@href, '/search')]/div"];
+    /** @var string[] */
+    final public const array RELATED_DESKTOP = ["//a[@data-xbu][starts-with(@href, '/search')]/div"];
 
-    /** @var string */
     // public const RESULT_SELECTOR = '//a[@role="presentation"]/parent::div/parent::div/parent::div';
-    final public const RESULT_SELECTOR = '(//h2[text()=\'Extrait optimisé sur le Web\']/ancestor::block-component//a[@class])[1]|//a[@role="presentation"] ';
+    final public const string RESULT_SELECTOR = '(//h2[text()=\'Extrait optimisé sur le Web\']/ancestor::block-component//a[@class])[1]|//a[@role="presentation"] ';
 
     // (//h2[text()='Extrait optimisé sur le Web']/ancestor::block-component//a[@class])[1]|//a[@role="presentation"]
-    /**
-     * @var string
-     */
-    final public const RESULT_SELECTOR_DESKTOP =
+    final public const string RESULT_SELECTOR_DESKTOP =
         '//a[not(starts-with(@href, "/search"))]/parent::div/parent::div/parent::div[@data-hveid]
         |//a[not(starts-with(@href, "/search"))]/parent::div/parent::div/parent::div[@data-sokoban-container]';
 
@@ -293,7 +286,7 @@ class SERPExtractor
     public function getPositionsZero(): SearchResult
     {
         $linkNodePositionZero = $this->domCrawler
-            ->filterXPath("//h2[text()='Extrait optimisé sur le Web']/ancestor::block-component//a[@class]")
+            ->filter('div[data-md="471"] a')
             ->getNode(0);
 
         if (! $linkNodePositionZero instanceof \DOMNode || ! $linkNodePositionZero instanceof \DOMElement) {

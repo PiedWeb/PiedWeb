@@ -89,18 +89,18 @@ final class GoogleSerpTest extends TestCase
         // This test is not working anymore
         // Google deleted position zero on smartphone ???
 
-        $extractor = $this->getExtractor('liste meilleures randonnées alpes');
+        $extractor = $this->getExtractor('qu\'est ce que l\'effet streisand');
 
         $extractor->getBrowserPage()->screenshot(['path' => './debug/debug-position-zero.png']);
         if (! $extractor->containsSerpFeature('PositionZero')) {
-            $this->assertStringContainsString('generationvoyage.fr',  $extractor->getResults()[0]->url);
+            $this->assertStringContainsString('wikipedia.org',  $extractor->getResults()[0]->url);
             dump('Position Zero was not checked');
 
             return;
         }
 
         $this->assertTrue($extractor->containsSerpFeature('PositionZero'));
-        $this->assertStringContainsString('generationvoyage.fr', $extractor->getPositionsZero()->url);
+        $this->assertStringContainsString('ligue-enseignement.be', $extractor->getPositionsZero()->url);
     }
 
     public function testExtractMaps(): void

@@ -13,6 +13,7 @@ use Symfony\Component\Console\Input\ArgvInput;
 
 class GoogleSpreadsheetSeoScraper
 {
+    /** @psalm-suppress PropertyNotSetInConstructor */
     protected ArgvInput $args;
 
     protected string $dir;
@@ -35,6 +36,7 @@ class GoogleSpreadsheetSeoScraper
 
     protected bool $previousRequestUsedCache = false;
 
+    /** @psalm-suppress PropertyNotSetInConstructor */
     protected string $prevError;
 
     /** @var string[] */
@@ -42,10 +44,11 @@ class GoogleSpreadsheetSeoScraper
 
     private int $attempt = 1;
 
+    /** @psalm-suppress PropertyNotSetInConstructor */
     private SERPExtractor $extractor;
 
     /**
-     * @param array<int, string> $argv
+     * @param list<string> $argv
      */
     public function __construct(array $argv)
     {
@@ -115,6 +118,9 @@ class GoogleSpreadsheetSeoScraper
         return $retryFile;
     }
 
+    /**
+     * @return Reader<array{'kw': string, 'tld': string, 'hl': string, 'pos':string,'pixelPos': string, 'url':string, 'domain': string, 'serpFeature': string, 'firstPixelPos': string, 'firstUrl': string, 'related': string}>
+     */
     private function getCsv(): Reader
     {
         $tmpCsvDir = $this->dir.'/tmp';
@@ -127,15 +133,43 @@ class GoogleSpreadsheetSeoScraper
         usort($files, static fn ($a, $b): int => (int) (filemtime($a) < filemtime($b)));
         $lastConvertedFile = $files[0];
 
-        return Reader::createFromPath($lastConvertedFile, 'r');
+        $csv = Reader::createFromPath($lastConvertedFile, 'r');
+        $this->validateCsv($csv);
+
+        return $csv;
     }
 
+    /**
+     * @param Reader<array<array-key, mixed>> $csv
+     */
+    private function validateCsv(Reader $csv): void
+    {
+        $kw = $csv->first();
+        if (! \is_string($kw['kw'] ?? null)
+            || ! \is_string($kw['tld'] ?? null)
+            || ! \is_string($kw['hl'] ?? null)
+            || ! \is_string($kw['pos'] ?? null)
+            || ! \is_string($kw['url'] ?? null)
+            || ! \is_string($kw['pixelPos'] ?? null)
+            || ! \is_string($kw['firstPixelPos'] ?? null)
+            || ! \is_string($kw['firstUrl'] ?? null)
+            || ! \is_string($kw['related'] ?? null)
+        ) {
+            throw new \Exception('CSV is not containing kw,tld,hl,pos,url columns or one of them.');
+        }
+    }
+
+    /**
+     * @return Reader<array{'kw': string, 'tld': string, 'hl': string, 'pos':string,'pixelPos':int, 'url':string, 'domain': string, 'serpFeature': string, 'firstPixelPos': int, 'firstUrl': string, 'related': string}>
+     */
     private function getCsvFromRetry(): Reader
     {
         if ($this->args->getParameterOption('--retry')) {
             $retryFile = $this->getRetryFile();
+            $csv = Reader::createFromPath($retryFile, 'r');
+            $this->validateCsv($csv);
 
-            return Reader::createFromPath($retryFile, 'r');
+            return $csv;
         }
 
         throw new \LogicException();
@@ -146,7 +180,6 @@ class GoogleSpreadsheetSeoScraper
         if ($this->args->getParameterOption('--retry')) {
             $csvFromRetry = $this->getCsvFromRetry();
             $csvFromRetry->setHeaderOffset(0);
-            /** @var array<array{'kw': string, 'tld': string, 'hl': string, 'pos':string,'pixelPos':int, 'url':string, 'domain': string, 'serpFeature': string, 'firstPixelPos': int, 'firstUrl': string, 'related': string}> */
             $kwsFromRetry = iterator_to_array($csvFromRetry->getRecords());
         }
 
@@ -155,10 +188,7 @@ class GoogleSpreadsheetSeoScraper
 
         $kws = $csv->getRecords();
         foreach ($kws as $k => $kw) {
-            if (! \is_array($kw) || ! \is_string($kw['kw'] ?? null) || ! \is_string($kw['tld'] ?? null) || ! \is_string($kw['hl'] ?? null) || ! \is_string($kw['pos'] ?? null) || ! \is_string($kw['url'] ?? null)) {
-                throw new \Exception('CSV is not containing kw,tld,hl,pos,url columns or one of them.');
-            }
-
+            /** @psalm-suppress PossiblyUndefinedVariable */
             $this->kws[$k] = [
                 'kw' => $kw['kw'],
                 'tld' => $kw['tld'],
@@ -166,11 +196,11 @@ class GoogleSpreadsheetSeoScraper
                 'pos' => $kwsFromRetry[$k]['pos'] ?? $kw['pos'],
                 'pixelPos' => $kwsFromRetry[$k]['pixelPos'] ?? $kw['pixelPos'],
                 'url' => $kwsFromRetry[$k]['url'] ?? $kw['url'],
-                'domain' => $kwsFromRetry[$k]['domain'] ?? $kw['domain'] ?? '',
-                'serpFeature' => $kwsFromRetry[$k]['serpFeature'] ?? $kw['serpFeature'] ?? '',
-                'firstPixelPos' => $kwsFromRetry[$k]['firstPixelPos'] ?? $kw['firstPixelPos'] ?? '',
-                'firstUrl' => $kwsFromRetry[$k]['firstUrl'] ?? $kw['firstUrl'] ?? '',
-                'related' => $kwsFromRetry[$k]['related'] ?? $kw['related'] ?? '',
+                'domain' => $kwsFromRetry[$k]['domain'] ?? $kw['domain'],
+                'serpFeature' => $kwsFromRetry[$k]['serpFeature'] ?? $kw['serpFeature'],
+                'firstPixelPos' => $kwsFromRetry[$k]['firstPixelPos'] ?? $kw['firstPixelPos'],
+                'firstUrl' => $kwsFromRetry[$k]['firstUrl'] ?? $kw['firstUrl'],
+                'related' => $kwsFromRetry[$k]['related'] ?? $kw['related'],
             ];
         }
     }
@@ -222,7 +252,8 @@ class GoogleSpreadsheetSeoScraper
                 $this->messageForCli('------------');
 
                 if ($i !== $kwsNbr && ! $this->previousRequestUsedCache) {
-                    sleep((int) $this->arg('--sleep', 60)); // @phpstan-ignore-line
+                    /** @psalm-suppress ArgumentTypeCoercion */
+                    sleep((int) $this->arg('--sleep', 60));
                 }
             }
         }
@@ -334,8 +365,10 @@ class GoogleSpreadsheetSeoScraper
             if (1 === $this->attempt) {
                 ++$this->attempt;
                 $this->messageForCli('First attempt failed...');
+                /** @psalm-suppress PossiblyNullOperand */
                 $this->messageForCli('New try in '.$this->arg('--sleep', 60).' seconds...');
-                sleep((int) $this->arg('--sleep', 60)); // @phpstan-ignore-line
+                /** @psalm-suppress ArgumentTypeCoercion */
+                sleep((int) $this->arg('--sleep', 60));
 
                 return $this->getGoogleResults($kw, $num);
             }
@@ -348,9 +381,14 @@ class GoogleSpreadsheetSeoScraper
         return $result;
     }
 
+    /**
+     * @param scalar|null $default
+     *
+     * @return scalar|null
+     */
     protected function arg(string $name, mixed $default): mixed
     {
-        return false !== $this->args->getParameterOption($name) ? $this->args->getParameterOption($name) : $default;
+        return false !== $this->args->getParameterOption($name) ? $this->args->getParameterOption($name) : $default; // @phpstan-ignore-line
     }
 
     public function exec(): void

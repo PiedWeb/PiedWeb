@@ -24,7 +24,7 @@ class Puphpeteer
     /**
      * @var string
      */
-    final public const DEFAULT_LANGUAGE = 'fr-FR';
+    final public const string DEFAULT_LANGUAGE = 'fr-FR';
 
     public static string $currentKey = '';
 
@@ -38,9 +38,9 @@ class Puphpeteer
     /**
      * Emulate a smartphone.
      *
-     * @var array<string, string|array<string, int|bool>>
+     * @var array<string, string|bool|array<string, int|bool>>
      */
-    final public const EMULATE_OPTIONS_MOBILE = [
+    final public const array EMULATE_OPTIONS_MOBILE = [
         'viewport' => [
             'width' => 412,
             'height' => 992,
@@ -50,13 +50,13 @@ class Puphpeteer
             'isLandscape' => false,
         ],
         'userAgent' => 'Mozilla/5.0 (Linux; Android 10; SM-A305N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.210 Mobile Safari/537.36',
-        'headless' => 'new',
+        'headless' => true, // false, //'new',
     ];
 
     /**
      * @var array<string, string|array<string, int|bool>>
      */
-    final public const EMULATE_OPTIONS_DESKTOP = [
+    final public const array EMULATE_OPTIONS_DESKTOP = [
         'viewport' => [
             'width' => 1440,
             'height' => 900,
@@ -208,18 +208,17 @@ class Puphpeteer
      */
     private function managePosition(): void
     {
-        $btn = $this->getBrowserPage()->querySelectorXPath("//*[contains(text(), 'Pas maintenant')]");
-        if (! isset($btn[0])) {
+        $btn = $this->getBrowserPage()->querySelector("::-p-xpath(//*[contains(text(), 'Pas maintenant')])");
+        if (null === $btn) {
             return;
         }
 
         $this->getLogger()->info('Accept Cookie');
-        $btn = $btn[0];
-        if (! $btn->isVisible()) {// @phpstan-ignore-line
+        if (! $btn->isVisible()) {
             return;
         }
 
-        $btn->tap();
+        $btn->tap($btn);
         usleep(500_000);
     }
 
@@ -228,19 +227,18 @@ class Puphpeteer
      */
     private function manageCookie(): void
     {
-        $cookieAcceptBtn = $this->getBrowserPage()->querySelectorXPath("//div[text()='Tout accepter']/ancestor::button");
-        if (! isset($cookieAcceptBtn[0])) {
+        $cookieAcceptBtn = $this->getBrowserPage()->querySelector('::-p-xpath('."//div[text()='Tout accepter']/ancestor::button".')');
+        if (null === $cookieAcceptBtn) {
             return;
         }
 
         $this->getLogger()->info('Accept Cookie');
-        $cookieAcceptBtn = $cookieAcceptBtn[0];
-        $cookieAcceptBtn->scrollIntoView(); // @phpstan-ignore-line
-        if (! $cookieAcceptBtn->isVisible()) {// @phpstan-ignore-line
+        $cookieAcceptBtn->scrollIntoView($cookieAcceptBtn);
+        if (! $cookieAcceptBtn->isVisible()) {
             return;
         }
 
-        $cookieAcceptBtn->tap();
+        $cookieAcceptBtn->tap($cookieAcceptBtn);
         usleep(1_000_000);
     }
 
@@ -249,12 +247,16 @@ class Puphpeteer
     /** @psalm-suppress UndefinedMagicMethod */
     private function clickMoreResults(): void
     {
-        $blockContainingMoreResultsBtn = $this->getBrowserPage()->querySelectorXPath("//*[contains(text(), 'Page Navigation')]");
-        if (isset($blockContainingMoreResultsBtn[0])) {
-            $blockContainingMoreResultsBtn[0]->scrollIntoView(); // @phpstan-ignore-line
-        }
+        $blockContainingMoreResultsBtn = $this->getBrowserPage()->querySelector('h1 ::-p-text(Page Navigation)');
 
+        if (null !== $blockContainingMoreResultsBtn) {
+            $blockContainingMoreResultsBtn->scrollIntoView($blockContainingMoreResultsBtn);
+        }
         usleep(350000);
+
+        // dump(null !== $blockContainingMoreResultsBtn ? 'moreResults not exists' : 'moreResults exists');
+        // dump(null !== $btn ? 'moreResults A not exists' : 'moreResults A exists');
+        // $this->getBrowserPage()->screenshot(['path' => './debug/dump.png',  ]);
 
         $btn = $this->getBrowserPage()->querySelector('a[aria-label="Autres résultats de recherche"]');
         if (null === $btn) {
@@ -265,12 +267,13 @@ class Puphpeteer
 
         $this->getLogger()->info('Click `Autres résultats de recherche`');
 
-        $btn->scrollIntoView(); // @phpstan-ignore-line
-        if (! $btn->isVisible()) {// @phpstan-ignore-line
+        $btn->scrollIntoView($btn);
+        usleep(350000);
+        if (! $btn->isVisible()) {
             return;
         }
 
-        $btn->tap();
+        $btn->tap($btn);
 
         ++$this->clickForMoreResults;
 
@@ -294,6 +297,8 @@ class Puphpeteer
             $this->getBrowserPage()->evaluate('window.scrollTo(0, document.body.scrollHeight)'); // @phpstan-ignore-line
             usleep(350000);
             $isHeighten = $this->getBrowserPage()->evaluate('document.body.scrollHeight > '.$scrollHeight.''); // @phpstan-ignore-line
+            // dump($scrollHeight, $isHeighten);
+            // $this->getBrowserPage()->screenshot(['path' => './debug/dump.png',  ]);
             if (! $isHeighten || $i > $maxScroll) {
                 break;
             }

@@ -58,11 +58,9 @@ class SERPExtractorJsExtended extends SERPExtractor
      */
     private function getPixelPosForWithoutCache(string|\DOMNode $elementOrXpath): int
     {
-        if ($elementOrXpath instanceof \DOMNode) {
-            $elementOrXpath = $elementOrXpath->getNodePath() ?? throw new \LogicException();
-        }
+        $xpath = $elementOrXpath instanceof \DOMNode ? $elementOrXpath->getNodePath() ?? throw new \LogicException() : $elementOrXpath;
 
-        $element = $this->getBrowserPage()->querySelectorXPath($elementOrXpath);
+        $element = $this->getBrowserPage()->querySelectorAll('::-p-xpath('.$xpath.')');
 
         if (isset($element[0]) && null !== $element[0]->boundingBox()) {
             $boundingBox = $element[0]->boundingBox();
@@ -84,7 +82,7 @@ class SERPExtractorJsExtended extends SERPExtractor
             if ($pixelPos < 0) {
                 $this->browserPage?->evaluate('window.scrollTo({top: 0})');  // @phpstan-ignore-line
 
-                return $this->getPixelPosFor($elementOrXpath); // potential infinite loop
+                return $this->getPixelPosFor($xpath); // potential infinite loop
             }
 
             return $pixelPos;
