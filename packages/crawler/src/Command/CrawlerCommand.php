@@ -30,6 +30,7 @@ final class CrawlerCommand extends Command
                 .\PHP_EOL.'You can use `last` to continue the last crawl (just stopped).'
             )
             ->addOption('limit', 'l', InputOption::VALUE_REQUIRED, 'Define where a depth limit', 5)
+            ->addOption('quiet', 'q', InputOption::VALUE_NONE)
             ->addOption(
                 'ignore',
                 'i',
@@ -89,9 +90,7 @@ final class CrawlerCommand extends Command
         $end = microtime(true);
 
         $output->writeln(['', '---------------', 'Crawl succeed', 'You can find your data in ']);
-
-        echo realpath($crawler->config->getDataFolder()).'/data.csv'.\PHP_EOL;
-
+        $output->writeln(realpath($crawler->config->getDataFolder()).'/data.csv');
         $output->writeln(['', '', '----Chrono----', round($end - $start, 2).'s', '', '']);
 
         return 0;
@@ -120,7 +119,7 @@ final class CrawlerCommand extends Command
                     (int) $input->getOption('wait'),
                     $this->loadVirtualRobotsTxt($input)
                 ))->setStartUrl((string) $input->getArgument('start')),
-                ! $input->getOption('quiet')
+                debug: ! $input->getOption('quiet')
             );
         }
 
@@ -128,7 +127,7 @@ final class CrawlerCommand extends Command
             return Crawler::restart(
                 $this->id,
                 2 == $input->getOption('restart'), // $fromCache
-                ! $input->getOption('quiet')
+                debug: ! $input->getOption('quiet')
             );
         }
 

@@ -18,7 +18,7 @@ class CrawlerTest extends \PHPUnit\Framework\TestCase
     public function testCrawlerUrl(): void
     {
         $url = new Url('https://dev.piedweb.com');
-        $crawlerUrl = new CrawlerUrl($url, (new CrawlerConfig())->setStartUrl('https://dev.piedweb.com/'));
+        new CrawlerUrl($url, (new CrawlerConfig())->setStartUrl('https://dev.piedweb.com/'));
 
         $this->assertGreaterThan(0, $url->getResponseTime());
     }
@@ -58,7 +58,7 @@ class CrawlerTest extends \PHPUnit\Framework\TestCase
         $commandTester = new CommandTester($command);
         $commandTester->execute([
             'start' => 'https://dev.piedweb.com',
-            '--quiet',
+            '--quiet' => true,
             // prefix the key with two dashes when passing options,
             // e.g: '--some-option' => 'option_value',
         ]);
@@ -84,10 +84,10 @@ class CrawlerTest extends \PHPUnit\Framework\TestCase
 
         $this->assertFileExists($crawler->config->getDataFolder().'/index.csv');
 
-        $restart = Crawler::restart($crawler->config->getId());
+        $restart = Crawler::restart($crawler->config->getId(), debug: false);
         $restart->crawl();
 
-        $continue = Crawler::continue($crawler->config->getId());
+        $continue = Crawler::continue($crawler->config->getId(), false);
         $continue->crawl();
 
         $this->assertFileExists($crawler->config->getDataFolder().'/index.csv');
