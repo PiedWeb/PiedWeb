@@ -18,7 +18,7 @@
     }
   ],
   "require": {
-    "php": ">=8.2",
+    "php": ">=8.3",
     "fylax/forceutf8": "^3.0",
     "symfony/dom-crawler": "^6.3|^7",
     "symfony/css-selector": "^6.3|^7",

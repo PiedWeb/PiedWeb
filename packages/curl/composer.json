@@ -16,7 +16,7 @@
     }
   ],
   "require": {
-    "php": ">=8.2",
+    "php": ">=8.3",
     "thecodingmachine/safe": "^2.1",
     "kelvinzer0/curl-impersonate-php": "^3.2"
   },

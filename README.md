@@ -10,13 +10,10 @@
 
 ## Documentation
 
+- [ComposerSymlink](packages/composer-symlink/README.md)
 - [Curl](packages/curl/README.md)
 - [Google](packages/google/README.md)
 - [GoogleSpreadsheetSeoScraper](packages/google-spreadsheet-seo-scraper/README.md)
-
-## TODO
-
-- Upgrade [Puppeteer](https://github.com/puppeteer/puppeteer/releases/tag/puppeteer-core-v21.0.0) by puphpeteer
 
 ## Credits
 

@@ -16,7 +16,7 @@
     }
   ],
   "require": {
-    "php": ">=8.2",
+    "php": ">=8.3",
     "piedweb/extractor": "*",
     "piedweb/text-analyzer": "*",
     "league/csv": "^9.8",
