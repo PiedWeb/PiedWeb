@@ -114,7 +114,7 @@ final class GoogleSerpTest extends TestCase
             file_put_contents('./debug/debugExtractMaps - '.$kw.'.html', $extractor->getBrowserPage()->content());
 
             $mapsResults = $extractor->extractBusinessResults();
-            dump($mapsResults[0] ?? null);
+            // dump($mapsResults[0] ?? null);
             $this->assertArrayHasKey(0, $mapsResults, $kw);
         }
     }

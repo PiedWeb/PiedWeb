@@ -37,7 +37,7 @@ class AnalyzerTest extends \PHPUnit\Framework\TestCase
         $text = $text.' '.$text.' '.$text;
 
         $tester = new Analyzer($text, false, 2);
-        dump($tester->exec()->getExpressions(2));
+        // dump($tester->exec()->getExpressions(2));
 
         $this->assertTrue(true);
     }

@@ -88,9 +88,9 @@ class ExtendedClient extends Client
             'Sec-Fetch-Mode: navigate',
             'Sec-Fetch-User: ?1',
             'Sec-Fetch-Dest: document',
-            null !== $this->referer ? 'Referer: '.$this->referer : '',
             'Accept-Encoding: gzip, deflate, br',
             'Accept-Language: '.$this->language,
+            null !== $this->referer ? 'Referer: '.$this->referer : '',
             null !== $this->cookie ? 'Cookie: '.$this->cookie : '',
         ]));
     }
