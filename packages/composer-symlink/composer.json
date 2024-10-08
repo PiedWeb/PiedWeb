@@ -1,7 +1,7 @@
 {
   "name": "piedweb/composer-symlink",
   "type": "library",
-  "description": "Disk space efficient composer fixer.",
+  "description": "One Vendor Directory for multiple PHP projects using same dependencies - Disk space efficient composer fixer.",
   "keywords": [
     "Composer",
     "Symlink"

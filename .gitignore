@@ -33,7 +33,7 @@ node_modules/
 .php-cs-fixer.cache
 coverage
 coverage.xml
-/debug
+/debug/*
 /debug-container
 /drivers
 .vs-code
