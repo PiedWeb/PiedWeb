@@ -12,18 +12,21 @@ class Response
     /** @var string * */
     protected string $content = '';
 
-    /** @var array<string, int|string>  an associative array with the following elements (which correspond to opt): "url" "content_type" "http_code" "header_size" "client_size" "filetime" "ssl_verify_result" "redirect_count" "total_time" "namelookup_time" "connect_time" "pretransfer_time" "size_upload" "size_download" "speed_download" "speed_upload" "download_content_length" "upload_content_length" "starttransfer_time" "redirect_time" */
+    /** @var array<string, array<int, array<string, string>>|float|int|string|null>  an associative array with the following elements (which correspond to opt): "url" "content_type" "http_code" "header_size" "client_size" "filetime" "ssl_verify_result" "redirect_count" "total_time" "namelookup_time" "connect_time" "pretransfer_time" "size_upload" "size_download" "speed_download" "speed_upload" "download_content_length" "upload_content_length" "starttransfer_time" "redirect_time" */
     protected $info = [];
 
     protected int $error = 0;
 
-    protected string $errorMessage;
+    protected string $errorMessage = '';
 
-    /**
-     * @psalm-suppress InvalidArgument (for $handle)
-     */
     public static function createFromClient(Client $client, bool|string $content): self
     {
+        if (18 === $client->getError()) { // transfer closed with 10500 bytes remaining to read
+            $client->request();
+
+            return $client->getResponse();
+        }
+
         $self = new self();
         $self->info = $client->getCurlInfos();
         $self->error = $client->getError();
@@ -114,7 +117,7 @@ class Response
      */
     public function getUrl(): ?string
     {
-        return isset($this->info['url']) ? (string) $this->info['url'] : null;
+        return isset($this->info['url']) && \is_string($this->info['url']) ? $this->info['url'] : null;
     }
 
     /**
@@ -144,7 +147,7 @@ class Response
      *
      * @param string|null $key to get
      *
-     * @return int|float|string|array<string, string|int>|null
+     * @return array<string, array<int, array<string, string>>|float|int|string|null>|array<int, array<string, string>>|float|int|string|null
      */
     public function getInfo(?string $key = null): int|float|string|array|null
     {
@@ -153,12 +156,12 @@ class Response
 
     public function getStatusCode(): int
     {
-        return (int) $this->info['http_code'];
+        return \is_int($this->info['http_code']) ? $this->info['http_code'] : throw new \Exception();
     }
 
     public function getContentType(): string
     {
-        return (string) $this->info['content_type'];
+        return \is_string($this->info['content_type']) ? $this->info['content_type'] : throw new \Exception();
     }
 
     public function getMimeType(): string

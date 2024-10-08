@@ -11,6 +11,7 @@
     "ext-iconv": "*",
     "fylax/forceutf8": "^3.0",
     "jeremykendall/php-domain-parser": "^6.3|^7",
+    "kelvinzer0/curl-impersonate-php": "^3.2",
     "league/csv": "^9.8",
     "league/uri": "^7.3",
     "spatie/robots-txt": "^2.0",
@@ -18,6 +19,7 @@
     "symfony/console": "^6.3|^7",
     "symfony/css-selector": "^6.3|^7",
     "symfony/dom-crawler": "^6.3|^7",
+    "symfony/filesystem": "^7.1",
     "symfony/serializer": "^6.3|^7",
     "thecodingmachine/safe": "^2.1",
     "voku/stringy": "^6.5",
@@ -47,6 +49,7 @@
       "PiedWeb\\GoogleSpreadsheetSeoScraper\\": "packages/google-spreadsheet-seo-scraper/src",
       "PiedWeb\\Extractor\\": "packages/extractor/src",
       "PiedWeb\\Crawler\\": "packages/crawler/src",
+      "PiedWeb\\ComposerSymlink\\": "packages/composer-symlink/src",
       "PiedWeb\\TextAnalyzer\\": "packages/text-analyzer/src",
       "PiedWeb\\Perso\\": "packages/perso",
       "PiedWeb\\MethodDocBlockGenerator\\": "packages/method-doc-block-generator/src"
@@ -59,6 +62,7 @@
       "PiedWeb\\Extractor\\Test\\": "packages/extractor/tests",
       "PiedWeb\\Crawler\\Test\\": "packages/crawler/tests",
       "PiedWeb\\TextAnalyzer\\Test\\": "packages/text-analyzer/tests",
+      "PiedWeb\\ComposerSymlink\\Test\\": "packages/composer-symlink/tests",
       "PiedWeb\\MethodDocBlockGenerator\\Test\\": "packages/method-doc-block-generator/tests"
     }
   },

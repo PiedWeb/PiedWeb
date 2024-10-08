@@ -8,6 +8,7 @@ parameters:
         - packages/google/tests
         - packages/google-spreadsheet-seo-scraper/src
         - packages/extractor/src
+        - packages/composer-symlink/src
         - packages/crawler/src
         - packages/crawler/tests
         - rector.php

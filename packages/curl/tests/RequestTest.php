@@ -53,7 +53,7 @@ class RequestTest extends \PHPUnit\Framework\TestCase
 
     public function testEffectiveUrl(): void
     {
-        $url = 'http://www.piedweb.com/';
+        $url = 'https://www.piedweb.com/';
         $request = new Client($url);
         $request
             ->setDefaultGetOptions()
@@ -62,10 +62,8 @@ class RequestTest extends \PHPUnit\Framework\TestCase
             ->setEncodingGzip()
         ;
         $request->request();
-        // dump($request->getCurlInfos());
         $this->assertSame('https://piedweb.com/', $request->getResponse()->getUrl());
-        $this->assertSame($url, $request->getTarget());
-        $this->assertGreaterThan(10, \strlen($request->getResponse()->getContent()));
+        $this->assertGreaterThan(10, \strlen($request->getResponse()->getContent()), $request->getResponse()->getErrorMessage());
     }
 
     public function testCurlError(): void
@@ -120,7 +118,6 @@ class RequestTest extends \PHPUnit\Framework\TestCase
 
         $request->request();
 
-        $this->assertSame($request->getTarget(), $url);
         $this->assertSame($request->getUserAgent(), $request->lessJsUserAgent);
 
         $this->assertSame(200, $request->getResponse()->getStatusCode());
@@ -132,19 +129,25 @@ class RequestTest extends \PHPUnit\Framework\TestCase
         $this->assertSame('text/html; charset=UTF-8', $request->getResponse()->getContentType());
 
         $this->assertGreaterThan(100, \strlen($request->getResponse()->getContent()));
-        $this->assertSame('Upgrade-Insecure-Requests: 1
+        $this->assertSame(
+            'Sec-Ch-Ua: "Chromium";v="116", "Not)A;Brand";v="24", "Google Chrome";v="116"
+Sec-Ch-Ua-Mobile: ?0
+Sec-Ch-Ua-Platform: "Windows"
+Upgrade-Insecure-Requests: 1
 User-Agent: '.$request->lessJsUserAgent.'
-Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
-Sec-Fetch-Site: same-origin
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Sec-Fetch-Site: none
 Sec-Fetch-Mode: navigate
 Sec-Fetch-User: ?1
 Sec-Fetch-Dest: document
-Referer: https://test.piedweb.com/
 Accept-Encoding: gzip, deflate, br
 Accept-Language: en-US,en;q=0.9
+Referer: https://test.piedweb.com/
 Cookie: CONSENT=YES+
 Host: test.piedweb.com
-Content-Length: 0', trim(strip_tags($request->getResponse()->getBody())));
+Content-Length: 0',
+            trim(strip_tags($request->getResponse()->getBody()))
+        );
     }
 
     public function testMultipleCheckInHeaders(): void

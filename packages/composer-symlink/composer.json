@@ -1,10 +1,10 @@
 {
-  "name": "piedweb/curl",
+  "name": "piedweb/composer-symlink",
   "type": "library",
-  "description": "curl OOP Wrapper",
+  "description": "Disk space efficient composer fixer.",
   "keywords": [
-    "Pied Web",
-    "Curl"
+    "Composer",
+    "Symlink"
   ],
   "homepage": "https://dev.piedweb.com",
   "license": "MIT",
@@ -16,18 +16,13 @@
     }
   ],
   "require": {
-    "php": ">=8.2",
-    "thecodingmachine/safe": "^2.1",
-    "kelvinzer0/curl-impersonate-php": "^3.2"
+    "php": ">=8",
+    "symfony/filesystem": "^7.1",
+    "thecodingmachine/safe": "^2.1"
   },
   "autoload": {
     "psr-4": {
-      "PiedWeb\\Curl\\": "src"
-    }
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "PiedWeb\\Curl\\": "tests"
+      "PiedWeb\\ComposerSymlink\\": "src"
     }
   }
 }

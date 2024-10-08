@@ -69,15 +69,15 @@ class GoogleRequesterTrendsWithPuppeteer extends GoogleRequester implements Goog
         $url = 'https://trends.google.com/trends/explore?geo=FR&q='.urlencode($this->trendsManager->q).'';
 
         $page = $this->getPuppeteerClient()->getBrowserPage();
-        $onResponseFunction = JsFunction::createWithParameters(['response']) // @phpstan-ignore-line
-            ->body("
-                let responseUrl = response.url();
-                if (responseUrl.startsWith('https://trends.google.com/trends/api/')) {
-                  response.text().then(function(body) {
-                    console.log('".PuppeteerLogger::TO_INDEX."'+responseUrl+'".PuppeteerLogger::KEY_VALUE_SEPARATOR."'+body);
-                  });
-                }
-            ")->async(true);
+        $onResponseFunction = (new JsFunction(
+            ['response'],
+            "let responseUrl = response.url();
+            if (responseUrl.startsWith('https://trends.google.com/trends/api/')) {
+                response.text().then(function(body) {
+                console.log('".PuppeteerLogger::TO_INDEX."'+responseUrl+'".PuppeteerLogger::KEY_VALUE_SEPARATOR."'+body);
+                });
+            }"
+        ))->async(true);
         $page->on('response', $onResponseFunction);
         $response = $page->goto($url)
             ?? throw new \Exception('Puppeteer return null targeting `'.$url.'`');

@@ -10,9 +10,10 @@ class Client
 
     protected string $errorMessage = '';
 
+    /** @psalm-suppress PropertyNotSetInConstructor */
     protected string $target;
 
-    protected Response $response;
+    protected ?Response $response = null;
 
     public function __construct(?string $target = null)
     {
@@ -21,16 +22,6 @@ class Client
         }
     }
 
-    public function getTarget(): string
-    {
-        return $this->target;
-    }
-
-    /**
-     * Change the URL to cURL.
-     *
-     * @param string $target to request
-     */
     public function setTarget(string $target): static
     {
         $this->target = $target;
@@ -39,7 +30,7 @@ class Client
         return $this;
     }
 
-    public function getHandle(): \CurlHandle
+    protected function getHandle(): \CurlHandle
     {
         if (null === $this->handle) {
             $this->handle = \Safe\curl_init();
@@ -51,13 +42,6 @@ class Client
         return $this->handle;
     }
 
-    /**
-     * Add a cURL's option.
-     *
-     * @param int $option cURL Predefined Constant
-     *
-     * @psalm-suppress InvalidArgument (for $handle)
-     */
     public function setOpt(int $option, mixed $value): static
     {
         if (\CURLOPT_HEADER === $option) {
@@ -74,8 +58,6 @@ class Client
      *
      * @param int $opt This may be one of the following constants:
      *                 http://php.net/manual/en/function.curl-getinfo.php
-     *
-     * @psalm-suppress InvalidArgument (for $handle)
      */
     public function getCurlInfo(int $opt): mixed
     {
@@ -83,20 +65,20 @@ class Client
     }
 
     /**
-     * @return array<string, int|string> an associative array with the following elements (which correspond to opt): "url" "content_type" "http_code" "header_size" "request_size" "filetime" "ssl_verify_result" "redirect_count" "total_time" "namelookup_time" "connect_time" "pretransfer_time" "size_upload" "size_download" "speed_download" "speed_upload" "download_content_length" "upload_content_length" "starttransfer_time" "redirect_time"
+     * @return array<string, array<int, array<string, string>>|float|int|string|null> an associative array with the following elements (which correspond to opt): "url" "content_type" "http_code" "header_size" "request_size" "filetime" "ssl_verify_result" "redirect_count" "total_time" "namelookup_time" "connect_time" "pretransfer_time" "size_upload" "size_download" "speed_download" "speed_upload" "download_content_length" "upload_content_length" "starttransfer_time" "redirect_time"
      *
      * @psalm-suppress InvalidArgument (for $handle)
      */
     public function getCurlInfos(): array
     {
-        return curl_getinfo($this->getHandle()); // @phpstan-ignore-line
+        $curlInfo = curl_getinfo($this->getHandle());
+
+        return \is_array($curlInfo) ? $curlInfo : throw new \Exception();
     }
 
     /**
      * Close the connexion
      * Call curl_reset function.
-     *
-     * @psalm-suppress InvalidArgument (for $handle)
      */
     public function close(): void
     {
@@ -107,8 +89,6 @@ class Client
      * Return the last error number (curl_errno).
      *
      * @return int the error number or 0 (zero) if no error occurred
-     *
-     * @psalm-suppress InvalidArgument (for $handle)
      */
     public function getError(): int
     {
@@ -119,8 +99,6 @@ class Client
      * Return a string containing the last error for the current session (curl_error).
      *
      * @return string the error message or '' (the empty string) if no error occurred
-     *
-     * @psalm-suppress InvalidArgument (for $handle)
      */
     public function getErrorMessage(): string
     {
@@ -146,6 +124,6 @@ class Client
 
     public function getResponse(): Response
     {
-        return $this->response;
+        return $this->response ?? throw new \Exception('You must use request() before');
     }
 }

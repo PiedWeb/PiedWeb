@@ -8,10 +8,7 @@ class ExtendedClient extends Client
 
     private ?string $userAgent = null;
 
-    /**
-     * @var string
-     */
-    final public const DEFAULT_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.104 Safari/537.36';
+    final public const string DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36	';
 
     private bool $fakeBrowserHeader = false;
 
@@ -23,7 +20,8 @@ class ExtendedClient extends Client
 
     /**
      * @var callable
-     */
+     *
+     * @psalm-suppress PropertyNotSetInConstructor */
     private $filter;
 
     private int $optChangeDuringRequest = 0;
@@ -80,10 +78,13 @@ class ExtendedClient extends Client
     private function setBrowserHeader(): void
     {
         $this->setOpt(\CURLOPT_HTTPHEADER, array_filter([
+            'Sec-Ch-Ua: "Chromium";v="116", "Not)A;Brand";v="24", "Google Chrome";v="116"',
+            'Sec-Ch-Ua-Mobile: ?0',
+            'Sec-Ch-Ua-Platform: "Windows"',
             'Upgrade-Insecure-Requests: 1',
-            null !== $this->getUserAgent() ? 'User-Agent: '.$this->getUserAgent() : self::DEFAULT_USER_AGENT,
-            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-            'Sec-Fetch-Site: same-origin',
+            null !== $this->userAgent ? 'User-Agent: '.$this->getUserAgent() : self::DEFAULT_USER_AGENT,
+            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'Sec-Fetch-Site: none',
             'Sec-Fetch-Mode: navigate',
             'Sec-Fetch-User: ?1',
             'Sec-Fetch-Dest: document',
@@ -146,9 +147,9 @@ class ExtendedClient extends Client
         return $this;
     }
 
-    public function getUserAgent(): ?string
+    public function getUserAgent(): string
     {
-        return $this->userAgent;
+        return $this->userAgent ?? throw new \Exception('userAgent must be setted');
     }
 
     /**
@@ -193,11 +194,11 @@ class ExtendedClient extends Client
         }
 
         $scheme = Helper::getSchemeFrom($proxy);
-        $proxy = explode(':', (string) $proxy);
+        $proxyArr = explode(':', (string) $proxy);
         $this->setOpt(\CURLOPT_HTTPPROXYTUNNEL, 1);
-        $this->setOpt(\CURLOPT_PROXY, $scheme.$proxy[0].':'.$proxy[1]);
-        if (isset($proxy[2])) {
-            $this->setOpt(\CURLOPT_PROXYUSERPWD, $proxy[2].':'.$proxy[3]);
+        $this->setOpt(\CURLOPT_PROXY, $scheme.$proxyArr[0].':'.$proxyArr[1]);
+        if (isset($proxyArr[2])) {
+            $this->setOpt(\CURLOPT_PROXYUSERPWD, $proxyArr[2].':'.$proxyArr[3]);
         }
 
         return $this;
@@ -227,6 +228,7 @@ class ExtendedClient extends Client
     {
         // $this->setOpt(CURLOPT_BUFFERSIZE, 128); // more progress info
         $this->setOpt(\CURLOPT_NOPROGRESS, false);
+        /** @psalm-suppress MissingClosureParamType */
         $this->setOpt(\CURLOPT_PROGRESSFUNCTION, static function ($handle, $totalBytes, $receivedBytes) use ($maxBytes) {
             if ($totalBytes > $maxBytes) {
                 return 1;

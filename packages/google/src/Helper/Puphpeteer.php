@@ -49,7 +49,8 @@ class Puphpeteer
             'hasTouch' => true,
             'isLandscape' => false,
         ],
-        'userAgent' => 'Mozilla/5.0 (Linux; Android 10; SM-A305N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.210 Mobile Safari/537.36',
+        'userAgent' => 'Mozilla/5.0 (Linux; Android 10; M10 4G PRO X Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
+        // 'Mozilla/5.0 (Linux; Android 10; SM-A305N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.210 Mobile Safari/537.36',
         'headless' => true, // false, //'new',
     ];
 
@@ -65,7 +66,7 @@ class Puphpeteer
             'hasTouch' => false,
             'isLandscape' => true,
         ],
-        'userAgent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.104 Safari/537.36',
+        'userAgent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
     ];
 
     /**
@@ -227,7 +228,7 @@ class Puphpeteer
      */
     private function manageCookie(): void
     {
-        $cookieAcceptBtn = $this->getBrowserPage()->querySelector('::-p-xpath(//div[text()=\'Tout accepter\']/ancestor::button)');
+        $cookieAcceptBtn = $this->getBrowserPage()->querySelector("::-p-xpath(//div[text()='Tout accepter']/ancestor::button)");
         if (null === $cookieAcceptBtn) {
             return;
         }
