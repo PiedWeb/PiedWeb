@@ -16,6 +16,22 @@ Google organic results scraper in PHP via Puppeteer.
 // see tests/*
 ```
 
+## Fix TroubleShoot
+
+```
+Failed to launch the browser process!
+  [57007:57007:1010/104537.301500:FATAL:zygote_host_impl_linux.cc(128)] No usable sandbox! If you are running o n Ubuntu 23.10+ or another Linux distro that has disabled unprivileged user namespaces with AppArmor, see https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md. Otherwise seehttps://chromium.googlesource.com/chromium/src/+/main/docs/linux/suid_sandbox_development.md for more information on developing with the (older) SUID sandbox. If you want to live dangerously and need an immediate workaround, you can try using --no-sandbox.
+
+  TROUBLESHOOTING: https://pptr.dev/troubleshooting
+```
+
+Since Ubuntu 23 (same with Ubuntu 24), it's not possible to directly use the chrome version downloaded by _puppeteer_ on package installation.
+
+Workaround are details here :
+https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md
+
+It's also possible to use an ever installed Chrome on your OS by defining _env_ variable **CHROME_BIN**.
+
 ### Contributors
 
 - [Pied Web](https://piedweb.com)

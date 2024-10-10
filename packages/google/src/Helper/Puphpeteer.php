@@ -79,10 +79,10 @@ class Puphpeteer
         array $emulateOptions = [],
         string $language = '',
         array $userOptions = [
-            'headless' => 'new',
             'slowMo' => 250,
             'read_timeout' => 9000,
-            'idle_timeout' => 9000, ]
+            'idle_timeout' => 9000,
+        ]
     ): self {
         $userOptions = [...$userOptions, ...['args' => ['--disable-web-security', '--lang='.('' !== $language ? $language : self::DEFAULT_LANGUAGE)]]];
 
@@ -111,7 +111,7 @@ class Puphpeteer
         self::$browser[self::$currentKey] = self::$puppeteer[self::$currentKey]->launch(
             array_merge(
                 [] !== $emulateOptions ? $emulateOptions : self::EMULATE_OPTIONS_MOBILE,
-                // ['executablePath' => '/snap/bin/chromium',]
+                isset($_SERVER['CHROME_BIN']) ? ['executablePath' => $_SERVER['CHROME_BIN']] : []
                 // ['headless' => false]
             )
         );
