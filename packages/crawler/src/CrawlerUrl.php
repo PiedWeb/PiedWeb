@@ -7,6 +7,7 @@ use PiedWeb\Curl\Response;
 use PiedWeb\Extractor\CanonicalExtractor;
 use PiedWeb\Extractor\HrefLangExtractor;
 use PiedWeb\Extractor\Indexable;
+use PiedWeb\Extractor\InstagramUsernameExtractor;
 use PiedWeb\Extractor\Link;
 use PiedWeb\Extractor\LinksExtractor;
 use PiedWeb\Extractor\RedirectionExtractor;
@@ -176,6 +177,12 @@ class CrawlerUrl
         $this->url->setLinksSub(\count($linksExtractor->get(Link::LINK_SUB)));
         $this->url->setLinksExternal(\count($linksExtractor->get(Link::LINK_EXTERNAL)));
         $this->url->setLinksDuplicate($linksExtractor->getNbrDuplicateLinks());
+    }
+
+    protected function harvestInstagramUsername(): void
+    {
+        $username = (new InstagramUsernameExtractor($this->url->getHtml()))->extract();
+        $this->url->instagramUsername = $username;
     }
 
     protected function harvestTextData(): void

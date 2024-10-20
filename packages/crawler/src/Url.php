@@ -68,6 +68,8 @@ final class Url
 
     private int $wordCount = 0;
 
+    public string $instagramUsername = '';
+
     /** @var array<string, string> */
     private array $flatContent = [];
 
