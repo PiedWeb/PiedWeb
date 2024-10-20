@@ -751,4 +751,14 @@ final class Url
     {
         $this->redirectUrl = $redirectUrl;
     }
+
+    public function getInstagramUsername(): string
+    {
+        return $this->instagramUsername;
+    }
+
+    public function setInstagramUsername(string $instagramUsername): void
+    {
+        $this->instagramUsername = $instagramUsername;
+    }
 }

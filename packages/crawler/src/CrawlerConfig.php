@@ -64,6 +64,7 @@ final class CrawlerConfig
             'h1',
             'canonical',
             'hrefLang',
+            'instagramUsername',
         ];
         $this->dataDirectory = self::dataDirectory((string) $dataDirectory);
     }
