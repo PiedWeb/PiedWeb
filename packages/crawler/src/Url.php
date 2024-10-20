@@ -70,6 +70,8 @@ final class Url
 
     public string $instagramUsername = '';
 
+    public string $youtubeChannel = '';
+
     /** @var array<string, string> */
     private array $flatContent = [];
 
@@ -760,5 +762,15 @@ final class Url
     public function setInstagramUsername(string $instagramUsername): void
     {
         $this->instagramUsername = $instagramUsername;
+    }
+
+    public function getYoutubeChannel(): string
+    {
+        return $this->youtubeChannel;
+    }
+
+    public function setYoutubeChannel(string $youtubeChannel): void
+    {
+        $this->youtubeChannel = $youtubeChannel;
     }
 }

@@ -17,4 +17,13 @@ final class InstagramUsernameExtractor
 
         return '';
     }
+
+    public function extractYoutubeChannel(): string
+    {
+        if (preg_match('#https?:\/\/(www\.)?youtube\.com\/(@[a-z0-9_-]+|channel\/[a-z0-9_-]+|c\/[a-z0-9_-]+|user\/[a-z0-9_-]+)"#i', $this->html, $match)) {
+            return $match[0];
+        }
+
+        return '';
+    }
 }

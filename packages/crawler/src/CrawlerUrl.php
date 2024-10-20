@@ -183,6 +183,9 @@ class CrawlerUrl
     {
         $username = (new InstagramUsernameExtractor($this->url->getHtml()))->extract();
         $this->url->instagramUsername = $username;
+
+        $youtubeChannel = (new InstagramUsernameExtractor($this->url->getHtml()))->extractYoutubeChannel();
+        $this->url->youtubeChannel = $youtubeChannel;
     }
 
     protected function harvestTextData(): void
