@@ -26,7 +26,7 @@ Quick Example :
 
 ```php
 $url = 'https://piedweb.com';
-$request = new \PiedWeb\Curl\ExtendedCliend($url);
+$request = new \PiedWeb\Curl\ExtendedClient($url);
 $request
     ->setDefaultSpeedOptions(true)
     ->setDownloadOnlyIf('PiedWeb\Curl\Helper::checkContentType') // 'PiedWeb\Curl\Helper::checkStatusCode'

@@ -11,7 +11,7 @@ final class InstagramUsernameExtractor
 
     public function extract(): string
     {
-        if (preg_match('#(https?://(www.)?instagram.com/([^/]+))/?"#Ui', $this->html, $match)) {
+        if (preg_match('#(https?://(www.)?instagram.com/([^/]+))/?(\?hl=([a-z]+))?"#Ui', $this->html, $match)) {
             return $match[3];
         }
 
