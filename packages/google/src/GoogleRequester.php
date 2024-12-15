@@ -43,8 +43,14 @@ class GoogleRequester
         return $this->getCurlClient()->getResponse()->getBody();
     }
 
-    public function requestGoogleWithPuppeteer(GoogleSERPManager $serpManager, string $proxy = ''): string
+    public function requestGoogleWithPuppeteer(GoogleSERPManager $serpManager, ?callable $manageProxy = null): string
     {
-        return (new PuppeteerConnector($serpManager->language, $proxy))->get($serpManager->generateGoogleSearchUrl());
+        $client = new PuppeteerConnector($serpManager->language);
+
+        if (null !== $manageProxy) {
+            \call_user_func($manageProxy, $this->getCurlClient());
+        }
+
+        return $client->get($serpManager->generateGoogleSearchUrl());
     }
 }
