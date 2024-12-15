@@ -45,6 +45,6 @@ class GoogleRequester
 
     public function requestGoogleWithPuppeteer(GoogleSERPManager $serpManager, string $proxy = ''): string
     {
-        return PuppeteerConnector::get($serpManager->generateGoogleSearchUrl(), $serpManager->language, $proxy);
+        return (new PuppeteerConnector($serpManager->language, $proxy))->get($serpManager->generateGoogleSearchUrl());
     }
 }

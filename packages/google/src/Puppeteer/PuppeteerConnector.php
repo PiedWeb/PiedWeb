@@ -11,7 +11,7 @@ class PuppeteerConnector
 
     private static string $lastWsEndpointUsed = '';
 
-    public static function close(): void
+    public function close(): void
     {
         $id = (string) \Safe\getmypid();
         foreach (static::$wsEndpointList as $key => $wsEndpoint) {
@@ -21,9 +21,9 @@ class PuppeteerConnector
         }
     }
 
-    public static function get(string $url, string $language = 'fr', string $proxy = ''): string
+    public function get(string $url): string
     {
-        $wsEndpoint = self::getWsEndpoint($language, $proxy);
+        $wsEndpoint = $this->getWsEndpoint();
 
         $outputFileLog = sys_get_temp_dir().'/puppeteer-direct-'.\Safe\getmypid();
         $cmd = 'PUPPETEER_WS_ENDPOINT='.escapeshellarg($wsEndpoint).' '
@@ -47,9 +47,13 @@ class PuppeteerConnector
         \Safe\exec($cmd);
     }
 
-    public static function getWsEndpoint(string $language = 'fr', string $proxy = ''): string
+    public function __construct(private string $language = 'fr', private string $proxy = '')
     {
-        $id = \Safe\getmypid().'-'.$language.'-'.$proxy;
+    }
+
+    public function getWsEndpoint(): string
+    {
+        $id = \Safe\getmypid().'-'.$this->language.'-'.$this->proxy;
 
         if (isset(static::$wsEndpointList[$id])) {
             self::$lastWsEndpointUsed = static::$wsEndpointList[$id];
@@ -59,12 +63,12 @@ class PuppeteerConnector
 
         $cmd = '';
 
-        if ('' !== $proxy) {
-            $cmd .= 'PROXY_GATE='.escapeshellarg($proxy).' ';
+        if ('' !== $this->proxy) {
+            $cmd .= 'PROXY_GATE='.escapeshellarg($this->proxy).' ';
         }
 
         $outputFileLog = sys_get_temp_dir().'/puppeteer-direct-'.$id;
-        $cmd .= 'node '.escapeshellarg(__DIR__.'/launchBrowser.js').' '.escapeshellarg($language)
+        $cmd .= 'node '.escapeshellarg(__DIR__.'/launchBrowser.js').' '.escapeshellarg($this->language)
                     .' > '.escapeshellarg($outputFileLog).' 2>&1 &';
         \Safe\exec($cmd);
         for ($i = 0; $i < 5; ++$i) {
@@ -75,7 +79,7 @@ class PuppeteerConnector
             }
         }
 
-        register_shutdown_function([__CLASS__, 'close']);
+        register_shutdown_function([$this, 'close']);
 
         self::$lastWsEndpointUsed = static::$wsEndpointList[$id];
 
