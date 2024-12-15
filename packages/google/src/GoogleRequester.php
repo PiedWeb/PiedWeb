@@ -4,6 +4,7 @@ namespace PiedWeb\Google;
 
 use PiedWeb\Curl\ExtendedClient;
 use PiedWeb\Google\Helper\Puphpeteer;
+use PiedWeb\Google\Puppeteer\PuppeteerDirect;
 
 class GoogleRequester
 {
@@ -69,5 +70,10 @@ class GoogleRequester
         return $infiniteScroll > 0
             ? $pClient->getInfiniteScrolled($manager->generateGoogleSearchUrl(), $infiniteScroll)
             : $pClient->get($manager->generateGoogleSearchUrl());
+    }
+
+    public function requestGoogleWithPuppeteerDirect(GoogleSERPManager $manager, string $proxy = ''): string
+    {
+        return PuppeteerDirect::get($manager->generateGoogleSearchUrl(), $manager->language, $proxy);
     }
 }

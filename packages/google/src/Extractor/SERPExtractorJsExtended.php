@@ -4,8 +4,6 @@ namespace PiedWeb\Google\Extractor;
 
 use Nesk\Puphpeteer\Resources\Page;
 use PiedWeb\Google\Helper\Puphpeteer;
-use Symfony\Component\Cache\Adapter\FilesystemAdapter;
-use Symfony\Contracts\Cache\ItemInterface;
 
 class SERPExtractorJsExtended extends SERPExtractor
 {
@@ -25,40 +23,14 @@ class SERPExtractorJsExtended extends SERPExtractor
         $this->browserPage->goto('file://'.$filePath);
         $this->browserPage->setOfflineMode(false);
 
-        // $this->getBrowserPage()->setContent($html); is failing
-
         return $this->browserPage;
     }
 
-    protected function getPixelPosFor(string|\DOMNode $element): int
+    protected function getPixelPosFor(?string $xpath): int
     {
-        if (($_ENV['APP_ENV'] ?? 'prod') !== 'test') {
-            return $this->getPixelPosForWithoutCache($element);
+        if (\in_array($xpath, ['', null], true)) {
+            return 0;
         }
-
-        $pixelPos = $this->getPixelPosForWithoutCache($element);
-
-        // $cache = new FilesystemAdapter();
-
-        // /** @var int */
-        // $pixelPos = $cache->get(
-        //     sha1($this->html.'-'.($element instanceof \DOMNode ? $element->getNodePath() : $element)),
-        //     function (ItemInterface $item) use ($element): int {
-        //         $item->expiresAfter(86400);
-
-        //         return $this->getPixelPosForWithoutCache($element);
-        //     }
-        // );
-
-        return $pixelPos;
-    }
-
-    /**
-     * @psalm-suppress InvalidArgument
-     */
-    private function getPixelPosForWithoutCache(string|\DOMNode $elementOrXpath): int
-    {
-        $xpath = $elementOrXpath instanceof \DOMNode ? $elementOrXpath->getNodePath() ?? throw new \LogicException() : $elementOrXpath;
 
         $element = $this->getBrowserPage()->querySelectorAll('::-p-xpath('.$xpath.')');
 
@@ -80,6 +52,7 @@ class SERPExtractorJsExtended extends SERPExtractor
 
             // handle when user has scroll on the page
             if ($pixelPos < 0) {
+                /** @psalm-suppress InvalidArgument */
                 $this->browserPage?->evaluate('window.scrollTo({top: 0})');  // @phpstan-ignore-line
 
                 return $this->getPixelPosFor($xpath); // potential infinite loop

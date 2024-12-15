@@ -19,9 +19,7 @@
     "php": ">=8.3",
     "piedweb/curl": "*",
     "piedweb/extractor": "*",
-    "symfony/cache": "^6.3|^7",
-    "zoon/puphpeteer": "^2.1",
-    "zoon/rialto": "@dev"
+    "symfony/cache": "^6.3|^7"
   },
   "autoload": {
     "psr-4": {

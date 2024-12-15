@@ -250,7 +250,7 @@ class SERPExtractor
         return $toReturn;
     }
 
-    protected function getPixelPosFor(string|\DOMNode $element): int
+    protected function getPixelPosFor(?string $xpath): int
     {
         return 0;
     }
@@ -262,7 +262,7 @@ class SERPExtractor
             return false;
         }
 
-        $pos = $this->getPixelPosFor($this->getNode($xpaths));
+        $pos = $this->getPixelPosFor($this->getNode($xpaths)->getNodePath());
 
         return true;
     }

@@ -22,8 +22,7 @@
     "symfony/filesystem": "^7.1",
     "symfony/serializer": "^6.3|^7",
     "thecodingmachine/safe": "^2.1",
-    "voku/stringy": "^6.5",
-    "zoon/puphpeteer": "^2.1"
+    "voku/stringy": "^6.5"
   },
   "require-dev": {
     "friendsofphp/php-cs-fixer": "^3.2",

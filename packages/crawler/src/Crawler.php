@@ -10,7 +10,7 @@ use PiedWeb\Extractor\Url as ExtractorUrl;
  */
 final class Crawler
 {
-    /** @var class-string<\PiedWeb\Crawler\CrawlerUrl> */
+    /** @var class-string<CrawlerUrl> */
     private string $harvester = CrawlerUrl::class;
 
     private int $counter = 0;

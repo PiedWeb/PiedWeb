@@ -92,7 +92,7 @@ class Puphpeteer
         $userOptions['log_browser_console'] = true;
         $userOptions['log_node_console'] = true;
 
-        if (isset(self::$puppeteer[self::$currentKey])) {
+        if (isset(self::$puppeteer[self::$currentKey]) && isset(self::$browserPage[self::$currentKey])) {
             $this->emulate([] !== $emulateOptions ? $emulateOptions : self::EMULATE_OPTIONS_MOBILE);
 
             return $this;
@@ -111,12 +111,13 @@ class Puphpeteer
         self::$browser[self::$currentKey] = self::$puppeteer[self::$currentKey]->launch(
             array_merge(
                 [] !== $emulateOptions ? $emulateOptions : self::EMULATE_OPTIONS_MOBILE,
-                isset($_SERVER['CHROME_BIN']) ? ['executablePath' => $_SERVER['CHROME_BIN']] : []
-                // ['headless' => false]
+                isset($_SERVER['CHROME_BIN']) ? ['executablePath' => $_SERVER['CHROME_BIN']] : [],
+                ['headless' => false]
             )
         );
 
-        self::$browserPage[self::$currentKey] = $this->getBrowserPage();
+        [$currentPage] = self::$browser[self::$currentKey]->pages();
+        self::$browserPage[self::$currentKey] = $currentPage; // self::$browserPage[self::$currentKey] = $this->getBrowserPage();
         self::$browserPage[self::$currentKey]->emulate([] !== $emulateOptions ? $emulateOptions : self::EMULATE_OPTIONS_MOBILE);
 
         return $this;
@@ -139,14 +140,11 @@ class Puphpeteer
             throw new \LogicException();
         }
 
-        [$currentPage] = self::$browser[self::$currentKey]->pages();
-        self::$browserPage[self::$currentKey] = $currentPage;
-
         if ($new || ! isset(self::$browserPage[self::$currentKey])) {
             self::$browserPage[self::$currentKey] = self::$browser[self::$currentKey]->newPage();
         }
 
-        if (self::$browserPage[self::$currentKey]::class === BasicResource::class) {
+        if (BasicResource::class === \get_class(self::$browserPage[self::$currentKey])) {
             dump($new);
             dump(self::$browser[self::$currentKey]::class);
             // self::$browserPage[self::$currentKey] = self::$browser[self::$currentKey]->newPage();
@@ -156,6 +154,7 @@ class Puphpeteer
             // dd(self::$browserPage[self::$currentKey]);
         }
 
+        // self::$browserPage[self::$currentKey]->setCacheEnabled(false);
         return self::$browserPage[self::$currentKey];
     }
 
@@ -194,10 +193,12 @@ class Puphpeteer
      */
     public function get(string $url): string
     {
-        $this->getBrowserPage()->goto($url, ['waitUntil' => 'domcontentloaded']);
+        $url = 'https://www.nytimes.com/international/';
+        $this->getBrowserPage()->goto($url, ['waitUntil' => 'domcontentloaded']); // ['waitUntil' => 'domcontentloaded']
+        // dd($url,  $this->getBrowserPage()::class,  $this->getBrowserPage()->content());
         self::$pageContent = $this->getBrowserPage()->content();
 
-        $this->manageMetaRefresh(pathinfo($url)['dirname']); // @phpstan-ignore-line
+        $this->manageMetaRefresh(pathinfo($url)['dirname']);
 
         self::$pageContent = $this->getBrowserPage()->content();
 
@@ -335,7 +336,9 @@ class Puphpeteer
 
     public function elementExists(string $selector): bool
     {
-        return [] !== $this->getBrowserPage()->querySelectorAll($selector);
+        $elementListOrNull = $this->getBrowserPage()->querySelectorAll($selector);
+
+        return ! \in_array($elementListOrNull, [null, []], true);
     }
 
     public function close(): void
