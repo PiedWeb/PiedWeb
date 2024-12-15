@@ -5,7 +5,6 @@ namespace PiedWeb\GoogleSpreadsheetSeoScraper;
 use League\Csv\Reader;
 use PiedWeb\Curl\ExtendedClient;
 use PiedWeb\Google\Extractor\SERPExtractor;
-use PiedWeb\Google\Extractor\SERPExtractorJsExtended;
 use PiedWeb\Google\GoogleRequester;
 use PiedWeb\Google\GoogleSERPManager;
 use PiedWeb\Google\Result\SearchResult;
@@ -350,7 +349,7 @@ class GoogleSpreadsheetSeoScraper
             $this->previousRequestUsedCache = false;
         }
 
-        $this->extractor = new SERPExtractorJsExtended($rawHtml);
+        $this->extractor = new SERPExtractor($rawHtml);
         $result = $this->extractor->getResults();
 
         if ([] === $result) {

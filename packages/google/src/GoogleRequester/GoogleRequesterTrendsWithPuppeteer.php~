@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Not used anymore
+ */
+
 namespace PiedWeb\Google\GoogleRequester;
 
 use Nesk\Rialto\Data\JsFunction;

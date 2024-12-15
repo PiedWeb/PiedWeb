@@ -4,19 +4,15 @@ declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
 use PiedWeb\Google\Extractor\SERPExtractor;
-use PiedWeb\Google\Extractor\SERPExtractorJsExtended;
 use PiedWeb\Google\GoogleRequester;
 use PiedWeb\Google\GoogleSERPManager;
+use PiedWeb\Google\Puppeteer\PuppeteerConnector;
 
 final class GoogleSerpTest extends TestCase
 {
     private function getSerpManager(string $kw = 'pied web'): GoogleSERPManager
     {
-        $manager = new GoogleSERPManager();
-        $manager->language = 'fr-FR';
-        $manager->tld = 'fr';
-        $manager->q = $kw;
-        $manager->parameters['hl'] = 'fr';
+        $manager = new GoogleSERPManager($kw, 'fr', 'fr-FR', ['hl' => 'fr']);
         $manager->generateGoogleSearchUrl();
 
         return $manager;
@@ -25,7 +21,6 @@ final class GoogleSerpTest extends TestCase
     private function extractSERP(string $rawHtml, string $expectedFirstResult = 'https://piedweb.com/'): SERPExtractor
     {
         $extractor = new SERPExtractor($rawHtml);
-        // $this->assertNotSame(0, $extractor->getNbrResults());
         if ($expectedFirstResult !== $extractor->getResults()[0]->url) {
             $this->markTestIncomplete('May google kick you, check /tmp/debug.html');
         }
@@ -37,27 +32,18 @@ final class GoogleSerpTest extends TestCase
 
     public function testPuphpeteerMobile(): void
     {
-        $manager = $this->getSerpManager();
-
-        $googleRequester = new GoogleRequester();
-        $rawHtml = $googleRequester->requestGoogleWithPuppeteer($manager); // $manager->getCache() ?? $manager->setCache($googleRequester->requestGoogleWithPuppeteer($manager));
+        $rawHtml = (new GoogleRequester())->requestGoogleWithPuppeteer($this->getSerpManager());
         file_put_contents('./debug/debug-puphpeteer-mobile.html', $rawHtml);
-        $googleRequester->getPuppeteerClient()->getBrowserPage()->screenshot(['path' => './debug/debug-puphpeteer-mobile.png']);
+        PuppeteerConnector::screenshot('./debug/debug-puphpeteer-mobile.png');
 
         $this->extractSERP($rawHtml);
     }
 
     public function testPuphpeteerMobileClickMoreResult(): void
     {
-        $manager = $this->getSerpManager('iphone');
-
-        $googleRequester = new GoogleRequester();
-        $rawHtml = $googleRequester->requestGoogleWithPuppeteer($manager); // $manager->getCache() ?? $manager->setCache($googleRequester->requestGoogleWithPuppeteer($manager));
+        $rawHtml = (new GoogleRequester())->requestGoogleWithPuppeteer($this->getSerpManager('iphone'));
         file_put_contents('./debug/debug-puphpeteer-mobile-more-results.html', $rawHtml);
-        $googleRequester->getPuppeteerClient()->getBrowserPage()->screenshot([
-            'path' => './debug/debug-puphpeteer-mobile-more-results.png',
-            // 'fullPage' => true,
-        ]);
+        PuppeteerConnector::screenshot('./debug/debug-puphpeteer-mobile-more-results.png');
 
         $extractor = $this->extractSERP($rawHtml, 'https://www.apple.com/fr/iphone/');
         $resultsNbr = count($extractor->getResults());
@@ -73,25 +59,22 @@ final class GoogleSerpTest extends TestCase
         $this->assertSame('https://piedvert.com/', $extractor->getResults()[0]->url);
     }
 
-    private function getExtractor(string $query): SERPExtractorJsExtended
+    private function getExtractor(string $query): SERPExtractor
     {
-        $manager = $this->getSerpManager($query);
-
-        $googleRequester = new GoogleRequester();
-        $rawHtml = $manager->getCache() ?? $manager->setCache((new GoogleRequester())->requestGoogleWithCurl($manager));
+        $rawHtml = (new GoogleRequester())->requestGoogleWithCurl($this->getSerpManager($query));
         file_put_contents('debug.html', $rawHtml);
 
-        return new SERPExtractorJsExtended($rawHtml);
+        return new SERPExtractor($rawHtml);
     }
 
     public function testExtractionPositionZero(): void
     {
         // This test is not working anymore
         // Google deleted position zero on smartphone ???
+        // https://www.google.fr/search?q=steve+jobs+date+de+naissance
 
         $extractor = $this->getExtractor("qu'est ce que l'effet streisand");
 
-        $extractor->getBrowserPage()->screenshot(['path' => './debug/debug-position-zero.png']);
         if (! $extractor->containsSerpFeature('PositionZero')) {
             $this->assertStringContainsString('wikipedia.org',  $extractor->getResults()[0]->url);
             dump('Position Zero was not checked');
@@ -105,16 +88,11 @@ final class GoogleSerpTest extends TestCase
 
     public function testExtractMaps(): void
     {
-        // 'lac bleu valgaudemar altitude',
-        // 'plombier paris'
-        foreach (['altimood', 'accompagnateur montagne'] as $kw) {
+        foreach (['plombier champsaur', 'pied web consultant'] as $kw) {
             $extractor = $this->getExtractor($kw);
-
-            $extractor->getBrowserPage()->screenshot(['path' => './debug/debugExtractMaps - '.$kw.'.png', 'fullPage' => true]);
-            file_put_contents('./debug/debugExtractMaps - '.$kw.'.html', $extractor->getBrowserPage()->content());
-
+            file_put_contents('./debug/debugExtractMaps - '.$kw.'.html', $extractor->html);
             $mapsResults = $extractor->extractBusinessResults();
-            // dump($mapsResults[0] ?? null);
+            dump($mapsResults[0] ?? null);
             $this->assertArrayHasKey(0, $mapsResults, $kw);
         }
     }
@@ -122,9 +100,6 @@ final class GoogleSerpTest extends TestCase
     public function testRelatedSearches(): void
     {
         $extractor = $this->getExtractor('randonnée valgaudemar');
-
-        $extractor->getBrowserPage()->screenshot(['path' => './debug/debug-relatedSearches.png']);
-
         $relatedSearches = $extractor->getRelatedSearches();
         $this->assertContains('Rando Valgaudemar 3 jours', $relatedSearches);
     }

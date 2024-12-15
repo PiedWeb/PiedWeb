@@ -3,14 +3,11 @@
 namespace PiedWeb\Google;
 
 use PiedWeb\Curl\ExtendedClient;
-use PiedWeb\Google\Helper\Puphpeteer;
-use PiedWeb\Google\Puppeteer\PuppeteerDirect;
+use PiedWeb\Google\Puppeteer\PuppeteerConnector;
 
 class GoogleRequester
 {
     public ?ExtendedClient $client = null;
-
-    public ?Puphpeteer $puppeteerClient = null;
 
     /** @var ?callable */
     public mixed $manageProxy = null;
@@ -29,28 +26,15 @@ class GoogleRequester
         return $this->client;
     }
 
-    public function getPuppeteerClient(string $language = 'fr'): Puphpeteer
+    public function requestGoogleWithCurl(GoogleSERPManager $serpManager, ?callable $manageProxy = null): string
     {
-        if (null === $this->puppeteerClient) {
-            $this->puppeteerClient = new Puphpeteer();
-
-            $this->puppeteerClient->instantiate(Puphpeteer::EMULATE_OPTIONS_MOBILE, $language);
-
-            $this->puppeteerClient->setCookie('CONSENT', 'YES+', '.google.fr');
-        }
-
-        return $this->puppeteerClient;
-    }
-
-    public function requestGoogleWithCurl(GoogleSERPManager $Google, ?callable $manageProxy = null): string
-    {
-        $this->getCurlClient()->setLanguage($Google->language.';q=0.9');
+        $this->getCurlClient()->setLanguage($serpManager->language.';q=0.9');
 
         if (null !== $manageProxy) {
             \call_user_func($manageProxy, $this->getCurlClient());
         }
 
-        $this->getCurlClient()->request($Google->generateGoogleSearchUrl());
+        $this->getCurlClient()->request($serpManager->generateGoogleSearchUrl());
 
         if (0 !== $this->getCurlClient()->getError()) {
             throw new \Exception($this->getCurlClient()->getErrorMessage());
@@ -59,21 +43,8 @@ class GoogleRequester
         return $this->getCurlClient()->getResponse()->getBody();
     }
 
-    public function requestGoogleWithPuppeteer(GoogleSERPManager $manager, ?callable $manageProxy = null, int $infiniteScroll = 10): string
+    public function requestGoogleWithPuppeteer(GoogleSERPManager $serpManager, string $proxy = ''): string
     {
-        $pClient = $this->getPuppeteerClient($manager->language);
-
-        if (null !== $manageProxy) {
-            \call_user_func($manageProxy, $pClient);
-        }
-
-        return $infiniteScroll > 0
-            ? $pClient->getInfiniteScrolled($manager->generateGoogleSearchUrl(), $infiniteScroll)
-            : $pClient->get($manager->generateGoogleSearchUrl());
-    }
-
-    public function requestGoogleWithPuppeteerDirect(GoogleSERPManager $manager, string $proxy = ''): string
-    {
-        return PuppeteerDirect::get($manager->generateGoogleSearchUrl(), $manager->language, $proxy);
+        return PuppeteerConnector::get($serpManager->generateGoogleSearchUrl(), $serpManager->language, $proxy);
     }
 }

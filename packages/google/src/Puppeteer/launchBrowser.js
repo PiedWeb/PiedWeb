@@ -11,7 +11,7 @@ puppeteer.use(StealthPlugin());
 async function launchBrowser() {
   /** @type {Browser} */
   let browser = await puppeteer.launch({
-    headless: false,
+    headless: process.env.PUPPETEER_HEADLESS ?? true,
     executablePath: process.env.CHROME_BIN ?? '/usr/bin/google-chrome',
     args: [
       ...[

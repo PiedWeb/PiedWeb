@@ -2,12 +2,14 @@
 
 namespace PiedWeb\Google\Puppeteer;
 
-class PuppeteerDirect
+class PuppeteerConnector
 {
     /**
      * @var array<string, string>
      */
     public static array $wsEndpointList = [];
+
+    private static string $lastWsEndpointUsed = '';
 
     public static function close(): void
     {
@@ -35,11 +37,23 @@ class PuppeteerDirect
         return $rawOutput;
     }
 
+    public static function screenshot(string $path, string $wsEndpoint = ''): void
+    {
+        $wsEndpoint = $wsEndpoint ?: self::$lastWsEndpointUsed ?: throw new \Exception();
+        $cmd = 'PUPPETEER_WS_ENDPOINT='.escapeshellarg($wsEndpoint).' '
+           .'node '.escapeshellarg(__DIR__.'/screenshot.js').' '
+           .escapeshellarg($path);
+
+        \Safe\exec($cmd);
+    }
+
     public static function getWsEndpoint(string $language = 'fr', string $proxy = ''): string
     {
         $id = \Safe\getmypid().'-'.$language.'-'.$proxy;
 
         if (isset(static::$wsEndpointList[$id])) {
+            self::$lastWsEndpointUsed = static::$wsEndpointList[$id];
+
             return static::$wsEndpointList[$id];
         }
 
@@ -62,6 +76,8 @@ class PuppeteerDirect
         }
 
         register_shutdown_function([__CLASS__, 'close']);
+
+        self::$lastWsEndpointUsed = static::$wsEndpointList[$id];
 
         return static::$wsEndpointList[$id];
     }

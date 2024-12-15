@@ -12,7 +12,7 @@ final class GoogleSERPManager
     public function __construct(
         public string $q = '',
         public string $tld = 'fr',
-        public string $language = 'fr',
+        public string $language = 'fr', // only used at browser level, if you want to use hl, use parameters
         public array $parameters = [], // Google Search URLs parameters (Eg. : hl => en, num => 100)
         public string $proxy = '',
     ) {

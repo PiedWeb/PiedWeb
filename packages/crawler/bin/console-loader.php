@@ -2,8 +2,6 @@
 
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Input\ArgvInput;
-use Symfony\Component\ErrorHandler\Debug;
-
 
 if (false === in_array(\PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
     echo 'Warning: The console should be invoked via the CLI version of PHP, not the '.\PHP_SAPI.' SAPI'.\PHP_EOL;
@@ -17,6 +15,6 @@ $input = new ArgvInput();
 
 $application = new Application();
 
-$application->add(new \PiedWeb\Crawler\Command\CrawlerCommand());
-$application->add(new \PiedWeb\Crawler\Command\ShowExternalLinksCommand());
-$application->add(new \PiedWeb\Crawler\Command\PageRankCommand());
+$application->add(new PiedWeb\Crawler\Command\CrawlerCommand());
+$application->add(new PiedWeb\Crawler\Command\ShowExternalLinksCommand());
+$application->add(new PiedWeb\Crawler\Command\PageRankCommand());

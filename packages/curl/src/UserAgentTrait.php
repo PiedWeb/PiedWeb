@@ -4,6 +4,8 @@ namespace PiedWeb\Curl;
 
 trait UserAgentTrait
 {
+    // Using Chrome 116 to be ISO with libcurl impersonate !
+
     public string $desktopUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36';
 
     public string $mobileUserAgent = 'Mozilla/5.0 (Linux; Android 10; M10 4G PRO X Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36	';

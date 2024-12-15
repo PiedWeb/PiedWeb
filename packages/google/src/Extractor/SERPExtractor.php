@@ -43,8 +43,11 @@ class SERPExtractor
      */
     private ?array $results = null;
 
-    public function __construct(public string $html, private int $extractedAt = 0)
-    {
+    public function __construct(
+        public string $html,
+        private int $extractedAt = 0,
+        private string $wsEndpoint = ''
+    ) {
         $this->domCrawler = new Crawler($html);
         $this->extractedAt = 0 === $this->extractedAt ? (int) (new \DateTime('now'))->format('ymdHi') : $this->extractedAt;
     }
@@ -86,7 +89,7 @@ class SERPExtractor
      */
     public function extractBusinessResults(): array
     {
-        $selector = '[data-rc_ludocids]';
+        $selector = 'a[data-open-viewer]';
         $nodes = $this->domCrawler->filter($selector);
         $mapsResults = [];
         $i = 0;
@@ -94,30 +97,18 @@ class SERPExtractor
             if (! $node instanceof \DOMElement) {
                 continue;
             }
+            $href = $node->getAttribute('href');
+            \Safe\preg_match('/mid=(\/g\/[\w\d]+)/', $href, $matches);
+            $mid = $matches[1] ?? throw new \Exception();
 
-            // Le second résultat correspond à un lien sur l'image à gauche (pour l'instant)
-            $pI = $i - 1;
-            if ($pI >= 0 && $node->getAttribute('data-rc_ludocids') === $mapsResults[$pI]->cid) {
-                continue; // unset($mapsResults[$pI]);
-            }
+            $mapsResults[$i] = new BusinessResult(
+                mid: $mid,
+                name: (new Crawler($node))->filter('[role]')->first()->text(''),
+                pixelPos: $this->getPixelPosFor($node->getNodePath() ?? ''),
+                position: $i + 1,
+                organicPos: $i + 1,
+            ); // data-rc_ludocids
 
-            $mapsResults[$i] = new BusinessResult();
-            $mapsResults[$i]->cid = $node->getAttribute('data-rc_ludocids');
-            $mapsResults[$i]->name = '';
-
-            if (($node->childNodes->item(0)->nodeName ?? '') === 'i') {
-                $newNode = (new Crawler($node->parentNode))->filter('[data-attrid="title"]')->getNode(0);
-                if (null !== $newNode && $newNode instanceof \DOMElement) {
-                    $mapsResults[$i]->name = trim(Helper::htmlToPlainText($newNode->textContent));
-                    $node = $newNode;
-                }
-            }
-
-            $mapsResults[$i]->name = $mapsResults[$i]->name ?: $this->extractBusinessName($node);
-
-            $mapsResults[$i]->pixelPos = $this->getPixelPosFor($node->getNodePath() ?? '');
-            $mapsResults[$i]->position = $i + 1;
-            $mapsResults[$i]->organicPos = $i + 1;
             ++$i;
         }
 
@@ -128,24 +119,13 @@ class SERPExtractor
         return $mapsResults;
     }
 
-    private function extractBusinessName(\DOMElement $node): string
-    {
-        if (($name = $node->getAttribute('data-ru_q')) !== '') {
-            return trim(Helper::htmlToPlainText($name));
-        }
-
-        $nameNode = (new Crawler($node))->filter('span')->getNode(0);
-
-        return null !== $nameNode ? trim(Helper::htmlToPlainText($nameNode->textContent)) : '';
-    }
-
     /**
      * @return BusinessResult[]
      */
     private function extractLocalServiceResults(): array
     {
         // [data-docid]
-        $selector = '[data-prvwid="HEADER"] [role="heading"]'; // '.rllt__details [role="heading"] span';
+        $selector = '[data-prvwid="HEADER"] [role="heading"]';
         $nodes = $this->domCrawler->filter($selector);
         $mapsResults = [];
         $i = 0;
@@ -158,16 +138,25 @@ class SERPExtractor
                 continue;
             }
 
-            $mapsResults[$i] = new BusinessResult();
-            $mapsResults[$i]->cid = $this->getCidFromLocalServiceResult();
-            $mapsResults[$i]->name = trim(Helper::htmlToPlainText($node->textContent));
-            $mapsResults[$i]->position = $i + 1;
-            $mapsResults[$i]->organicPos = $i + 1;
-            $mapsResults[$i]->pixelPos = $this->getPixelPosFor($node->getNodePath() ?? '');
+            $mapsResults[$i] = new BusinessResult(
+                cid: $this->getCidFromLocalServiceResult(),
+                mid: $this->getMidFromLocalServiceResult(),
+                name: trim(Helper::htmlToPlainText($node->textContent)),
+                position: $i + 1,
+                organicPos: $i + 1,
+                pixelPos: $this->getPixelPosFor($node->getNodePath() ?? '')
+            );
             ++$i;
         }
 
         return $mapsResults;
+    }
+
+    private function getMidFromLocalServiceResult(): string
+    {
+        \Safe\preg_match('/,"(\/g\/[\w\d]+)",/', $this->html, $matches);
+
+        return $matches[1] ?? '';
     }
 
     private function getCidFromLocalServiceResult(): string
@@ -203,18 +192,14 @@ class SERPExtractor
                 continue;
             }
 
-            $result = $this->extractResultFrom($node, $ads);
+            $result = $this->extractResultFrom($node, $ads ? 0 : $iOrganic + 1,  $i + 1, $ads);
             if (! $result instanceof SearchResult) {
                 continue;
             }
 
             $toReturn[$i] = $result;
-            $toReturn[$i]->organicPos = $ads ? 0 : $iOrganic + 1;
-            $toReturn[$i]->position = $i + 1;
             ++$i;
-            if (! $ads) {
-                ++$iOrganic;
-            }
+            ! $ads ? ++$iOrganic : null;
         }
 
         if (false === $organicOnly) {
@@ -224,7 +209,7 @@ class SERPExtractor
         return $toReturn;
     }
 
-    private function extractResultFrom(\DOMNode $linkNode, bool $ads = false): ?SearchResult
+    private function extractResultFrom(\DOMNode $linkNode, int $organicPos, int $position, bool $ads = false): ?SearchResult
     {
         // $domCrawler = new Crawler($node);
         // $linkNode = $domCrawler->filter('a')->getNode(0);
@@ -241,18 +226,33 @@ class SERPExtractor
             return null;
         }
 
-        $toReturn = new SearchResult();
-        $toReturn->pixelPos = $this->getPixelPosFor($linkNode->getNodePath() ?? '');
-        $toReturn->url = $linkNode->getAttribute('href');
-        $toReturn->title = (new Crawler($linkNode))->text('');
-        $toReturn->ads = $ads;
+        $toReturn = new SearchResult(
+            organicPos: $organicPos,
+            position: $position,
+            pixelPos: $this->getPixelPosFor($linkNode->getNodePath() ?? ''),
+            url: $linkNode->getAttribute('href'),
+            title: (new Crawler($linkNode))->text(''),
+            ads : $ads
+        );
 
         return $toReturn;
     }
 
     protected function getPixelPosFor(?string $xpath): int
     {
-        return 0;
+        if ('' === $this->wsEndpoint) {
+            return 0;
+        }
+
+        if (\in_array($xpath, ['', null], true)) {
+            return 0;
+        }
+
+        $cmd = 'PUPPETEER_WS_ENDPOINT='.escapeshellarg($this->wsEndpoint).' '
+            .'node '.escapeshellarg(__DIR__.'/../Puppeteer/pixelPos.js').' '.escapeshellarg($xpath);
+        \Safe\exec($cmd, $output);
+
+        return \intval($output[0] ?? throw new \Exception());
     }
 
     public function containsSerpFeature(string $serpFeatureName, int &$pos = 0): bool
@@ -295,12 +295,7 @@ class SERPExtractor
             throw new \LogicException('Google has changed its selector (position Zero)');
         }
 
-        $toReturn = new SearchResult();
-        $toReturn->position = 1; // not true
-        $toReturn->organicPos = 1;
-        $toReturn->pixelPos = $this->getPixelPosFor($linkNodePositionZero->getNodePath() ?? '');
-        $toReturn->url = $linkNodePositionZero->getAttribute('href');
-        $toReturn->title = $linkNodePositionZero->textContent;
+        $toReturn = new SearchResult(1, 1, $linkNodePositionZero->getAttribute('href'), $linkNodePositionZero->textContent, pixelPos: $this->getPixelPosFor($linkNodePositionZero->getNodePath() ?? ''));
 
         return $toReturn;
     }

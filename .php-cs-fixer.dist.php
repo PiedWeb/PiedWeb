@@ -1,14 +1,12 @@
 <?php
 
 $finder = Symfony\Component\Finder\Finder::create()
-    ->in([
-        __DIR__ . '/packages/*/src',
-        __DIR__ . '/packages/*/tests',
-        __DIR__ . '/packages/perso/'
-    ])
+    ->in(__DIR__ )
+    ->exclude('vendor')
     ->name('*.php')
     ->ignoreDotFiles(true)
-    //->ignoreVCS(true)
+    ->ignoreVCS(true)
+    ->ignoreUnreadableDirs(true)
     ;
 
 return (new PhpCsFixer\Config())

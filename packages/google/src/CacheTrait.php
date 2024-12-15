@@ -16,7 +16,12 @@ trait CacheTrait
     public int $cacheFilemtime = 0;
 
     /** @var string Contain the cache folder for SERP results * */
-    public string $cacheFolder = '/tmp';
+    public string $cacheFolder = '';
+
+    public function cacheFolder(): string
+    {
+        return $this->cacheFolder ?: sys_get_temp_dir();
+    }
 
     public function getCacheFilePath(): string
     {
@@ -26,7 +31,7 @@ trait CacheTrait
 
         $cacheKey = $this->getRequestUid();
 
-        return $this->cacheFolder.'/gsc92_'.$cacheKey.'.html';
+        return $this->cacheFolder().'/gsc92_'.$cacheKey.'.html';
     }
 
     abstract public function getRequestUid(): string;
@@ -38,7 +43,7 @@ trait CacheTrait
 
     public function setCache(string $html, ?string $filePath = null): string
     {
-        if ('' !== $this->cacheFolder) {
+        if ('' !== $this->cacheFolder()) {
             (new Filesystem())->dumpFile($filePath ?? $this->getCacheFilePath(), \Safe\gzcompress($html, 9));
         }
 
