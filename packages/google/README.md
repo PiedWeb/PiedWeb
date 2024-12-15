@@ -1,6 +1,4 @@
-# Google Puppeteer in PHP
-
-Google organic results scraper in PHP via Puppeteer.
+# Google (unofficial) API via PHP
 
 [![Latest Version](https://img.shields.io/github/tag/PiedWeb/PiedWeb.svg?style=flat&label=release)](https://github.com/PiedWeb/PiedWeb/tags)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](LICENSE)
@@ -10,11 +8,22 @@ Google organic results scraper in PHP via Puppeteer.
 [![Type Coverage](https://shepherd.dev/github/PiedWeb/PiedWeb/coverage.svg)](https://shepherd.dev/github/PiedWeb/PiedWeb)
 [![Total Downloads](https://img.shields.io/packagist/dt/piedweb/google.svg?style=flat)](https://packagist.org/packages/piedweb/google)
 
+Via Curl or Puppeteer. This lib offers for now :
+
+- SERP extraction
+- Suggests
+- _Trends_ dropped
+
+## Requirements
+
+- node (tested with v20)
+- [puppeteer](package.json) (tested with v23) `npm install puppeteer puppeteer-extra puppeteer-extra-plugin-stealth`
+- php ^8.3
+- `composer require piedweb/google`
+
 ## Google
 
-```php
-// see tests/*
-```
+Still no docs, see [tests/\*](tests/) :
 
 ## Fix TroubleShoot
 

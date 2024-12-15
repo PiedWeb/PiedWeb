@@ -32,4 +32,4 @@ $ composer require piedweb/extractor
 
 - [PiedWeb](https://piedweb.com)
 - [Altimood](https://altimood.com)
-- [All Contributors](https://github.com/PiedWeb/GoogleSpreadsheetSeoScraper/graphs/contributors)
+- [All Contributors](https://github.com/PiedWeb/PiedWeb/graphs/contributors)

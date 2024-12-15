@@ -22,7 +22,6 @@ jobs:
                     - curl
                     - extractor
                     - google
-                    - google-spreedsheet-seo-scraper
                     - text-analyzer
                     - composer-symlink
 
