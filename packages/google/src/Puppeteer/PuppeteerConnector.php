@@ -47,7 +47,10 @@ class PuppeteerConnector
         \Safe\exec($cmd);
     }
 
-    public function __construct(private string $language = 'fr', private string $proxy = '')
+    /**
+     * @param string $language if language or proxy are changed, a new chrome will be launched
+     */
+    public function __construct(public string $language = 'fr', public string $proxy = '')
     {
     }
 
