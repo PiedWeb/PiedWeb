@@ -68,7 +68,8 @@ async function manageLoadMoreResultsViaBtn(page, clicked = 0) {
   await sleep(750);
   if (!(await moreBtn.isVisible())) return;
 
-  moreBtn.tap();
+  await moreBtn.tap();
+  await sleep(250);
   clicked++;
   if (clicked <= 4) return await manageLoadMoreResultsViaBtn(page, clicked);
 }
