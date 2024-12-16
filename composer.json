@@ -9,7 +9,7 @@
     "php": ">=8.2",
     "ext-ctype": "*",
     "ext-iconv": "*",
-    "fylax/forceutf8": "^3.0",
+    "fylax/forceutf8": "^4.0",
     "jeremykendall/php-domain-parser": "^6.3|^7",
     "kelvinzer0/curl-impersonate-php": "^3.2",
     "league/csv": "^9.8",
@@ -27,11 +27,11 @@
   "require-dev": {
     "friendsofphp/php-cs-fixer": "^3.2",
     "phpstan/extension-installer": "^1.1",
-    "phpstan/phpstan": "^1.0",
-    "phpstan/phpstan-phpunit": "^1.1",
-    "phpstan/phpstan-symfony": "^1.2",
+    "phpstan/phpstan": "^2",
+    "phpstan/phpstan-phpunit": "^2",
+    "phpstan/phpstan-symfony": "^2",
     "phpunit/phpunit": "^10.2",
-    "rector/rector": "^1",
+    "rector/rector": "^2",
     "symfony/var-dumper": "^6.3|^7",
     "symplify/monorepo-builder": "^11",
     "vimeo/psalm": "^5"
@@ -67,9 +67,9 @@
   },
   "scripts": {
     "stan": "vendor/bin/phpstan analyze packages/*/src",
+    "rector": "vendor/bin/rector process",
     "format": "vendor/bin/php-cs-fixer fix && vendor/bin/php-cs-fixer fix rector.php",
     "psalm": "vendor/bin/psalm --no-suggestions --no-cache",
-    "rector": "vendor/bin/rector process",
     "test": "vendor/bin/phpunit",
     "test-google": "vendor/bin/phpunit --stop-on-failure --testsuite google"
   },

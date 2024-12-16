@@ -48,7 +48,7 @@ class GoogleRequester
         $client = new PuppeteerConnector($serpManager->language);
 
         if (null !== $manageProxy) {
-            \call_user_func($manageProxy, $this->getCurlClient());
+            \call_user_func($manageProxy, $client);
         }
 
         return $client->get($serpManager->generateGoogleSearchUrl());

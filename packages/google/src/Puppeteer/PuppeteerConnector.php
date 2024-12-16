@@ -70,6 +70,10 @@ class PuppeteerConnector
             $cmd .= 'PROXY_GATE='.escapeshellarg($this->proxy).' ';
         }
 
+        if (isset($_SERVER['PUPPETEER_HEADLESS'])) {
+            $cmd .= 'PUPPETEER_HEADLESS='.$_SERVER['PUPPETEER_HEADLESS'].' ';
+        }
+
         $outputFileLog = sys_get_temp_dir().'/puppeteer-direct-'.$id;
         $cmd .= 'node '.escapeshellarg(__DIR__.'/launchBrowser.js').' '.escapeshellarg($this->language)
                     .' > '.escapeshellarg($outputFileLog).' 2>&1 &';
@@ -86,6 +90,6 @@ class PuppeteerConnector
 
         self::$lastWsEndpointUsed = static::$wsEndpointList[$id];
 
-        return static::$wsEndpointList[$id];
+        return static::$wsEndpointList[$id] ?? throw new \Exception();
     }
 }

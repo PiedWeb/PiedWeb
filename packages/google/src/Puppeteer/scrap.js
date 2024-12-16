@@ -1,6 +1,8 @@
 /**
  *
  * PUPPETEER_WS_ENDPOINT='xxx' node packages/google/src/Puppeteer/scrap.js https://www.google.fr/search?q=pied+web
+ * PUPPETEER_HEADLESS=0 PUPPETEER_WS_ENDPOINT='ws://127.0.0.1:37109/devtools/browser/a2943f64-8a79-488f-bac8-837b9b4f4ee2' node packages/google/src/Puppeteer/scrap.js https://www.google.fr/search?q=pied+web
+
  */
 const { Page } = require('puppeteer');
 const { connectBrowserPage } = require('./connectBrowserPage');

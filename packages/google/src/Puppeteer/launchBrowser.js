@@ -1,6 +1,8 @@
 /**
  * node packages/google/src/Puppeteer/launchBrowser.js &
- * PROXY_GATE=https://127.0.0.1:9876 CHROME_BIN=/usr/bin/google-chrome node packages/google/src/Puppeteer/launchBrowser.js 'fr' > ws.log 2>&1 &
+PROXY_GATE=https://127.0.0.1:9876 \
+CHROME_BIN=/usr/bin/google-chrome \
+node packages/google/src/Puppeteer/launchBrowser.js 'fr' > ws.log 2>&1 &
  */
 
 const { executablePath, Browser } = require('puppeteer');

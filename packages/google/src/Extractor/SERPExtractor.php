@@ -98,7 +98,10 @@ class SERPExtractor
                 continue;
             }
             $href = $node->getAttribute('href');
-            \Safe\preg_match('/mid=(\/g\/[\w\d]+)/', $href, $matches);
+            if (! \Safe\preg_match('/mid=(\/g\/[\w\d]+)/', $href, $matches)) {
+                continue; // TODO log it
+            }
+
             $mid = $matches[1] ?? throw new \Exception();
 
             $mapsResults[$i] = new BusinessResult(
