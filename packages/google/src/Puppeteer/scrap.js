@@ -33,6 +33,7 @@ async function manageCookie(page) {
         if (cookieAcceptBtn.isVisible()) {
           await sleep(350);
           await cookieAcceptBtn.tap(cookieAcceptBtn);
+          await sleep(350);
         }
       }
     }
@@ -69,7 +70,7 @@ async function manageLoadMoreResultsViaBtn(page, clicked = 0) {
   if (!(await moreBtn.isVisible())) return;
 
   await moreBtn.tap();
-  await sleep(250);
+  await sleep(500);
   clicked++;
   if (clicked <= 4) return await manageLoadMoreResultsViaBtn(page, clicked);
 }
