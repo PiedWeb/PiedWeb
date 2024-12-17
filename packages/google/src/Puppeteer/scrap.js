@@ -32,7 +32,7 @@ async function manageCookie(page) {
         await cookieAcceptBtn.evaluate((el) => el.scrollIntoView()); // bretelles
         await cookieAcceptBtn.scrollIntoView();
         if (cookieAcceptBtn.isVisible()) {
-          await page.waitForSelector(selector, { visible: true }); // et ceintures
+          await page.waitForSelector(selector, { visible: true, timeout: 2000 }); // et ceintures
           await sleep(350);
           await cookieAcceptBtn.tap(cookieAcceptBtn);
           await sleep(350);
@@ -72,8 +72,12 @@ async function manageLoadMoreResultsViaBtn(page, clicked = 0) {
   await moreBtn.scrollIntoView(moreBtn);
   await sleep(750);
   if (!(await moreBtn.isVisible())) return;
-  await page.waitForSelector(moreBtnSelector, { visible: true }); // et ceinture
-  await moreBtn.tap();
+  try {
+    await page.waitForSelector(moreBtnSelector, { visible: true, timeout: 1000 }); // et ceinture
+    await moreBtn.tap();
+  } catch (error) {
+    console.log(`moreBtn found but not able to click it`);
+  }
   await sleep(500);
   clicked++;
   if (clicked <= 4) return await manageLoadMoreResultsViaBtn(page, clicked);
