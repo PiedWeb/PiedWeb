@@ -3,6 +3,7 @@
 namespace PiedWeb\Google;
 
 use PiedWeb\Curl\ExtendedClient;
+use PiedWeb\Google\Puppeteer\Puphpeteer;
 use PiedWeb\Google\Puppeteer\PuppeteerConnector;
 
 class GoogleRequester
@@ -52,5 +53,38 @@ class GoogleRequester
         }
 
         return $client->get($serpManager->generateGoogleSearchUrl());
+    }
+
+    /** Puphpeteer */
+    public ?Puphpeteer $puppeteerClient = null;
+
+    public function getPuppeteerClient(string $language = 'fr'): Puphpeteer
+    {
+        if (null === $this->puppeteerClient) {
+            $this->puppeteerClient = new Puphpeteer();
+
+            $this->puppeteerClient->instantiate(Puphpeteer::EMULATE_OPTIONS_MOBILE, $language);
+
+            $this->puppeteerClient->setCookie('CONSENT', 'YES+', '.google.fr');
+        }
+
+        return $this->puppeteerClient;
+    }
+
+    /**
+     * Not working till https://github.com/zoonru/puphpeteer/issues/17 is resolved
+     * TODO : restore test.
+     */
+    public function requestGoogleWithPuphpeteer(GoogleSERPManager $manager, ?callable $manageProxy = null, int $infiniteScroll = 10): string
+    {
+        $pClient = $this->getPuppeteerClient($manager->language);
+
+        if (null !== $manageProxy) {
+            \call_user_func($manageProxy, $pClient);
+        }
+
+        return $infiniteScroll > 0
+            ? $pClient->getInfiniteScrolled($manager->generateGoogleSearchUrl(), $infiniteScroll)
+            : $pClient->get($manager->generateGoogleSearchUrl());
     }
 }

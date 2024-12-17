@@ -21,8 +21,10 @@
     "symfony/dom-crawler": "^6.3|^7",
     "symfony/filesystem": "^7.1",
     "symfony/serializer": "^6.3|^7",
-    "thecodingmachine/safe": "dev-master",
-    "voku/stringy": "^6.5"
+    "thecodingmachine/safe": "^2",
+    "voku/stringy": "^6.5",
+    "zoon/puphpeteer": "^2.1",
+    "zoon/rialto": "@dev"
   },
   "require-dev": {
     "friendsofphp/php-cs-fixer": "^3.2",
