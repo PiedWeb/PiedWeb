@@ -51,6 +51,7 @@ class Helper
 
                 $key = $h[0];
             } elseif (str_starts_with($h[0], "\t")) {
+                \assert(\is_string($headers[$key]));
                 $headers[$key] .= "\r\n\t".trim($h[0]);
             } elseif ('' === $key) {
                 $headers[] = trim($h[0]);
@@ -73,22 +74,23 @@ class Helper
      *
      * @return array<int, array<int|string, string>> returns the parsed header values
      *
-     * @psalm-suppress RedundantCast
+     * @psalm-suppress PossiblyUndefinedArrayOffset
      */
     public static function parseHeader(array|string $header): array
     {
-        static $trimmed = "\"'  \n\t\r";
+        $trimmed = "\"'  \n\t\r";
         $params = [];
         $matches = [];
         foreach (self::normalizeHeader($header) as $val) {
             $part = [];
             foreach (\Safe\preg_split('/;(?=([^"]*"[^"]*")*[^"]*$)/', $val) as $kvp) {
-                if (preg_match_all('#<[^>]+>|[^=]+#', (string) $kvp, $matches)) {
+                \assert(\is_string($kvp));
+                if (! \in_array(preg_match_all('#<[^>]+>|[^=]+#', $kvp, $matches), [false, 0], true)) {
                     $m = $matches[0];
                     if (isset($m[1])) {
-                        $part[trim((string) $m[0], $trimmed)] = trim((string) $m[1], $trimmed);
+                        $part[trim($m[0], $trimmed)] = trim($m[1], $trimmed);
                     } else {
-                        $part[] = trim((string) $m[0], $trimmed);
+                        $part[] = trim($m[0], $trimmed);
                     }
                 }
             }
@@ -127,8 +129,10 @@ class Helper
                     continue;
                 }
 
-                foreach (\Safe\preg_split('/,(?=([^"]*"[^"]*")*[^"]*$)/', $v) as $vv) {
-                    $result[] = trim((string) $vv);
+                /** @var list<string> */
+                $vvList = \Safe\preg_split('/,(?=([^"]*"[^"]*")*[^"]*$)/', $v);
+                foreach ($vvList as $vv) {
+                    $result[] = trim($vv);
                 }
             }
         }

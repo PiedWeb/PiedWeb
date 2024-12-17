@@ -3,6 +3,7 @@
 namespace PiedWeb\Google;
 
 use PiedWeb\Curl\ExtendedClient;
+use Webmozart\Assert\Assert;
 
 class GoogleSuggester
 {
@@ -47,7 +48,10 @@ class GoogleSuggester
             return;
         }
 
-        $this->results = array_merge($data[1], $this->results);
+        $list = $data[1];
+        Assert::allString($list);
+        /** @var list<string> $list */
+        $this->results = array_merge($list, $this->results);
         $this->results = array_unique($this->results);
         usleep(500);
     }

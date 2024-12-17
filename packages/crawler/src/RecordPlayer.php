@@ -33,10 +33,11 @@ final class RecordPlayer
 
         $records = $csv->getRecords();
         foreach ($records as $r) {
-            if (! \is_array($r) || ! isset($r['id']) || ! isset($r['uri']) || ! \is_string($r['uri'])) {
+            if (! isset($r['id']) || ! isset($r['uri']) || ! \is_string($r['uri'])) {
                 throw new \LogicException();
             }
 
+            \assert(\is_scalar($r['id']));
             $this->index[(int) $r['id']] = $r['uri'];
         }
     }
@@ -53,7 +54,7 @@ final class RecordPlayer
     }
 
     /**
-     * @return array{'urls': Url[], 'counter': int, 'currentClick': int}
+     * @return array{'urls': array<string, Url>, 'counter': int, 'currentClick': int}
      */
     public function getDataFromPreviousCrawl(): array
     {
@@ -71,15 +72,17 @@ final class RecordPlayer
 
         $records = $csv->getRecords();
         foreach ($records as $r) {
-            if (! \is_array($r) || ! isset($r['uri'])) {
+            if (! isset($r['uri'])) {
                 throw new \LogicException();
             }
 
+            \assert(\is_string($r['uri']));
             $urls[$r['uri']] = new Url($this->config->getBase().$r['uri']);
-            if (! empty($r['can_be_crawled'] ?? '')
+            if (($r['can_be_crawled'] ?? '') === ''
                  // we will retry network errror
                 && NetworkStatus::NETWORK_ERROR != ($r['network_status'] ?? true)
             ) {
+                /** @psalm-suppress PossibleRawObjectIteration */
                 foreach ($r as $k => $v) {
                     $kFunction = 'set'.Stringy::create($k)->camelize()
                         .(isset(Url::ARRAY_EXPORTED[$k]) ? 'FromString' : '');
@@ -94,7 +97,9 @@ final class RecordPlayer
             }
         }
 
-        $currentClick = (int) ($r['click'] ?? 0);
+        $currentClick = $r['click'] ?? 0;
+        \assert(\is_scalar($currentClick));
+        $currentClick = (int) $currentClick;
 
         return [
             'urls' => $urls,

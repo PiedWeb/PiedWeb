@@ -46,7 +46,7 @@ class SERPExtractor
     public function __construct(
         public string $html,
         private int $extractedAt = 0,
-        private string $wsEndpoint = ''
+        private readonly string $wsEndpoint = ''
     ) {
         $this->domCrawler = new Crawler($html);
         $this->extractedAt = 0 === $this->extractedAt ? (int) (new \DateTime('now'))->format('ymdHi') : $this->extractedAt;
@@ -97,12 +97,13 @@ class SERPExtractor
             if (! $node instanceof \DOMElement) {
                 continue;
             }
+
             $href = $node->getAttribute('href');
-            if (! \Safe\preg_match('/mid=(\/g\/[\w\d]+)/', $href, $matches)) {
+            if (1 !== preg_match('/mid=(\/g\/[\w\d]+)/', $href, $matches)) {
                 continue; // TODO log it
             }
 
-            $mid = $matches[1] ?? throw new \Exception();
+            $mid = $matches[1];
 
             $mapsResults[$i] = new BusinessResult(
                 mid: $mid,
@@ -157,7 +158,7 @@ class SERPExtractor
 
     private function getMidFromLocalServiceResult(): string
     {
-        \Safe\preg_match('/,"(\/g\/[\w\d]+)",/', $this->html, $matches);
+        preg_match('/,"(\/g\/[\w\d]+)",/', $this->html, $matches);
 
         return $matches[1] ?? '';
     }
@@ -202,7 +203,9 @@ class SERPExtractor
 
             $toReturn[$i] = $result;
             ++$i;
-            ! $ads ? ++$iOrganic : null;
+            if (! $ads) {
+                ++$iOrganic;
+            }
         }
 
         if (false === $organicOnly) {
@@ -255,7 +258,10 @@ class SERPExtractor
             .'node '.escapeshellarg(__DIR__.'/../Puppeteer/pixelPos.js').' '.escapeshellarg($xpath);
         \Safe\exec($cmd, $output);
 
-        return \intval($output[0] ?? throw new \Exception());
+        /** @var string */
+        $pixelPos = $output[0] ?? throw new \Exception();
+
+        return (int) $pixelPos;
     }
 
     public function containsSerpFeature(string $serpFeatureName, int &$pos = 0): bool

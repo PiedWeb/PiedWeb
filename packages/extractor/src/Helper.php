@@ -28,14 +28,15 @@ class Helper
         return self::preg_replace_str($keepN ? '/ {2,}/' : '/\s+/', ' ', $str);
     }
 
-    public static function preg_replace_str(string $pattern, array|string $replacement, array|string $subject, int $limit = -1, int &$count = 0): string // @phpstan-ignore-line
+    /**
+     * @param array<string>|string $replacement
+     * @param array<string>|string $subject
+     *                                          , ?int &$count = null
+     */
+    public static function preg_replace_str(string $pattern, array|string $replacement, array|string $subject, int $limit = -1): string
     {
-        $return = \Safe\preg_replace($pattern, $replacement, $subject, $limit, $count);
-
-        // if (\gettype($pattern) !== \gettype($return)) {
-        if (! \is_string($return)) {
-            throw new \Exception('An error occured on preg_replace');
-        }
+        $return = \Safe\preg_replace($pattern, $replacement, $subject, $limit); // , $count
+        \assert(\is_string($return));
 
         return $return;
     }

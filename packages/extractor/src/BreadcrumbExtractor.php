@@ -81,7 +81,7 @@ final class BreadcrumbExtractor
     /**
      * On essaye d'extraire l'url et l'ancre.
      *
-     * @param array<int, string> $array
+     * @param array<string> $array
      */
     private function extractBreadcrumbData(array $array): void
     {

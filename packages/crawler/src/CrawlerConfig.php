@@ -94,6 +94,7 @@ final class CrawlerConfig
      */
     public static function getLastCrawl(string $dataDirectory): string
     {
+        /** @var list<string> */
         $dir = \Safe\scandir($dataDirectory);
         $lastCrawl = null;
         $lastRunAt = null;

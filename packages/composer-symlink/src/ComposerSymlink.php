@@ -39,6 +39,7 @@ final class ComposerSymlink
             throw new \Exception(\sprintf('Project %s not found', $projectPath));
         }
 
+        /** @var list<string> */
         $vendorDirList = array_diff(\Safe\scandir($vendorBaseDir), ['.', '..', 'bin']);
         /** @var array{packages: ?list<array{name: string, version: string}>, packages-dev: ?list<array{name: string, version: string}>} */
         $composerLockData = json_decode(\Safe\file_get_contents($projectPath.'/composer.lock'), true);
@@ -57,12 +58,16 @@ final class ComposerSymlink
             return;
         }
 
-        foreach (array_diff(\Safe\scandir($this->globalVendorDir), ['.', '..']) as $vendor) {
+        /** @var list<string> */
+        $vendorList = array_diff(\Safe\scandir($this->globalVendorDir), ['.', '..']);
+        foreach ($vendorList as $vendor) {
             if (! is_dir($this->globalVendorDir.$vendor)) {
                 continue;
             }
 
-            foreach (array_diff(\Safe\scandir($this->globalVendorDir.$vendor), ['.', '..']) as $packageNameAndVersion) {
+            /** @var list<string> */
+            $packageNameAndVersionList = array_diff(\Safe\scandir($this->globalVendorDir.$vendor), ['.', '..']);
+            foreach ($packageNameAndVersionList as $packageNameAndVersion) {
                 $packagePath = $this->globalVendorDir.$vendor.'/'.$packageNameAndVersion;
                 if (! is_dir($packagePath)) {
                     continue;
@@ -91,6 +96,7 @@ final class ComposerSymlink
             return;
         }
 
+        /** @var list<string> https://github.com/thecodingmachine/safe/issues/272 */
         $packageDirList = array_diff(\Safe\scandir($vendorBaseDir.$vendorName), ['.', '..']);
         // @mkdir($this->globalVendorDir.$vendorName, 0755, true);
         $this->filesystem->mkdir($this->globalVendorDir.$vendorName, 0755);

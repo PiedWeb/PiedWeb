@@ -179,6 +179,7 @@ final class Url
                 $value = $this->$getter();
             }
 
+            \assert(\is_scalar($value));
             $return[$exportable] = (string) $value;
         }
 
@@ -486,6 +487,7 @@ final class Url
 
     public function setSource(string $source): void
     {
+        /** @psalm-suppress RiskyTruthyFalsyComparison */
         $this->source = realpath($source) ?: '';
     }
 

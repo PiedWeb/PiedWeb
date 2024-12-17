@@ -44,20 +44,22 @@ final class SimplePageRankCalculator extends AbstractPageRankCalculator
 
         $records = $csv->getRecords();
         foreach ($records as $r) {
-            if (! \is_array($r) || ! isset($r['To']) || ! isset($r['From'])) {
+            if (! isset($r['To']) || ! isset($r['From'])) {
                 throw new \LogicException();
             }
 
-            $r['To'] = (int) $r['To'];
+            \assert(\is_scalar($r['To']));
+            $to = (int) $r['To'];
 
-            if (! isset($this->linksTo[$r['To']])) {
-                $this->linksTo[$r['To']] = [];
+            if (! isset($this->linksTo[$to])) {
+                $this->linksTo[$to] = [];
             }
 
-            $r['From'] = (int) $r['From'];
-            $this->linksTo[$r['To']][] = $r['From'];
+            \assert(\is_scalar($r['From']));
+            $from = (int) $r['From'];
+            $this->linksTo[$to][] = $from;
 
-            $this->nbrLinksFrom[$r['From']] = ($this->nbrLinksFrom[$r['From']] ?? 0) + 1;
+            $this->nbrLinksFrom[$from] = ($this->nbrLinksFrom[$from] ?? 0) + 1;
         }
     }
 }

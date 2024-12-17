@@ -13,12 +13,13 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->parallel();
 
     $composerConfig = \Safe\json_decode(\Safe\file_get_contents('composer.json'), true);
+    /** @var list<string> */
     $paths = array_merge(
         array_values($composerConfig['autoload']['psr-4']), // @phpstan-ignore-line
         array_values($composerConfig['autoload-dev']['psr-4']) // @phpstan-ignore-line
     );
     $rectorConfig->paths(array_map(
-        function ($path) { return __DIR__.'/'.$path; },
+        function (string $path) { return __DIR__.'/'.$path; },
         $paths
     ));
 

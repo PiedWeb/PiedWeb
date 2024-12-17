@@ -19,10 +19,13 @@ final class HrefLangExtractor
         $toReturn = [];
         $links = $this->crawler->filterXPath('//link[@hreflang]')->extract(['hreflang', 'href']);
         foreach ($links as $link) {
+            \assert(\is_array($link));
             if (isset($toReturn[$link[0]])) {
                 continue;
             }
 
+            \assert(\is_scalar($link[0]));
+            \assert(\is_scalar($link[1]));
             $toReturn[(string) $link[0]] = (string) $link[1];
         }
 

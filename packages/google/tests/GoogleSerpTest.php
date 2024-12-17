@@ -25,7 +25,7 @@ final class GoogleSerpTest extends TestCase
             $this->markTestIncomplete('May google kick you, check /tmp/debug.html');
         }
 
-        $this->assertTrue(true);
+        $this->assertNotEmpty($extractor->getResults()[0]->url);
 
         return $extractor;
     }

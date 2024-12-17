@@ -35,8 +35,8 @@ class Client
         if (null === $this->handle) {
             $this->handle = \Safe\curl_init();
 
-            curl_setopt($this->handle, \CURLOPT_HEADER, 1);
-            $this->setOpt(\CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($this->handle, \CURLOPT_HEADER, true);
+            $this->setOpt(\CURLOPT_RETURNTRANSFER, true);
         }
 
         return $this->handle;

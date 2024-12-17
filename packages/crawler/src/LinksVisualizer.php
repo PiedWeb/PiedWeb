@@ -41,7 +41,7 @@ class LinksVisualizer
 
         $records = $csv->getRecords();
         foreach ($records as $r) {
-            if (! \is_array($r) || ! isset($r['To'])) {
+            if (! isset($r['To'])) {
                 throw new \LogicException();
             }
 

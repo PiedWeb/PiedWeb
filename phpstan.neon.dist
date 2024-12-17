@@ -6,7 +6,6 @@ parameters:
         - packages/curl/tests
         - packages/google/src
         - packages/google/tests
-        - packages/google-spreadsheet-seo-scraper/src
         - packages/extractor/src
         - packages/composer-symlink/src
         - packages/crawler/src

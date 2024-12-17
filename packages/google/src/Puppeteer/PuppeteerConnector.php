@@ -54,6 +54,8 @@ class PuppeteerConnector
     {
     }
 
+    /** @psalm-suppress NullableReturnStatement
+     *  @psalm-suppress InvalidNullableReturnType  */
     public function getWsEndpoint(): string
     {
         $id = \Safe\getmypid().'-'.$this->language.'-'.$this->proxy;
@@ -71,7 +73,7 @@ class PuppeteerConnector
         }
 
         if (isset($_SERVER['PUPPETEER_HEADLESS'])) {
-            $cmd .= 'PUPPETEER_HEADLESS='.$_SERVER['PUPPETEER_HEADLESS'].' ';
+            $cmd .= 'PUPPETEER_HEADLESS='.$_SERVER['PUPPETEER_HEADLESS'].' '; // @phpstan-ignore-line
         }
 
         $outputFileLog = sys_get_temp_dir().'/puppeteer-direct-'.$id;
@@ -90,6 +92,6 @@ class PuppeteerConnector
 
         self::$lastWsEndpointUsed = static::$wsEndpointList[$id];
 
-        return static::$wsEndpointList[$id] ?? throw new \Exception();
+        return static::$wsEndpointList[$id];
     }
 }

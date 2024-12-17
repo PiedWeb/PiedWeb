@@ -100,10 +100,6 @@ final class CrawlerCommand extends Command
     {
         $start = $input->getArgument('start');
         if (! filter_var($start, \FILTER_VALIDATE_URL)) {
-            if (! \is_string($start)) {
-                throw new \LogicException();
-            }
-
             $this->id = $start;
         }
     }

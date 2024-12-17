@@ -21,7 +21,7 @@
     "symfony/dom-crawler": "^6.3|^7",
     "symfony/filesystem": "^7.1",
     "symfony/serializer": "^6.3|^7",
-    "thecodingmachine/safe": "^2.1",
+    "thecodingmachine/safe": "dev-master",
     "voku/stringy": "^6.5"
   },
   "require-dev": {
@@ -45,7 +45,6 @@
     "psr-4": {
       "PiedWeb\\Curl\\": "packages/curl/src",
       "PiedWeb\\Google\\": "packages/google/src",
-      "PiedWeb\\GoogleSpreadsheetSeoScraper\\": "packages/google-spreadsheet-seo-scraper/src",
       "PiedWeb\\Extractor\\": "packages/extractor/src",
       "PiedWeb\\Crawler\\": "packages/crawler/src",
       "PiedWeb\\ComposerSymlink\\": "packages/composer-symlink/src",

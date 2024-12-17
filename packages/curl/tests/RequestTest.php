@@ -16,7 +16,7 @@ class RequestTest extends \PHPUnit\Framework\TestCase
         $request = new Client($url);
         $request
             ->setDefaultGetOptions()
-            ->setDownloadOnlyIf(static fn ($line): bool => 0 === stripos(trim((string) $line), 'content-type') && false !== stripos((string) $line, 'text/html'))
+            ->setDownloadOnlyIf(static fn (string $line): bool => 0 === stripos(trim($line), 'content-type') && false !== stripos((string) $line, 'text/html'))
             ->setDesktopUserAgent()
             ->setEncodingGzip()
         ;
@@ -197,7 +197,6 @@ class RequestTest extends \PHPUnit\Framework\TestCase
             ['content_type' => 'text/html; charset=UTF-8']
         );
 
-        $this->assertInstanceOf(\PiedWeb\Curl\Response::class, $response);
         $this->assertSame($response->getMimeType(), 'text/html');
         $this->assertSame($response->getContent(), '<!DOCTYPE html><html><body><p>Tests</p></body>');
     }
