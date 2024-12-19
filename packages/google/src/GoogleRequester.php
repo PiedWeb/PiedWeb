@@ -44,31 +44,33 @@ class GoogleRequester
         return $this->getCurlClient()->getResponse()->getBody();
     }
 
+    public ?PuppeteerConnector $puppeteerClient = null;
+
     public function requestGoogleWithPuppeteer(GoogleSERPManager $serpManager, ?callable $manageProxy = null): string
     {
-        $client = new PuppeteerConnector($serpManager->language);
+        $this->puppeteerClient = new PuppeteerConnector($serpManager->language);
 
         if (null !== $manageProxy) {
-            \call_user_func($manageProxy, $client);
+            \call_user_func($manageProxy, $this->puppeteerClient);
         }
 
-        return $client->get($serpManager->generateGoogleSearchUrl());
+        return $this->puppeteerClient->get($serpManager->generateGoogleSearchUrl());
     }
 
     /** Puphpeteer */
-    public ?Puphpeteer $puppeteerClient = null;
+    public ?Puphpeteer $puphpeteerClient = null;
 
-    public function getPuppeteerClient(string $language = 'fr'): Puphpeteer
+    public function getPuphpeteerClient(string $language = 'fr'): Puphpeteer
     {
-        if (null === $this->puppeteerClient) {
-            $this->puppeteerClient = new Puphpeteer();
+        if (null === $this->puphpeteerClient) {
+            $this->puphpeteerClient = new Puphpeteer();
 
-            $this->puppeteerClient->instantiate(Puphpeteer::EMULATE_OPTIONS_MOBILE, $language);
+            $this->puphpeteerClient->instantiate(Puphpeteer::EMULATE_OPTIONS_MOBILE, $language);
 
-            $this->puppeteerClient->setCookie('CONSENT', 'YES+', '.google.fr');
+            $this->puphpeteerClient->setCookie('CONSENT', 'YES+', '.google.fr');
         }
 
-        return $this->puppeteerClient;
+        return $this->puphpeteerClient;
     }
 
     /**
@@ -77,7 +79,7 @@ class GoogleRequester
      */
     public function requestGoogleWithPuphpeteer(GoogleSERPManager $manager, ?callable $manageProxy = null, int $infiniteScroll = 10): string
     {
-        $pClient = $this->getPuppeteerClient($manager->language);
+        $pClient = $this->getPuphpeteerClient($manager->language);
 
         if (null !== $manageProxy) {
             \call_user_func($manageProxy, $pClient);

@@ -54,9 +54,13 @@ class PuppeteerConnector
     {
     }
 
-    /** @psalm-suppress NullableReturnStatement
-     *  @psalm-suppress InvalidNullableReturnType  */
-    public function getWsEndpoint(): string
+    /**
+     *  @psalm-suppress NullableReturnStatement
+     *  @psalm-suppress InvalidNullableReturnType
+     *
+     * @return string could be empty if create = false and no endpoint match
+     */
+    public function getWsEndpoint(bool $create = true): string
     {
         $id = \Safe\getmypid().'-'.$this->language.'-'.$this->proxy;
 
@@ -64,6 +68,10 @@ class PuppeteerConnector
             self::$lastWsEndpointUsed = static::$wsEndpointList[$id];
 
             return static::$wsEndpointList[$id];
+        }
+
+        if (! $create) {
+            return '';
         }
 
         $cmd = '';

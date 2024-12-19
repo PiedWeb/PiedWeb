@@ -29,7 +29,7 @@ class SERPExtractor
     final public const array RELATED_DESKTOP = ["//a[@data-xbu][starts-with(@href, '/search')]/div"];
 
     // public const RESULT_SELECTOR = '//a[@role="presentation"]/parent::div/parent::div/parent::div';
-    final public const string RESULT_SELECTOR = '(//h2[text()=\'Extrait optimisé sur le Web\']/ancestor::block-component//a[@class])[1]|//a[@role="presentation"] ';
+    final public const string RESULT_SELECTOR = "(//h2[text()='Extrait optimisé sur le Web']/ancestor::block-component//a[@class])[1]|//a[@role='presentation']";
 
     // (//h2[text()='Extrait optimisé sur le Web']/ancestor::block-component//a[@class])[1]|//a[@role="presentation"]
     final public const string RESULT_SELECTOR_DESKTOP =
