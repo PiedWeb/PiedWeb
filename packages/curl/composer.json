@@ -17,7 +17,7 @@
   ],
   "require": {
     "php": ">=8.3",
-    "thecodingmachine/safe": "^2",
+    "thecodingmachine/safe": "^2 || dev-master",
     "kelvinzer0/curl-impersonate-php": "^3.2"
   },
   "autoload": {

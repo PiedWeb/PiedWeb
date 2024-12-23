@@ -57,36 +57,36 @@ class GoogleRequester
         return $this->puppeteerClient->get($serpManager->generateGoogleSearchUrl());
     }
 
-    /** Puphpeteer */
-    public ?Puphpeteer $puphpeteerClient = null;
+    // /** Puphpeteer */
+    // public ?Puphpeteer $puphpeteerClient = null;
 
-    public function getPuphpeteerClient(string $language = 'fr'): Puphpeteer
-    {
-        if (null === $this->puphpeteerClient) {
-            $this->puphpeteerClient = new Puphpeteer();
+    // public function getPuphpeteerClient(string $language = 'fr'): Puphpeteer
+    // {
+    //     if (null === $this->puphpeteerClient) {
+    //         $this->puphpeteerClient = new Puphpeteer();
 
-            $this->puphpeteerClient->instantiate(Puphpeteer::EMULATE_OPTIONS_MOBILE, $language);
+    //         $this->puphpeteerClient->instantiate(Puphpeteer::EMULATE_OPTIONS_MOBILE, $language);
 
-            $this->puphpeteerClient->setCookie('CONSENT', 'YES+', '.google.fr');
-        }
+    //         $this->puphpeteerClient->setCookie('CONSENT', 'YES+', '.google.fr');
+    //     }
 
-        return $this->puphpeteerClient;
-    }
+    //     return $this->puphpeteerClient;
+    // }
 
     /**
      * Not working till https://github.com/zoonru/puphpeteer/issues/17 is resolved
      * TODO : restore test.
      */
-    public function requestGoogleWithPuphpeteer(GoogleSERPManager $manager, ?callable $manageProxy = null, int $infiniteScroll = 10): string
-    {
-        $pClient = $this->getPuphpeteerClient($manager->language);
+    // public function requestGoogleWithPuphpeteer(GoogleSERPManager $manager, ?callable $manageProxy = null, int $infiniteScroll = 10): string
+    // {
+    //     $pClient = $this->getPuphpeteerClient($manager->language);
 
-        if (null !== $manageProxy) {
-            \call_user_func($manageProxy, $pClient);
-        }
+    //     if (null !== $manageProxy) {
+    //         \call_user_func($manageProxy, $pClient);
+    //     }
 
-        return $infiniteScroll > 0
-            ? $pClient->getInfiniteScrolled($manager->generateGoogleSearchUrl(), $infiniteScroll)
-            : $pClient->get($manager->generateGoogleSearchUrl());
-    }
+    //     return $infiniteScroll > 0
+    //         ? $pClient->getInfiniteScrolled($manager->generateGoogleSearchUrl(), $infiniteScroll)
+    //         : $pClient->get($manager->generateGoogleSearchUrl());
+    // }
 }
