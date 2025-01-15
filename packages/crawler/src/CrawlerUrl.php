@@ -190,11 +190,11 @@ class CrawlerUrl
 
     private function harvestSocialProfiles(): void
     {
-        $username = (new InstagramUsernameExtractor($this->url->getHtml()))->extract();
-        $this->url->instagramUsername = $username;
+        $extractor = (new InstagramUsernameExtractor($this->url->getHtml()));
 
-        $youtubeChannel = (new InstagramUsernameExtractor($this->url->getHtml()))->extractYoutubeChannel();
-        $this->url->youtubeChannel = $youtubeChannel;
+        $this->url->instagramUsername = $extractor->extract();
+        $this->url->youtubeChannel = $extractor->extractYoutubeChannel();
+        $this->url->linkedin = $extractor->extractLinkedin();
     }
 
     private function harvestTextData(): void
