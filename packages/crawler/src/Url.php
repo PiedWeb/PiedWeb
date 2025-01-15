@@ -186,7 +186,7 @@ final class Url
         return $return;
     }
 
-    public CrawlerUrl $harvester;
+    public ?CrawlerUrl $harvester = null;
 
     public function __construct(string $url, private int $click = 0, int $id = 0)
     {
