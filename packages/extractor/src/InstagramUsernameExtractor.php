@@ -26,4 +26,15 @@ final class InstagramUsernameExtractor
 
         return '';
     }
+
+    public function extractLinkedin(): string
+    {
+        $pattern = '~linkedin\.com/in/([^/?#"\'> ]+)~i';
+
+        if (preg_match($pattern, $this->html, $matches)) {
+            return $matches[1];
+        }
+
+        return '';
+    }
 }

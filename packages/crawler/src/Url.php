@@ -72,6 +72,8 @@ final class Url
 
     public string $youtubeChannel = '';
 
+    public string $linkedinProfile = '';
+
     /** @var array<string, string> */
     private array $flatContent = [];
 
