@@ -72,7 +72,7 @@ final class Url
 
     public string $youtubeChannel = '';
 
-    public string $linkedinProfile = '';
+    public string $linkedin = '';
 
     /** @var array<string, string> */
     private array $flatContent = [];
