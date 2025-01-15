@@ -17,19 +17,17 @@ use PiedWeb\Extractor\TextData;
 
 class CrawlerUrl
 {
-    /** @var Link[] */
-    protected $links = [];
-
-    protected static ?ExtendedClient $curlClient = null;
+    private static ?ExtendedClient $curlClient = null;
 
     public function __construct(
         protected Url $url,
         protected CrawlerConfig $config,
     ) {
+        $this->url->harvester = $this;
         $this->harvest();
     }
 
-    protected function harvest(): void
+    private function harvest(): void
     {
         $this->request();
         if (0 !== $this->url->getNetworkStatus()) {
@@ -43,7 +41,7 @@ class CrawlerUrl
         $this->defaultHarvesting();
     }
 
-    protected function getCurlClient(): ExtendedClient
+    private function getCurlClient(): ExtendedClient
     {
         self::$curlClient ??= (new ExtendedClient())
             ->setDefaultGetOptions()
@@ -89,7 +87,6 @@ class CrawlerUrl
         $this->url->setSource($this->config->getRecorder()->getCacheFilePath($this->url));
     }
 
-    /** @psalm-suppress RiskyCast */
     protected function setUrlDataFromResponse(Response $response): void
     {
         $this->url->setHeaders($response->getRawHeaders());
@@ -112,8 +109,30 @@ class CrawlerUrl
      * $this->url->setRatioTextCode($this->getHarvester()->getRatioTxtCode()); // Slow ~30%
      * $this->url->setH1($this->getHarvester()->getUniqueTag('h1') ?? '');.
      */
-    protected function defaultHarvesting(): void
+    private function defaultHarvesting(): void
     {
+        if ($this->config->toHarvest === [
+            'indexable',
+            'links',
+            'textData',
+            'title',
+            'h1',
+            'canonical',
+            'hrefLang',
+            'socialProfiles',
+        ]) {
+            $this->harvestIndexable();
+            $this->harvestLinks();
+            $this->harvestTextData();
+            $this->harvestTitle();
+            $this->harvestH1();
+            $this->harvestCanonical();
+            $this->harvestHrefLang();
+            $this->haverstSocialProfiles();
+
+            return;
+        }
+
         foreach ($this->config->toHarvest as $toHarvest) {
             $toHarvest = ucfirst($toHarvest);
             if (! method_exists($this, $harvestMethod = 'harvest'.$toHarvest)) {
@@ -124,7 +143,9 @@ class CrawlerUrl
         }
     }
 
-    protected function isRedirection(): bool
+    // /** @var Link[] */
+    // private $links = [];
+    private function isRedirection(): bool
     {
         $redirLink = (new RedirectionExtractor($this->url->getUrl(), $this->url->getParsedHeaders()))
             ->getRedirectionLink();
@@ -133,7 +154,7 @@ class CrawlerUrl
             return false;
         }
 
-        $this->links[] = $redirLink;
+        // $this->links[] = $redirLink;
         $this->url->setRedirectUrl($redirLink->getUrl());
         $this->url->setLinks([$redirLink]);
         $this->url->setIndexable(false);
@@ -142,7 +163,7 @@ class CrawlerUrl
         return true;
     }
 
-    protected function harvestIndexable(): void
+    private function harvestIndexable(): void
     {
         $indexable = new Indexable(
             $this->url->getUrl(),
@@ -157,7 +178,7 @@ class CrawlerUrl
         $this->url->setIndexableStatus($indexable->getIndexableStatus());
     }
 
-    protected function harvestLinks(): void
+    private function harvestLinks(): void
     {
         $linksExtractor = new LinksExtractor(
             $this->url->getUrl(),
@@ -166,9 +187,6 @@ class CrawlerUrl
             LinksExtractor::SELECT_ALL
         );
         $links = $linksExtractor->get();
-        foreach ($links as $link) {
-            $this->links[] = $link;
-        }
 
         $this->url->setLinks($links);
         $this->url->setLinksTotal(\count($links));
@@ -179,7 +197,7 @@ class CrawlerUrl
         $this->url->setLinksDuplicate($linksExtractor->getNbrDuplicateLinks());
     }
 
-    protected function harvestInstagramUsername(): void
+    private function haverstSocialProfiles(): void
     {
         $username = (new InstagramUsernameExtractor($this->url->getHtml()))->extract();
         $this->url->instagramUsername = $username;
@@ -188,7 +206,7 @@ class CrawlerUrl
         $this->url->youtubeChannel = $youtubeChannel;
     }
 
-    protected function harvestTextData(): void
+    private function harvestTextData(): void
     {
         $textData = new TextData($this->url->getHtml(), $this->url->getDomCrawler());
         $this->url->setWordCount($textData->getWordCount());
@@ -197,7 +215,7 @@ class CrawlerUrl
         $this->url->setFlatContent($textData->getFlatContent());
     }
 
-    protected function harvestTitle(): void
+    private function harvestTitle(): void
     {
         $this->url->setTitle(
             (new TagExtractor($this->url->getDomCrawler()))
@@ -212,14 +230,14 @@ class CrawlerUrl
         }
     }
 
-    protected function harvestHrefLang(): void
+    private function harvestHrefLang(): void
     {
         $this->url->setHrefLangList(
             (new HrefLangExtractor($this->url->getDomCrawler()))->getHrefLangList()
         );
     }
 
-    protected function harvestH1(): void
+    private function harvestH1(): void
     {
         $this->url->setH1(
             (new TagExtractor($this->url->getDomCrawler()))
@@ -227,7 +245,7 @@ class CrawlerUrl
         );
     }
 
-    protected function harvestCanonical(): void
+    private function harvestCanonical(): void
     {
         $this->url->setCanonical(
             (new CanonicalExtractor($this->url->getUrl(), $this->url->getDomCrawler()))

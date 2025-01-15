@@ -25,38 +25,18 @@ final class CrawlerConfig
 
     public readonly string $dataDirectory;
 
-    public readonly string $userAgent;
-
-    public readonly int $cacheMethod;
-
-    public readonly int $sleepBetweenReqInMs;
-
-    public readonly string $virtualRobotsTxtRules;
-
     public bool $executeJs = false;
 
-    /** @var string[] */
-    public readonly array $toHarvest;
-
     /**
-     * @param string[]|null $toHarvest
+     * @param string[] $toHarvest
      */
     public function __construct(
         public readonly int $depthLimit = 0,
-        ?string $userAgent = null,
-        ?int $cacheMethod = null,
-        ?int $sleepBetweenReqInMs = null, // ms
-        ?string $virtualRobotsTxtRules = null,
-        ?array $toHarvest = null,
-        ?string $dataDirectory = null,
-        public readonly int $autosave = 500, // number of Urls we can crawled before saving (0 = autosaving disabled),
-        public readonly string $userPassword = ''
-    ) {
-        $this->userAgent = $userAgent ?? 'Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)';
-        $this->cacheMethod = $cacheMethod ?? Recorder::CACHE_URI;
-        $this->sleepBetweenReqInMs = $sleepBetweenReqInMs ?? 1000;
-        $this->virtualRobotsTxtRules = $virtualRobotsTxtRules ?? '';
-        $this->toHarvest = $toHarvest ?? [
+        public readonly string $userAgent = 'Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)',
+        public readonly int $cacheMethod = Recorder::CACHE_URI,
+        public readonly int $sleepBetweenReqInMs = 0, // ms
+        public readonly string $virtualRobotsTxtRules = '',
+        public readonly array $toHarvest = [
             'indexable',
             'links',
             'textData',
@@ -64,8 +44,12 @@ final class CrawlerConfig
             'h1',
             'canonical',
             'hrefLang',
-            'instagramUsername',
-        ];
+            'socialProfiles',
+        ],
+        ?string $dataDirectory = null,
+        public readonly int $autosave = 500, // number of Urls we can crawled before saving (0 = autosaving disabled),
+        public readonly string $userPassword = ''
+    ) {
         $this->dataDirectory = self::dataDirectory((string) $dataDirectory);
     }
 

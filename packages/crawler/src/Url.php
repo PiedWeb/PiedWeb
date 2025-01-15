@@ -186,6 +186,8 @@ final class Url
         return $return;
     }
 
+    public CrawlerUrl $harvester;
+
     public function __construct(string $url, private int $click = 0, int $id = 0)
     {
         $this->url = new UrlManipuler($url);
