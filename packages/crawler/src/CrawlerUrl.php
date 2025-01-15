@@ -111,16 +111,7 @@ class CrawlerUrl
      */
     private function defaultHarvesting(): void
     {
-        if ($this->config->toHarvest === [
-            'indexable',
-            'links',
-            'textData',
-            'title',
-            'h1',
-            'canonical',
-            'hrefLang',
-            'socialProfiles',
-        ]) {
+        if ([] === $this->config->toHarvest) {
             $this->harvestIndexable();
             $this->harvestLinks();
             $this->harvestTextData();
@@ -178,7 +169,7 @@ class CrawlerUrl
         $this->url->setIndexableStatus($indexable->getIndexableStatus());
     }
 
-    private function harvestLinks(): void
+    public function harvestLinks(): void
     {
         $linksExtractor = new LinksExtractor(
             $this->url->getUrl(),
