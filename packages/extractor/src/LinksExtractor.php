@@ -4,17 +4,17 @@ namespace PiedWeb\Extractor;
 
 use Symfony\Component\DomCrawler\Crawler;
 
-class LinksExtractor
+final class LinksExtractor
 {
     /**
      * @var string
      */
-    final public const SELECT_A = 'a[href]';
+    public const SELECT_A = 'a[href]';
 
     /**
      * @var string
      */
-    final public const SELECT_ALL = '[href],[src]';
+    public const SELECT_ALL = '[href],[src]';
 
     /** @var Link[] */
     private readonly array $links;
@@ -22,11 +22,15 @@ class LinksExtractor
     /** @var array<int, array<Link>> */
     private array $linksPerType = [];
 
+    /**
+     * @param list<string> $attributes
+     */
     public function __construct(
         private readonly Url $requestedUrl,
         private readonly Crawler $crawler,
         private readonly string $headers,
-        private readonly string $selector = self::SELECT_A
+        private readonly string $selector = self::SELECT_A,
+        private readonly array $attributes = ['href', 'src'],
     ) {
         $this->links = $this->extract();
         $this->classifyLinks();
@@ -80,7 +84,8 @@ class LinksExtractor
     private function extract(): array
     {
         $links = [];
-        $elements = $this->crawler->filter($this->selector);
+        $elements = str_starts_with($this->selector, '/') ? $this->crawler->filterXPath($this->selector)
+            : $this->crawler->filter($this->selector);
         $parentMayFollow = (new FollowExtractor($this->crawler, $this->headers))->mayFollow();
         $parentBase = (new BaseExtractor($this->crawler))->get() ?? $this->requestedUrl;
 
@@ -104,15 +109,15 @@ class LinksExtractor
      */
     private function extractUrl(\DOMElement $element): ?string
     {
-        $attributes = explode(',', str_replace(['a[', '*[', '[', ']'], '', $this->selector));
-        foreach ($attributes as $attribute) {
+        // $attributes = explode(',', str_replace(['a[', '*[', '[', ']'], '', $this->selector));
+        foreach ($this->attributes as $attribute) {
             $url = $element->getAttribute($attribute);
             if ('' !== $url) {
                 break;
             }
         }
 
-        if ('' === $url) {
+        if (! isset($url) || '' === $url) {
             return null;
         }
 

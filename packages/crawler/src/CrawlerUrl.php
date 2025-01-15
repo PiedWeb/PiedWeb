@@ -169,13 +169,13 @@ class CrawlerUrl
         $this->url->setIndexableStatus($indexable->getIndexableStatus());
     }
 
-    public function harvestLinks(): void
+    public function harvestLinks(string $selector = LinksExtractor::SELECT_ALL): void
     {
         $linksExtractor = new LinksExtractor(
             $this->url->getUrl(),
             $this->url->getDomCrawler(),
             $this->url->getHeaders(),
-            LinksExtractor::SELECT_ALL
+            $selector
         );
         $links = $linksExtractor->get();
 
