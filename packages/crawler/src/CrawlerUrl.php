@@ -119,7 +119,7 @@ class CrawlerUrl
             $this->harvestH1();
             $this->harvestCanonical();
             $this->harvestHrefLang();
-            $this->haverstSocialProfiles();
+            $this->harvestSocialProfiles();
 
             return;
         }
@@ -188,7 +188,7 @@ class CrawlerUrl
         $this->url->setLinksDuplicate($linksExtractor->getNbrDuplicateLinks());
     }
 
-    private function haverstSocialProfiles(): void
+    private function harvestSocialProfiles(): void
     {
         $username = (new InstagramUsernameExtractor($this->url->getHtml()))->extract();
         $this->url->instagramUsername = $username;
