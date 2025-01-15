@@ -779,4 +779,14 @@ final class Url
     {
         $this->youtubeChannel = $youtubeChannel;
     }
+
+    public function getLinkedin(): string
+    {
+        return $this->linkedin;
+    }
+
+    public function setLinkedin(string $linkedin): void
+    {
+        $this->linkedin = $linkedin;
+    }
 }
