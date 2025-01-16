@@ -156,12 +156,12 @@ class Response
 
     public function getStatusCode(): int
     {
-        return \is_int($this->info['http_code']) ? $this->info['http_code'] : throw new \Exception();
+        return \is_int($this->info['http_code']) ? $this->info['http_code'] : 503;
     }
 
     public function getContentType(): string
     {
-        return \is_string($this->info['content_type']) ? $this->info['content_type'] : throw new \Exception();
+        return \is_string($this->info['content_type']) ? $this->info['content_type'] : '';
     }
 
     public function getMimeType(): string
