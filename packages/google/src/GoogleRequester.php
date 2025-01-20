@@ -27,6 +27,9 @@ class GoogleRequester
         return $this->client;
     }
 
+    /**
+     * Google block direct curl request, this method is not working anymore.
+     */
     public function requestGoogleWithCurl(GoogleSERPManager $serpManager, ?callable $manageProxy = null): string
     {
         $this->getCurlClient()->setLanguage($serpManager->language.';q=0.9');
@@ -46,7 +49,7 @@ class GoogleRequester
 
     public ?PuppeteerConnector $puppeteerClient = null;
 
-    public function requestGoogleWithPuppeteer(GoogleSERPManager $serpManager, ?callable $manageProxy = null): string
+    public function requestGoogleWithPuppeteer(GoogleSERPManager $serpManager, ?callable $manageProxy = null, int $maxPages = 5): string
     {
         $this->puppeteerClient = new PuppeteerConnector($serpManager->language);
 
@@ -54,7 +57,7 @@ class GoogleRequester
             \call_user_func($manageProxy, $this->puppeteerClient);
         }
 
-        return $this->puppeteerClient->get($serpManager->generateGoogleSearchUrl());
+        return $this->puppeteerClient->get($serpManager->generateGoogleSearchUrl(), $maxPages);
     }
 
     // /** Puphpeteer */

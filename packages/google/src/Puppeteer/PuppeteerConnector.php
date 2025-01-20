@@ -21,14 +21,15 @@ class PuppeteerConnector
         }
     }
 
-    public function get(string $url): string
+    public function get(string $url, int $maxPages): string
     {
         $wsEndpoint = $this->getWsEndpoint();
 
         $outputFileLog = sys_get_temp_dir().'/puppeteer-direct-'.\Safe\getmypid();
         $cmd = 'PUPPETEER_WS_ENDPOINT='.escapeshellarg($wsEndpoint).' '
             .'node '.escapeshellarg(__DIR__.'/scrap.js').' '
-            .escapeshellarg($url)
+            .escapeshellarg($url).' '
+            .$maxPages
             .' > '.escapeshellarg($outputFileLog);
 
         \Safe\exec($cmd);

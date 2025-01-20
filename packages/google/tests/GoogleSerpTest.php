@@ -32,6 +32,7 @@ final class GoogleSerpTest extends TestCase
 
     public function testPuphpeteerMobile(): void
     {
+        // requestGoogleWithCurl ➜ dead
         $rawHtml = (new GoogleRequester())->requestGoogleWithPuppeteer($this->getSerpManager());
         file_put_contents('./debug/debug-puphpeteer-mobile.html', $rawHtml);
         PuppeteerConnector::screenshot('./debug/debug-puphpeteer-mobile.png');
@@ -61,7 +62,7 @@ final class GoogleSerpTest extends TestCase
 
     private function getExtractor(string $query): SERPExtractor
     {
-        $rawHtml = (new GoogleRequester())->requestGoogleWithCurl($this->getSerpManager($query));
+        $rawHtml = (new GoogleRequester())->requestGoogleWithPuppeteer($this->getSerpManager($query), maxPages: 1);
         file_put_contents('debug.html', $rawHtml);
 
         return new SERPExtractor($rawHtml);
@@ -71,10 +72,9 @@ final class GoogleSerpTest extends TestCase
     {
         // This test is not working anymore
         // Google deleted position zero on smartphone ???
-        // https://www.google.fr/search?q=steve+jobs+date+de+naissance
+        // TODO : change test for ➜ https://www.google.fr/search?q=steve+jobs+date+de+naissance
 
         $extractor = $this->getExtractor("qu'est ce que l'effet streisand");
-
         if (! $extractor->containsSerpFeature('PositionZero')) {
             $this->assertStringContainsString('wikipedia.org',  $extractor->getResults()[0]->url);
             dump('Position Zero was not checked');

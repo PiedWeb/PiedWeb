@@ -166,7 +166,7 @@ class Recorder
     private function recordInboundLink(Link $link, Url $to): void
     {
         \Safe\file_put_contents(
-            $this->folder.static::LINKS_DIR.'/To_'.(string) $to->getId().'_'.((int) $link->mayFollow()),
+            $this->folder.static::LINKS_DIR.'/To_'.(string) $to->getId().'_'.((int) $link->mayFollow),
             $this->inboundLinkToStr($link).\PHP_EOL, // can use ->relativize to get only /uri
             \FILE_APPEND
         );
@@ -174,7 +174,7 @@ class Recorder
 
     private function inboundLinkToStr(Link $link): string
     {
-        return $link->getParentUrl().';'.$link->getAnchor().';'.((int) $link->mayFollow()).';'.$link->getType();
+        return $link->parentUrl.';'.$link->anchor.';'.((int) $link->mayFollow).';'.$link->type;
     }
 
     /**
@@ -193,11 +193,11 @@ class Recorder
         foreach ($links as $link) {
             $content .= $from->getId();
             $uri = self::removeBase($base, (string) $link->getUrlStd()->getDocumentUrl());
-            if (\in_array($link->getUrl(), $everAdded)) { // like Google, we sould not add duplicate link,
+            if (\in_array($link->url, $everAdded)) { // like Google, we sould not add duplicate link,
                 // so we say the juice is lost -1
                 $content .= ',-1'.\PHP_EOL;
             } else {
-                $everAdded[] = $link->getUrl();
+                $everAdded[] = $link->url;
                 $content .= ','.(isset($urls[$uri]) ? $urls[$uri]->getId() : 0).\PHP_EOL; // 0 = external
             }
 
@@ -216,7 +216,7 @@ class Recorder
      */
     private function recordOutboundLink(Url $from, array $links): void
     {
-        $links = array_map(static fn (Link $link): string => $link->getUrl().';'.$link->getAnchor().';'.((int) $link->mayFollow()).';'.$link->getType(), $links);
+        $links = array_map(static fn (Link $link): string => $link->url.';'.$link->anchor.';'.((int) $link->mayFollow).';'.$link->type, $links);
 
         \Safe\file_put_contents($this->folder.static::LINKS_DIR.'/From_'.(string) $from->getId(), implode(\PHP_EOL, $links));
     }

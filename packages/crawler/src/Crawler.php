@@ -174,11 +174,11 @@ final class Crawler
     {
         $everAdd = [];
         foreach ($links as $link) {
-            if (Link::LINK_INTERNAL !== $link->getType()) {
+            if ($link->internal) {
                 continue;
             }
 
-            $newUrl = (new ExtractorUrl($link->getUrl()));
+            $newUrl = (new ExtractorUrl($link->url));
             $newUri = $newUrl->getAbsoluteUri();
             $this->urls[$newUri] ??= new Url(
                 $newUrl->getDocumentUrl()->__toString(),
@@ -189,7 +189,7 @@ final class Crawler
             }
 
             $everAdd[$newUri] = 1;
-            if (! $link->mayFollow()) {
+            if (! $link->mayFollow) {
                 $this->urls[$newUri]->incrementInboundLinksNofollow();
             } else {
                 $this->urls[$newUri]->incrementInboundLinks();

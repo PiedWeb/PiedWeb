@@ -33,21 +33,24 @@ final class Link
     /** @var int type */
     public const LINK_EXTERNAL = 4;
 
-    private ?string $url = null;
+    public readonly string $url;
 
-    private string $to;
+    public readonly string $to;
 
-    private ?string $parentUrl = null;
+    public readonly ?string $parentUrl;
 
-    private bool $mayFollow;
+    public readonly bool $mayFollow;
 
-    private ?string $anchor = null;
+    /** empty if not found, limited to 50 chars */
+    public readonly string $anchor;
 
-    private bool $internal;
+    /** 1 = a[href], 2 = src, 3 = 301, 4 = redirection, see Link::LINK_* */
+    public readonly int $wrapper;
 
-    private int $wrapper;
+    public readonly bool $internal;
 
-    private int $type;
+    /** internal or external with a code, see Link::TYPE_* || prefer use `internal` property */
+    public readonly int $type;
 
     #[Ignore]
     private ?Url $urlStd = null;
@@ -62,13 +65,14 @@ final class Link
         ?string $url = null,
         ?Url $parentUrl = null,
         bool $parentMayFollow = true,
-        private ?\DOMElement $element = null
+        public ?\DOMElement $element = null,
+        public int $position = 0,
+        ?int $wrapper = null,
     ) {
         if (null === $url || null === $parentUrl) {
-            return;
+            throw new \Exception('`url` or `parentUrl` must be setted');
         }
 
-        $this->element = $element;
         $this->mayFollow = $this->retrieveMayFollow($parentMayFollow);
         $this->url = UrlNormalizer::normalizeUrl($url);
         $this->urlStd = (new Url($this->url));
@@ -76,26 +80,30 @@ final class Link
         $this->parentUrlStd = $parentUrl;
         $this->internal = $this->urlStd->getHost() === $parentUrl->getHost();
         $this->to = $this->internal ? $this->urlStd->getAbsoluteUri(true, true) : $this->url;
-        $this->wrapper = null !== $this->element ? $this->getWrapperFrom($this->element) : 0;
+        $this->wrapper = $wrapper ?? (null !== $this->element ? $this->getWrapperFrom($this->element) : 0);
         $this->type = $this->retrieveType();
+        $this->anchor = $this->getAnchor();
     }
 
     public static function createRedirection(string $url, Url $parentUrl): self
     {
-        $self = new self($url, $parentUrl);
-        $self->wrapper = self::LINK_3XX;
-
-        return $self;
+        return new self($url, $parentUrl, wrapper: self::LINK_3XX);
     }
 
     public function toMarkdown(): string
     {
-        return '['.($this->anchor ?? '').']('.$this->getUrl().')';
+        return '['.($this->anchor ?? '').']('.$this->url.')';
+    }
+
+    #[Ignore]
+    public static function elementIsHyperlink(\DOMElement $element): bool
+    {
+        return 'a' === $element->tagName && $element->hasAttribute('href');
     }
 
     private function getWrapperFrom(\DOMElement $element): int
     {
-        if ('a' === $element->tagName && $element->getAttribute('href')) {
+        if (self::elementIsHyperlink($element)) {
             return self::LINK_A;
         }
 
@@ -106,12 +114,8 @@ final class Link
         return 0;
     }
 
-    public function getAnchor(): string
+    private function getAnchor(): string
     {
-        if (null !== $this->anchor) {
-            return $this->anchor;
-        }
-
         if (null === $this->element) {
             return '';
         }
@@ -128,7 +132,7 @@ final class Link
         }
 
         // Limit to 50 chars -> Totally subjective
-        return $this->anchor = mb_substr(CleanText::fixEncoding($anchor), 0, 49);
+        return mb_substr(CleanText::fixEncoding($anchor), 0, 49);
     }
 
     private function retrieveMayFollow(bool $parentMayFollow): bool
@@ -187,28 +191,16 @@ final class Link
         return self::LINK_EXTERNAL;
     }
 
-    #[Ignore]
-    public function getUrl(): string
-    {
-        return $this->url ?? throw new \Exception();
-    }
-
     public function getTo(): string
     {
         return $this->to;
     }
 
     #[Ignore]
-    public function getParentUrl(): string
-    {
-        return $this->parentUrl ?? throw new \Exception();
-    }
-
-    #[Ignore]
     public function getUrlStd(): Url
     {
         if (null === $this->urlStd) {
-            $this->urlStd = (new Url($this->getUrl()));
+            return new Url($this->url);
         }
 
         return $this->urlStd;
@@ -218,80 +210,9 @@ final class Link
     public function getParentUrlStd(): Url
     {
         if (null === $this->parentUrlStd) {
-            $this->parentUrlStd = (new Url($this->getParentUrl()));
+            $this->parentUrlStd = (new Url($this->parentUrl ?? throw new \Exception()));
         }
 
         return $this->parentUrlStd;
-    }
-
-    public function getWrapper(): int
-    {
-        return $this->wrapper;
-    }
-
-    public function mayFollow(): bool
-    {
-        return $this->mayFollow;
-    }
-
-    public function getMayFollow(): bool
-    {
-        return $this->mayFollow;
-    }
-
-    public function getInternal(): bool
-    {
-        return $this->internal;
-    }
-
-    public function getType(): int
-    {
-        return $this->type;
-    }
-
-    public function setType(int $type): void
-    {
-        $this->type = $type;
-    }
-
-    #[Ignore]
-    public function getElement(): \DOMElement
-    {
-        return $this->element ?? throw new \Exception();
-    }
-
-    public function setParentUrl(string $parentUrl): void
-    {
-        $this->parentUrl = $parentUrl;
-    }
-
-    public function setUrl(string $url): void
-    {
-        $this->url = $url;
-    }
-
-    public function setMayFollow(bool $mayFollow): void
-    {
-        $this->mayFollow = $mayFollow;
-    }
-
-    public function setAnchor(string $anchor): void
-    {
-        $this->anchor = $anchor;
-    }
-
-    public function setWrapper(int $wrapper): void
-    {
-        $this->wrapper = $wrapper;
-    }
-
-    public function setInternal(bool $internal): void
-    {
-        $this->internal = $internal;
-    }
-
-    public function setTo(string $to): void
-    {
-        $this->to = $to;
     }
 }

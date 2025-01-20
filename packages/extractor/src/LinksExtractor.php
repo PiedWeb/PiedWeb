@@ -65,7 +65,7 @@ final class LinksExtractor
         $links = $this->get();
         $u = [];
         foreach ($links as $link) {
-            $u[$link->getUrl()] = 1;
+            $u[$link->url] = 1;
         }
 
         return \count($links) - \count($u);
@@ -74,7 +74,7 @@ final class LinksExtractor
     private function classifyLinks(): void
     {
         foreach ($this->links as $link) {
-            $this->linksPerType[$link->getType()][] = $link;
+            $this->linksPerType[$link->type][] = $link;
         }
     }
 
@@ -89,15 +89,21 @@ final class LinksExtractor
         $parentMayFollow = (new FollowExtractor($this->crawler, $this->headers))->mayFollow();
         $parentBase = (new BaseExtractor($this->crawler))->get() ?? $this->requestedUrl;
 
+        $position = 0;
         foreach ($elements as $element) {
             if (! $element instanceof \DOMElement) {
                 throw new \LogicException('check your selector');
             }
 
+            $isHyperlink = Link::elementIsHyperlink($element);
+            if ($isHyperlink) {
+                ++$position;
+            }
+
             $url = $this->extractUrl($element);
             if (null !== $url) {
                 $url = $parentBase->resolve($url);
-                $links[] = new Link($url, $this->requestedUrl, $parentMayFollow, $element);
+                $links[] = new Link($url, $this->requestedUrl, $parentMayFollow, $element,  $isHyperlink ? $position : 0);
             }
         }
 

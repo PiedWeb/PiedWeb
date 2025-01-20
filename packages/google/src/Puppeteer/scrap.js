@@ -8,7 +8,8 @@ const { Page } = require('puppeteer');
 const { connectBrowserPage } = require('./connectBrowserPage');
 
 const url = process.argv[2];
-get(url).then((source) => {
+const maxPages = process.argv[3] ? parseInt(process.argv[3], 10) : 5;
+get(url, maxPages).then((source) => {
   console.log(source);
   process.exit(0);
 });
@@ -42,9 +43,12 @@ async function manageCookie(page) {
   }
 }
 
-/**  @param {Page} page */
-async function manageLoadMoreResultsViaInfiniteScroll(page) {
-  let i = 0;
+/**
+ * @param {Page} page
+ * @param {int} maxPages
+ */
+async function manageLoadMoreResultsViaInfiniteScroll(page, maxPages) {
+  let i = 1;
   while (true) {
     let scrollHeight = await page.evaluate(() => document.body.scrollHeight);
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
@@ -52,13 +56,18 @@ async function manageLoadMoreResultsViaInfiniteScroll(page) {
     const isHeighten = await page.evaluate((scrollHeight) => {
       return document.body.scrollHeight > scrollHeight;
     }, scrollHeight);
-    if (!isHeighten || i > 10) break;
+    // limiter à maxPages pages
+    if (!isHeighten || i >= maxPages) break;
     i++;
   }
 }
 
-/**  @param {Page} page */
-async function manageLoadMoreResultsViaBtn(page, clicked = 0) {
+/**
+ * @param {Page} page
+ * @param {int} maxPages
+ */
+async function manageLoadMoreResultsViaBtn(page, maxPages, clicked = 1) {
+  if (clicked >= maxPages) return;
   let navigationBlock = await page.$('h1 ::-p-text(Page Navigation)');
   if (navigationBlock === null) return;
   await navigationBlock.scrollIntoView();
@@ -80,16 +89,16 @@ async function manageLoadMoreResultsViaBtn(page, clicked = 0) {
   }
   await sleep(500);
   clicked++;
-  if (clicked <= 4) return await manageLoadMoreResultsViaBtn(page, clicked);
+  return await manageLoadMoreResultsViaBtn(page, maxPages, clicked);
 }
 
 /**  @param {string} url */
-async function get(url) {
+async function get(url, maxPages) {
   const page = await connectBrowserPage();
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   await sleep(1000);
   await manageCookie(page);
-  await manageLoadMoreResultsViaInfiniteScroll(page);
-  await manageLoadMoreResultsViaBtn(page);
+  await manageLoadMoreResultsViaInfiniteScroll(page, maxPages);
+  await manageLoadMoreResultsViaBtn(page, maxPages);
   return await page.content();
 }
