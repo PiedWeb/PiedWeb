@@ -36,15 +36,15 @@ final class Link
     #[Ignore]
     public string $to;
 
-    public bool $mayFollow;
+    public readonly bool $mayFollow;
 
     /** empty if not found, limited to 50 chars */
-    public string $anchor;
+    public readonly string $anchor;
 
     /** 1 = a[href], 2 = src, 3 = 301, 4 = redirection, see Link::LINK_* */
-    public int $wrapper;
+    public readonly int $wrapper;
 
-    public bool $internal;
+    public readonly bool $internal;
 
     /** internal or external with a code, see Link::TYPE_* || prefer use `internal` property */
     public int $type;
@@ -58,7 +58,7 @@ final class Link
         public Url|string $parentUrl,
         bool $parentMayFollow = true,
         #[Ignore]
-        private ?\DOMElement $element = null,
+        private readonly ?\DOMElement $element = null,
         public int $position = 0,
         ?int $wrapper = null,
     ) {

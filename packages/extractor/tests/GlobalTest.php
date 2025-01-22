@@ -125,7 +125,6 @@ final class GlobalTest extends TestCase
         $classMetadataFactory = new ClassMetadataFactory(new AttributeLoader());
         $propertyAccessor = new PropertyAccessor();
         $serializer = new Serializer([new ObjectNormalizer($classMetadataFactory, null, $propertyAccessor)], [new JsonEncoder()]);
-        // Test JSON serialization
         $json = $serializer->serialize($link, 'json');
         $unserializedFromJson = $serializer->deserialize($json, Link::class, 'json');
 
