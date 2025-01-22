@@ -33,53 +33,44 @@ final class Link
     /** @var int type */
     public const LINK_EXTERNAL = 4;
 
-    public readonly string $url;
+    #[Ignore]
+    public string $to;
 
-    public readonly string $to;
-
-    public readonly ?string $parentUrl;
-
-    public readonly bool $mayFollow;
+    public bool $mayFollow;
 
     /** empty if not found, limited to 50 chars */
-    public readonly string $anchor;
+    public string $anchor;
 
     /** 1 = a[href], 2 = src, 3 = 301, 4 = redirection, see Link::LINK_* */
-    public readonly int $wrapper;
+    public int $wrapper;
 
-    public readonly bool $internal;
+    public bool $internal;
 
     /** internal or external with a code, see Link::TYPE_* || prefer use `internal` property */
-    public readonly int $type;
+    public int $type;
 
-    #[Ignore]
-    private ?Url $urlStd = null;
-
-    #[Ignore]
-    private ?Url $parentUrlStd = null;
-
+    // public   ?string $parentUrl;
     /**
      * Always submit absoute Url !
      */
     public function __construct(
-        ?string $url = null,
-        ?Url $parentUrl = null,
+        public string $url,
+        public Url|string $parentUrl,
         bool $parentMayFollow = true,
-        public ?\DOMElement $element = null,
+        #[Ignore]
+        private ?\DOMElement $element = null,
         public int $position = 0,
         ?int $wrapper = null,
     ) {
-        if (null === $url || null === $parentUrl) {
-            throw new \Exception('`url` or `parentUrl` must be setted');
+        if (\is_string($parentUrl)) {
+            $parentUrl = new Url($url);
         }
 
         $this->mayFollow = $this->retrieveMayFollow($parentMayFollow);
         $this->url = UrlNormalizer::normalizeUrl($url);
-        $this->urlStd = (new Url($this->url));
         $this->parentUrl = $parentUrl->get();
-        $this->parentUrlStd = $parentUrl;
-        $this->internal = $this->urlStd->getHost() === $parentUrl->getHost();
-        $this->to = $this->internal ? $this->urlStd->getAbsoluteUri(true, true) : $this->url;
+        $this->internal = $this->getUrlStd()->getHost() === $parentUrl->getHost();
+        $this->to = $this->internal ? $this->getUrlStd()->getAbsoluteUri(true, true) : $this->url;
         $this->wrapper = $wrapper ?? (null !== $this->element ? $this->getWrapperFrom($this->element) : 0);
         $this->type = $this->retrieveType();
         $this->anchor = $this->getAnchor();
@@ -197,10 +188,16 @@ final class Link
     }
 
     #[Ignore]
+    private ?Url $urlStd = null;
+
+    #[Ignore]
+    private ?Url $parentUrlStd = null;
+
+    #[Ignore]
     public function getUrlStd(): Url
     {
         if (null === $this->urlStd) {
-            return new Url($this->url);
+            return $this->urlStd = new Url($this->url);
         }
 
         return $this->urlStd;

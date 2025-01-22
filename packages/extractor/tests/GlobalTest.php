@@ -8,10 +8,17 @@ use PiedWeb\Curl\Helper;
 use PiedWeb\Curl\Response;
 use PiedWeb\Extractor\CanonicalExtractor;
 use PiedWeb\Extractor\HrefLangExtractor;
+use PiedWeb\Extractor\Link;
 use PiedWeb\Extractor\TextData;
 use PiedWeb\Extractor\Url;
 use PiedWeb\TextAnalyzer\CleanText;
 use Symfony\Component\DomCrawler\Crawler;
+use Symfony\Component\PropertyAccess\PropertyAccessor;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
+use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Serializer;
 
 final class GlobalTest extends TestCase
 {
@@ -107,5 +114,23 @@ final class GlobalTest extends TestCase
         $list = $extractor->getHrefLangList();
 
         $this->assertContains('https://altimood.com/en', $list);
+    }
+
+    public function testLinkSerializationWithSymfony(): void
+    {
+        // Create test data
+        $parentUrl = new Url('https://example.com');
+        $link = new Link('https://example.com/page', $parentUrl);
+
+        $classMetadataFactory = new ClassMetadataFactory(new AttributeLoader());
+        $propertyAccessor = new PropertyAccessor();
+        $serializer = new Serializer([new ObjectNormalizer($classMetadataFactory, null, $propertyAccessor)], [new JsonEncoder()]);
+        // Test JSON serialization
+        $json = $serializer->serialize($link, 'json');
+        $unserializedFromJson = $serializer->deserialize($json, Link::class, 'json');
+
+        // Assertions
+        $this->assertEquals($link->url, $unserializedFromJson->url);
+        $this->assertEquals($link->internal, $unserializedFromJson->internal);
     }
 }
