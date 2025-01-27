@@ -9,6 +9,7 @@ use PiedWeb\Curl\Response;
 use PiedWeb\Extractor\CanonicalExtractor;
 use PiedWeb\Extractor\HrefLangExtractor;
 use PiedWeb\Extractor\Link;
+use PiedWeb\Extractor\LinksExtractor;
 use PiedWeb\Extractor\TextData;
 use PiedWeb\Extractor\Url;
 use PiedWeb\TextAnalyzer\CleanText;
@@ -114,6 +115,19 @@ final class GlobalTest extends TestCase
         $list = $extractor->getHrefLangList();
 
         $this->assertContains('https://altimood.com/en', $list);
+    }
+
+    public function testLinkExtractor(): void
+    {
+        $rawHtml = $this->getPage('https://piedweb.com/');
+        $rawHtml .= '<a href="http://127.0.0.1:8000/" class="btn btn-1 btn-back not-target">Retourner à la liste</a>';
+
+        $url = new Url('https://piedweb.com');
+        $extractor = new LinksExtractor($url, new Crawler($rawHtml), '');
+        $list = $extractor->get();
+        $lastItem = $list[count($list) - 1];
+
+        $this->assertSame('http://127.0.0.1:8000/', $lastItem->getTo());
     }
 
     public function testLinkSerializationWithSymfony(): void
