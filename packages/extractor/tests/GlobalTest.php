@@ -107,6 +107,18 @@ final class GlobalTest extends TestCase
         $this->assertArrayHasKey('web', $textData->getTextAnalysis()->getExpressions());
     }
 
+    public function testTextFlatContent(): void
+    {
+        $rawHtml = '<body><p>test</p><footer><div><p>Conditions de vente</p></div></footer></body>';
+        $crawler = new Crawler($rawHtml);
+
+        $textData = new TextData($rawHtml, $crawler);
+
+        $flatContent = implode(' ', array_keys($textData->getFlatContent()));
+        $this->assertNotEmpty($flatContent);
+        $this->assertStringNotContainsString('Conditions de vente', $flatContent);
+    }
+
     public function testHrefLangExtractor(): void
     {
         $rawHtml = $this->getPage('https://altimood.com/');

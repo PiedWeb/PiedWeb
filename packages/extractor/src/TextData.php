@@ -56,7 +56,7 @@ final class TextData
     {
         $tagsToGet = explode(',', $tag);
         $xpath = '//head/title';
-        $not = '[not(self::node()[count(.//'.implode('|.//', $tagsToGet).') > 0])]';
+        $not = '[not(self::node()[count(.//'.implode('|.//', $tagsToGet).') > 0]) and not(ancestor::footer) ]';
         foreach ($tagsToGet as $tag) {
             $xpath .= ' | //'.$tag.$not;
         }
@@ -69,7 +69,7 @@ final class TextData
         return str_word_count($this->getText());
     }
 
-    /** @return array<string, string> */
+    /** @return array<string, string> where key is the content and value is the wrapper */
     public function getFlatContent(): array
     {
         if (null === $this->crawler) {
