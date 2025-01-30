@@ -66,6 +66,7 @@ class CleanText
     public static function fixEncoding(string $text): string
     {
         // fix encoding
+        $text = str_replace('&nbsp;', ' ', $text);
         $text = str_replace(mb_convert_encoding('’', 'ISO-8859-1'), "'", $text);
         /** @var string $text */
         $text = Encoding::toUTF8($text);
