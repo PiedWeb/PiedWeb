@@ -109,7 +109,7 @@ final class GlobalTest extends TestCase
 
     public function testTextFlatContent(): void
     {
-        $rawHtml = '<body><header><h1>ExampleH1</h1></header><p>test</p><p>test</p><p>test</p><p>test</p><p>test</p><p>test</p><p>test</p><p>test</p><p>test</p><p>test</p><p>test</p><footer><div><p>Conditions de vente</p></div></footer></body>';
+        $rawHtml = '<body><header><h1>ExampleH1</h1></header><p>test</p><p>test</p><p>test</p><p>test</p><p>test</p><p>test</p><p>test</p><p>test</p><p>test</p><p>test</p><p>test</p><footer><div><p>Conditions de vente</p></div></footer><div id="off-canvas">offCanvas</div></body>';
         $crawler = new Crawler($rawHtml);
 
         $textData = new TextData($rawHtml, $crawler);
@@ -117,6 +117,7 @@ final class GlobalTest extends TestCase
         $flatContent = implode(' ', array_keys($textData->getFlatContent()));
         $this->assertNotEmpty($flatContent);
         $this->assertStringNotContainsString('Conditions de vente', $flatContent);
+        $this->assertStringNotContainsString('offCanvas', $flatContent);
         $this->assertStringContainsString('ExampleH1', $flatContent);
     }
 

@@ -58,7 +58,7 @@ final class TextData
         $xpath = '//head/title';
         $not = 'not(self::node()[count(.//'.implode('|.//', $tagsToGet).') > 0])';
         $notHeader = ' and not(ancestor::header)';
-        $notFooter = ' and not(ancestor::footer)';
+        $notFooter = " and not(ancestor::footer) and not(ancestor::*[@id='off-canvas'])";
         foreach ($tagsToGet as $tag) {
             $xpath .= ' | //'.$tag.'['.$not
                 .($removeFooterAndHeader ? $notFooter
