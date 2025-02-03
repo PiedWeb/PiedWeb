@@ -1,0 +1,36 @@
+{
+  "name": "piedweb/render-html-attributes",
+  "description": "[Twig Extension] Transform an array in html tag attributes.",
+  "keywords": [
+    "templating",
+    "template",
+    "view",
+    "plates",
+    "twig",
+    "attributes",
+    "html"
+  ],
+  "homepage": "https://piedweb.com",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": ":Robin",
+      "email": "contact@piedweb.com",
+      "homepage": "https://piedweb.com/",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": "^8.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "PiedWeb\\RenderAttributes\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "PiedWeb\\RenderAttributes\\Test\\": "tests"
+    }
+  }
+}

@@ -23,6 +23,7 @@
     "symfony/property-access": "^7.2",
     "symfony/serializer": "^6.3|^7",
     "thecodingmachine/safe": "dev-master",
+    "twig/twig": "^3.19",
     "voku/stringy": "^6.5"
   },
   "require-dev": {
@@ -51,6 +52,7 @@
       "PiedWeb\\ComposerSymlink\\": "packages/composer-symlink/src",
       "PiedWeb\\TextAnalyzer\\": "packages/text-analyzer/src",
       "PiedWeb\\Perso\\": "packages/perso",
+      "PiedWeb\\RenderAttributes\\": "packages/render-html-attribute",
       "PiedWeb\\MethodDocBlockGenerator\\": "packages/method-doc-block-generator/src"
     }
   },
@@ -62,7 +64,8 @@
       "PiedWeb\\Crawler\\Test\\": "packages/crawler/tests",
       "PiedWeb\\TextAnalyzer\\Test\\": "packages/text-analyzer/tests",
       "PiedWeb\\ComposerSymlink\\Test\\": "packages/composer-symlink/tests",
-      "PiedWeb\\MethodDocBlockGenerator\\Test\\": "packages/method-doc-block-generator/tests"
+      "PiedWeb\\MethodDocBlockGenerator\\Test\\": "packages/method-doc-block-generator/tests",
+      "PiedWeb\\RenderAttributes\\Test\\": "packages/render-html-attribute/tests"
     }
   },
   "scripts": {

@@ -13,6 +13,7 @@
 - [ComposerSymlink](packages/composer-symlink/README.md)
 - [Curl](packages/curl/README.md)
 - [Google](packages/google/README.md)
+- [RenderHtmlAttributes](packages/RenderHtmlAttribute/README.md)
 
 ## Credits
 

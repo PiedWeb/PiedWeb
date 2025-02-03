@@ -24,6 +24,7 @@ jobs:
                     - google
                     - text-analyzer
                     - composer-symlink
+                    - RenderHtmlAttribute
 
         steps:
             - uses: actions/checkout@v3
