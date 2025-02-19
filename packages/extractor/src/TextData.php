@@ -82,11 +82,12 @@ final class TextData
             throw new \Exception();
         }
 
+        $selector = 'p,h1,h2,h3,h4,h5,h6,li,div';
         $flatContent = [];
-        $elements = $this->crawler->filterXPath(self::getXPathToSelectNodeContent('p,h1,h2,h3,h4,h5,h6,li', true));
+        $elements = $this->crawler->filterXPath(self::getXPathToSelectNodeContent($selector, true));
 
         if (\count($elements) < 3) {
-            $elements = $this->crawler->filterXPath(self::getXPathToSelectNodeContent('p,h1,h2,h3,h4,h5,h6,li', false));
+            $elements = $this->crawler->filterXPath(self::getXPathToSelectNodeContent($selector, false));
         }
 
         foreach ($elements as $node) {
