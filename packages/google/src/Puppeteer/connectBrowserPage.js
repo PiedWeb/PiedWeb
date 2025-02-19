@@ -8,10 +8,10 @@ const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 puppeteer.use(StealthPlugin());
 
 /** @return {Promise<Page>} */
-async function connectBrowserPage(mustEmulate = true) {
+async function connectBrowserPage(mustEmulate = true, options = {}) {
   const WsEndpoint = process.env.PUPPETEER_WS_ENDPOINT;
   /** @type {Browser} */
-  const browser = await puppeteer.connect({ browserWSEndpoint: WsEndpoint });
+  const browser = await puppeteer.connect({ browserWSEndpoint: WsEndpoint, ...options });
   const pages = await browser.pages();
   if (!pages[0]) throw new Error('no page found');
   const page = pages[0];

@@ -21,21 +21,37 @@ class PuppeteerConnector
         }
     }
 
-    public function get(string $url, int $maxPages): string
+    /**
+     * @param array<string|int> $args
+     */
+    public function execute(string $script, array $args = []): string
     {
         $wsEndpoint = $this->getWsEndpoint();
 
         $outputFileLog = sys_get_temp_dir().'/puppeteer-direct-'.\Safe\getmypid();
+
+        $argsStr = '';
+        foreach ($args as $arg) {
+            if (! \is_string($arg)) { // so is int
+                $argsStr .= ' '.$arg;
+
+                continue;
+            }
+
+            $argsStr .= ' '.escapeshellarg($arg);
+        }
         $cmd = 'PUPPETEER_WS_ENDPOINT='.escapeshellarg($wsEndpoint).' '
-            .'node '.escapeshellarg(__DIR__.'/scrap.js').' '
-            .escapeshellarg($url).' '
-            .$maxPages
-            .' > '.escapeshellarg($outputFileLog);
+            .'node '.escapeshellarg($script).' '.$argsStr.' > '.escapeshellarg($outputFileLog);
 
         \Safe\exec($cmd);
         $rawOutput = \Safe\file_get_contents($outputFileLog); // going with file io to avoid truncated output
 
         return $rawOutput;
+    }
+
+    public function get(string $url, int $maxPages): string
+    {
+        return $this->execute(__DIR__.'/scrap.js', [$url, $maxPages]);
     }
 
     public static function screenshot(string $path, string $wsEndpoint = ''): void
