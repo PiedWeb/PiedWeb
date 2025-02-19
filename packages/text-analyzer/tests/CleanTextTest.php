@@ -8,10 +8,10 @@ class CleanTextTest extends \PHPUnit\Framework\TestCase
 {
     public function testFixEncoding(): void
     {
-        $text = 'une&nbsp;gourde&nbsp;ou';
-        $text2 = "une&nbsp;gourde\u{a0}ou";
-        $this->assertSame('une gourde ou', CleanText::fixEncoding($text));
-        $this->assertSame('une gourde ou', CleanText::fixEncoding($text2));
+        $text = 'une&nbsp;gourde&nbsp;ou ?';
+        $text2 = "une&nbsp;gourde\u{a0}ou ?";
+        $this->assertSame('une gourde ou ?', CleanText::fixEncoding($text));
+        $this->assertSame('une gourde ou ?', CleanText::fixEncoding($text2));
     }
 
     public function testSimpleSentences(): void

@@ -67,7 +67,7 @@ class CleanText
     {
         // fix encoding
         $text = str_replace(['&nbsp;', "\xC2\xA0"], ' ', $text);
-        $text = str_replace(mb_convert_encoding('’', 'ISO-8859-1'), "'", $text);
+        $text = str_replace('’', "'", $text);
         /** @var string $text */
         $text = Encoding::toUTF8($text);
         $text = html_entity_decode(htmlentities($text), 0, 'UTF-8');
