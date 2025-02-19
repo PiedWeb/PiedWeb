@@ -96,6 +96,10 @@ final class TextData
                 continue;
             }
 
+            if (\in_array(trim($text), ['Pressez la touche entrée'])) {
+                continue;
+            }
+
             $flatContent[$text] = $node->nodeName;
         }
 
