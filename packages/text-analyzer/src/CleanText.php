@@ -84,6 +84,8 @@ class CleanText
 
         $text = str_replace('', "'", $text);
 
+        $text = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
+
         return trim($text);
     }
 
