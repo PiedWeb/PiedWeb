@@ -2,6 +2,7 @@ parameters:
     level: max
     paths:
         - packages/text-analyzer/src
+        - packages/rison/src
         - packages/curl/src
         - packages/curl/tests
         - packages/google/src

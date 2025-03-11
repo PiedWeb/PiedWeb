@@ -40,6 +40,7 @@ class PuppeteerConnector
 
             $argsStr .= ' '.escapeshellarg($arg);
         }
+
         $cmd = 'PUPPETEER_WS_ENDPOINT='.escapeshellarg($wsEndpoint).' '
             .'node '.escapeshellarg($script).' '.$argsStr.' > '.escapeshellarg($outputFileLog);
 

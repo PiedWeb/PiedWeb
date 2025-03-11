@@ -11,9 +11,8 @@ namespace PiedWeb\RenderAttributes;
  */
 final class Attribute
 {
-    public static function merge(): array
+    public static function merge(...$arrays): array
     {
-        $arrays = \func_get_args();
         $result = [];
 
         foreach ($arrays as $array) {
@@ -36,7 +35,7 @@ final class Attribute
         return $arr1;
     }
 
-    public static function render(string $name, string $value = '')
+    public static function render(string $name, string $value = ''): string
     {
         if (\in_array($name, ['class', 'style'], true) && (! \is_string($value) || '' === $value)) {
             return '';
@@ -59,15 +58,14 @@ final class Attribute
         $result = '';
 
         foreach ($attributes as $name => $value) {
-            $result .= \is_int($name) ? static::render($value) : static::render($name, $value);
+            $result .= \is_int($name) ? self::render($value) : self::render($name, $value);
         }
 
         return $result;
     }
 
-    public static function mergeAndRender(): string
+    public static function mergeAndRender(...$arrays): string
     {
-        $arrays = \func_get_args();
         $result = [];
 
         foreach ($arrays as $array) {

@@ -10,10 +10,11 @@
 
 ## Documentation
 
+- [Rison](packages/rison/README.md)
 - [ComposerSymlink](packages/composer-symlink/README.md)
 - [Curl](packages/curl/README.md)
 - [Google](packages/google/README.md)
-- [RenderHtmlAttributes](packages/RenderHtmlAttribute/README.md)
+- [RenderHtmlAttributes](packages/render-html-attributes/README.md)
 
 ## Credits
 

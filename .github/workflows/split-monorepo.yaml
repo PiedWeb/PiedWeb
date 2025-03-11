@@ -23,8 +23,9 @@ jobs:
                     - extractor
                     - google
                     - text-analyzer
+                    - rison
                     - composer-symlink
-                    - RenderHtmlAttribute
+                    - render-html-attributes
 
         steps:
             - uses: actions/checkout@v3

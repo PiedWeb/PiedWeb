@@ -56,14 +56,14 @@ final class TextData
     {
         $tagsToGet = explode(',', $tag);
         $xpath = '//head/title';
-        $not = 'not(self::node()[count(.//'.implode('|.//', $tagsToGet).') > 0])';
+        $not = 'not(self::node()[count(.//'.implode('|.//', $tagsToGet).') > 0]) and not(@id="off-canvas")';
         $notHeader = ' and not(ancestor::header)';
         $notFooter = ' and not(ancestor::footer) and not(ancestor::*[@id="off-canvas"]) and not(ancestor::*[@id="main-menu"]) and not(ancestor::*[@id="site-navigation"]) and not(ancestor::nav)';
         // not(ancestor::*[@id='off-canvas' or contains(@class, 'site_footer') or contains(@class, 'footer_site')
         foreach ($tagsToGet as $tag) {
             $xpath .= ' | //'.$tag.'['.$not
                 .($removeFooterAndHeader ? $notFooter
-                    .(! \in_array($tag, ['h1', 'h2']) ? $notHeader : '') : '')
+                    .(\in_array($tag, ['h1', 'h2']) ? '' : $notHeader) : '')
                 .']';
         }
 
@@ -96,7 +96,7 @@ final class TextData
                 continue;
             }
 
-            if (\in_array(trim($text), ['Pressez la touche entrée'])) {
+            if ('Pressez la touche entrée' === trim($text)) {
                 continue;
             }
 

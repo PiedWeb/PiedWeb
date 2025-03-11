@@ -36,7 +36,7 @@
     "rector/rector": "^2",
     "symfony/var-dumper": "^6.3|^7",
     "symplify/monorepo-builder": "^11",
-    "vimeo/psalm": "^5"
+    "vimeo/psalm": "^6"
   },
   "extra": {
     "branch-alias": {
@@ -51,10 +51,14 @@
       "PiedWeb\\Crawler\\": "packages/crawler/src",
       "PiedWeb\\ComposerSymlink\\": "packages/composer-symlink/src",
       "PiedWeb\\TextAnalyzer\\": "packages/text-analyzer/src",
+      "PiedWeb\\Rison\\": "packages/rison/src",
       "PiedWeb\\Perso\\": "packages/perso",
       "PiedWeb\\RenderAttributes\\": "packages/render-html-attribute",
       "PiedWeb\\MethodDocBlockGenerator\\": "packages/method-doc-block-generator/src"
-    }
+    },
+    "files": [
+      "packages/rison/src/rison_functions.php"
+    ]
   },
   "autoload-dev": {
     "psr-4": {
@@ -63,6 +67,7 @@
       "PiedWeb\\Extractor\\Test\\": "packages/extractor/tests",
       "PiedWeb\\Crawler\\Test\\": "packages/crawler/tests",
       "PiedWeb\\TextAnalyzer\\Test\\": "packages/text-analyzer/tests",
+      "PiedWeb\\Rison\\Test\\": "packages/rison/tests",
       "PiedWeb\\ComposerSymlink\\Test\\": "packages/composer-symlink/tests",
       "PiedWeb\\MethodDocBlockGenerator\\Test\\": "packages/method-doc-block-generator/tests",
       "PiedWeb\\RenderAttributes\\Test\\": "packages/render-html-attribute/tests"

@@ -99,6 +99,7 @@ final class LinksExtractor
             if ($isHyperlink) {
                 ++$position;
             }
+
             $url = $this->extractUrl($element);
             if (null !== $url) {
                 $url = $parentBase->resolve($url);

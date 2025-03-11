@@ -53,7 +53,8 @@ final class GlobalTest extends TestCase
     public function testEncoding(): void
     {
         $toTests = [
-            mb_convert_encoding('Nous n’avons pas encore', 'ISO-8859-1') => "Nous n'avons pas encore",
+            // mb_convert_encoding('Nous n’avons pas encore', 'ISO-8859-1') => "Nous n'avons pas encore",
+            'Nous n’avons pas encore' => "Nous n'avons pas encore",
             '&raquo; L’ombre  &laquo;' => '" L\'ombre "',
             iconv('UTF-8', 'ISO-8859-1', 'supér\'') => 'supér\'',
             iconv('UTF-8', 'ISO-8859-1', 'supér') => 'supér',

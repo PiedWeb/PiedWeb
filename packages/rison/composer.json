@@ -1,0 +1,32 @@
+{
+  "name": "piedweb/rison",
+  "type": "library",
+  "description": "A PHP encoder and decoder for Rison, the compact JSON-like data format optimized for URIs.",
+  "keywords": [
+    "rison",
+    "encode",
+    "decode",
+    "json",
+    "Pied Web"
+  ],
+  "homepage": "https://dev.piedweb.com",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Robin D. (ak Pied Web)",
+      "email": "contact@piedweb.com",
+      "homepage": "https://piedweb.com"
+    }
+  ],
+  "require": {
+    "php": ">=8.3"
+  },
+  "autoload": {
+    "psr-4": {
+      "PiedWeb\\Rison\\": "src"
+    },
+    "files": [
+      "src/rison_functions.php"
+    ]
+  }
+}
