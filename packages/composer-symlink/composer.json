@@ -18,7 +18,7 @@
   "require": {
     "php": ">=8",
     "symfony/filesystem": "^7.1",
-    "thecodingmachine/safe": "^2.5 || dev-master"
+    "thecodingmachine/safe": "^3 || dev-master"
   },
   "autoload": {
     "psr-4": {
