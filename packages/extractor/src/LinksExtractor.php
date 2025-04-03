@@ -84,7 +84,8 @@ final class LinksExtractor
     private function extract(): array
     {
         $links = [];
-        $elements = str_starts_with($this->selector, '/') ? $this->crawler->filterXPath($this->selector)
+        $elements = str_starts_with($this->selector, '/')
+            ? $this->crawler->filterXPath($this->selector)
             : $this->crawler->filter($this->selector);
         $parentMayFollow = (new FollowExtractor($this->crawler, $this->headers))->mayFollow();
         $parentBase = (new BaseExtractor($this->crawler))->get() ?? $this->requestedUrl;
@@ -142,6 +143,10 @@ final class LinksExtractor
         }
 
         if (str_starts_with($url, '////')) {
+            return null;
+        }
+
+        if ('#' === $url) {
             return null;
         }
 

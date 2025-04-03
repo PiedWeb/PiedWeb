@@ -83,7 +83,7 @@ final class Link
 
     public function toMarkdown(): string
     {
-        return '['.($this->anchor ?? '').']('.$this->url.')';
+        return '['.$this->anchor.']('.$this->url.')';
     }
 
     #[Ignore]
@@ -207,7 +207,7 @@ final class Link
     public function getParentUrlStd(): Url
     {
         if (null === $this->parentUrlStd) {
-            $this->parentUrlStd = (new Url($this->parentUrl ?? throw new \Exception()));
+            $this->parentUrlStd = (new Url((string) $this->parentUrl));
         }
 
         return $this->parentUrlStd;
