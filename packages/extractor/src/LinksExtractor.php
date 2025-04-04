@@ -102,16 +102,18 @@ final class LinksExtractor
             }
 
             $url = $this->extractUrl($element);
-            if (null !== $url) {
-                $url = $parentBase->resolve($url);
-                $links[] = new Link(
-                    $url,
-                    $this->requestedUrl,
-                    $parentMayFollow,
-                    $element,
-                    position: $isHyperlink ? $position : 0
-                );
+            if (null === $url) {
+                continue;
             }
+
+            $url = $parentBase->resolve($url);
+            $links[] = new Link(
+                $url,
+                $this->requestedUrl,
+                $parentMayFollow,
+                $element,
+                position: $isHyperlink ? $position : 0
+            );
         }
 
         return $links;
