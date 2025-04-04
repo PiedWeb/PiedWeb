@@ -57,7 +57,7 @@ final class TextData
         $tagsToGet = explode(',', $tag);
         $xpath = '//head/title';
         $not = 'not(self::node()[count(.//'.implode('|.//', $tagsToGet).') > 0]) and not(@id="off-canvas")';
-        $not .= ' and not(@role="alert") and not(ancestor::*[@role="alert"])'; // temp patch to avoid error front end
+        // $not .= ' and not(@role="alert") and not(ancestor::*[@role="alert"])'; // temp patch to avoid error front end
         $notHeader = ' and not(ancestor::header)';
         $notFooter = ' and not(ancestor::footer) and not(ancestor::*[@id="off-canvas"]) and not(ancestor::*[@id="main-menu"]) and not(ancestor::*[@id="site-navigation"]) and not(ancestor::nav)';
 

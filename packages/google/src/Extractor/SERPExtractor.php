@@ -29,7 +29,7 @@ class SERPExtractor
     final public const array RELATED_DESKTOP = ["//a[@data-xbu][starts-with(@href, '/search')]/div"];
 
     // public const RESULT_SELECTOR = '//a[@role="presentation"]/parent::div/parent::div/parent::div';
-    final public const string RESULT_SELECTOR = "(//h2[text()='Extrait optimisé sur le Web']/ancestor::block-component//a[@class])[1]|//a[@role='presentation']";
+    final public const string RESULT_SELECTOR = "(//h2[text()='Extrait optimisé sur le Web']/ancestor::block-component//a[@class])[1]|//a[@role='presentation']|//div[@data-md=\"471\"]//a";
 
     // (//h2[text()='Extrait optimisé sur le Web']/ancestor::block-component//a[@class])[1]|//a[@role="presentation"]
     final public const string RESULT_SELECTOR_DESKTOP =
@@ -225,6 +225,11 @@ class SERPExtractor
 
         // skip shopping Results
         if (str_starts_with($linkNode->getAttribute('href'), 'https://www.google.')) {
+            return null;
+        }
+
+        // skip google image links (see in pos0)
+        if (str_starts_with($linkNode->getAttribute('href'), '/search?')) {
             return null;
         }
 
