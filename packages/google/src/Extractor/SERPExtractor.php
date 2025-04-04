@@ -223,25 +223,30 @@ class SERPExtractor
             throw new \Exception('Google changes his selector.');
         }
 
+        $href = $linkNode->getAttribute('href');
         // skip shopping Results
-        if (str_starts_with($linkNode->getAttribute('href'), 'https://www.google.')) {
+        if (str_starts_with($href, 'https://www.google.')) {
             return null;
         }
 
         // skip google image links (see in pos0)
-        if (str_starts_with($linkNode->getAttribute('href'), '/search?')) {
+        if (str_starts_with($href, '/search?')) {
             return null;
         }
 
-        if (str_starts_with($linkNode->getAttribute('href'), '/aclk?')) {
+        if (str_starts_with($href, '/aclk?')) {
             return null;
+        }
+
+        if (str_starts_with($href, '/interstitial?url=')) {
+            $href = substr($href, \strlen('/interstitial?url='));
         }
 
         $toReturn = new SearchResult(
             organicPos: $organicPos,
             position: $position,
             pixelPos: $this->getPixelPosFor($linkNode->getNodePath() ?? ''),
-            url: $linkNode->getAttribute('href'),
+            url: $href,
             title: (new Crawler($linkNode))->text(''),
             ads : $ads
         );
