@@ -11,7 +11,32 @@ PUPPETEER_HEADLESS=0 node vendor/piedweb/google/src/Puppeteer/launchBrowser.js '
 const { executablePath, Browser } = require('puppeteer');
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+const { exec } = require('child_process');
+const { promisify } = require('util');
+const execAsync = promisify(exec);
 puppeteer.use(StealthPlugin());
+
+/**
+ * Tue uniquement les processus Chrome utilisant le même userDataDir
+ * @param {string} userDataDir - Le répertoire de données utilisateur
+ */
+async function killExistingBrowserProcesses(userDataDir) {
+  try {
+    const escapedUserDataDir = userDataDir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    try {
+      const killCommand = `pkill -f -- "--user-data-dir.*${escapedUserDataDir}"`;
+      await execAsync(killCommand);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    } catch (error) {
+      // Aucun processus trouvé, c'est normal
+    }
+
+    // Attendre un peu pour s'assurer que les processus sont bien terminés
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  } catch (error) {
+    // Ignorer les erreurs de nettoyage
+  }
+}
 
 /**
  * @returns {Browser}
@@ -21,6 +46,11 @@ async function launchBrowser() {
   const windowSize = process.argv[3] ? process.argv[3] : '';
   const proxy = process.env.PROXY_GATE ? process.env.PROXY_GATE : '';
   const userDataDir = process.env.PUPPETEER_USER_DATA_DIR || null;
+
+  // Nettoyer les processus existants utilisant le même userDataDir
+  if (userDataDir) {
+    await killExistingBrowserProcesses(userDataDir);
+  }
 
   const options = {
     defaultViewport: null,
@@ -35,7 +65,7 @@ async function launchBrowser() {
         '--no-sandbox',
         '--disable-setuid-sandbox',
         // '--single-process',
-        '--no-zygote',
+        // '--no-zygote',
       ],
       ...(proxy ? ['--proxy-server=' + proxy] : []),
       ...(windowSize ? ['--window-size=' + windowSize] : ['--window-size=360,840']),

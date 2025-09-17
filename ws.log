@@ -1,10 +1,17 @@
-/home/robin/localhost/PiedWebMono/node_modules/puppeteer-core/lib/cjs/puppeteer/node/BrowserLauncher.js:166
-                throw new Error(`The browser is already running for ${launchArgs.userDataDir}. Use a different \`userDataDir\` or stop the running browser first.`);
-                      ^
+/home/robin/localhost/PiedWebMono/node_modules/puppeteer-core/lib/cjs/puppe
+  #  node[906776]: void node::ResetStdio() at ../src/node.cc:756
+  #  Assertion failed: !(err != 0) || (err == -1 && (*__errno_location ()) == 1)
 
-Error: The browser is already running for /tmp/chrome-puppeteer-user-data. Use a different `userDataDir` or stop the running browser first.
-    at ChromeLauncher.launch (/home/robin/localhost/PiedWebMono/node_modules/puppeteer-core/lib/cjs/puppeteer/node/BrowserLauncher.js:166:23)
-    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+----- Native stack trace -----
+
+ 1: 0xf76da7 node::Assert(node::AssertionInfo const&) [node]
+ 2: 0xf23a44  [node]
+ 3: 0xf249a1 node::TearDownOncePerProcess() [node]
+ 4: 0xf2b84c node::Start(int, char**) [node]
+ 5: 0x794cc402a1ca  [/lib/x86_64-linux-gnu/libc.so.6]
+ 6: 0x794cc402a28b __libc_start_main [/lib/x86_64-linux-gnu/libc.so.6]
+ 7: 0xe71bde _start [node]
+t process.processTicksAndRejections (node:internal/process/task_queues:105:5)
     at async PuppeteerExtra.launch (/home/robin/localhost/PiedWebMono/node_modules/puppeteer-extra/dist/index.cjs.js:128:25)
     at async launchBrowser (/home/robin/localhost/PiedWebMono/packages/google/src/Puppeteer/launchBrowser.js:25:17)
 

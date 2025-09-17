@@ -7,6 +7,10 @@ puppeteer.use(StealthPlugin());
 closeBrowser().then(() => process.exit(0));
 
 async function closeBrowser() {
-  const page = await connectBrowserPage();
-  await page.browser().close();
+  try {
+    const page = await connectBrowserPage();
+    await page.browser().close();
+  } catch (error) {
+    console.error(error);
+  }
 }
