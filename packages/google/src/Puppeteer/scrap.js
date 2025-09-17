@@ -97,6 +97,7 @@ async function get(url, maxPages) {
   const page = await connectBrowserPage();
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   await sleep(1000);
+  // if there is a captcha, close an restart the browser in headless = false
   await manageCookie(page);
   await manageLoadMoreResultsViaInfiniteScroll(page, maxPages);
   await manageLoadMoreResultsViaBtn(page, maxPages);

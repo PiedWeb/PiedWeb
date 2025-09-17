@@ -16,13 +16,11 @@ puppeteer.use(StealthPlugin());
  * @returns {Browser}
  */
 async function launchBrowser() {
-  const headless = process.env.PUPPETEER_HEADLESS === 'false' ? false : true;
+  const headless = ['false', '0'].includes(process.env.PUPPETEER_HEADLESS) ? false : true;
   const windowSize = process.argv[3] ? process.argv[3] : '';
   const proxy = process.env.PROXY_GATE ? process.env.PROXY_GATE : '';
   const userDataDir = process.env.PUPPETEER_USER_DATA_DIR || '/tmp/chrome-puppeteer-user-data';
-
-  /** @type {Browser} */
-  let browser = await puppeteer.launch({
+  const options = {
     defaultViewport: null,
     headless: headless,
     executablePath: process.env.CHROME_BIN ?? '/usr/bin/google-chrome',
@@ -40,7 +38,10 @@ async function launchBrowser() {
       ...(proxy ? ['--proxy-server=' + proxy] : []),
       ...(windowSize ? ['--window-size=' + windowSize] : ['--window-size=360,840']),
     ],
-  });
+  };
+
+  /** @type {Browser} */
+  browser = await puppeteer.launch(options);
 
   // Wait for the browser to launch and retrieve the WebSocket endpoint
   console.log(await browser.wsEndpoint());
