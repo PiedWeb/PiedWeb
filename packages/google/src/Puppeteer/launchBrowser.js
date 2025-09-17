@@ -3,8 +3,9 @@
 PROXY_GATE=https://127.0.0.1:9876 \
 CHROME_BIN=/usr/bin/google-chrome \
 node packages/google/src/Puppeteer/launchBrowser.js 'fr' > ws.log 2>&1 &
+PUPPETEER_HEADLESS=0 node packages/google/src/Puppeteer/launchBrowser.js 'fr'
 
-PUPPETEER_HEADLESS=false node vendor/piedweb/google/src/Puppeteer/launchBrowser.js 'fr' '1920,1080' &
+PUPPETEER_HEADLESS=0 node vendor/piedweb/google/src/Puppeteer/launchBrowser.js 'fr' '1920,1080' &
  */
 
 const { executablePath, Browser } = require('puppeteer');
@@ -19,12 +20,13 @@ async function launchBrowser() {
   const headless = ['false', '0'].includes(process.env.PUPPETEER_HEADLESS) ? false : true;
   const windowSize = process.argv[3] ? process.argv[3] : '';
   const proxy = process.env.PROXY_GATE ? process.env.PROXY_GATE : '';
-  const userDataDir = process.env.PUPPETEER_USER_DATA_DIR || '/tmp/chrome-puppeteer-user-data';
+  const userDataDir = process.env.PUPPETEER_USER_DATA_DIR || null;
+
   const options = {
     defaultViewport: null,
     headless: headless,
     executablePath: process.env.CHROME_BIN ?? '/usr/bin/google-chrome',
-    userDataDir: userDataDir,
+    ...(userDataDir && { userDataDir: userDataDir }),
     args: [
       ...[
         '--disable-web-security',
