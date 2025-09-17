@@ -56,10 +56,11 @@ class PuppeteerConnector
         $rawOutput = $this->execute(__DIR__.'/scrap.js', [$url, $maxPages]);
 
         if ('captcha' === trim($rawOutput)) {
-            dump('retry');
             $this->close();
             $_SERVER['PUPPETEER_HEADLESS'] = false;
             $rawOutput = $this->execute(__DIR__.'/scrap.js', [$url, $maxPages], 30000);
+            $this->close();
+            $_SERVER['PUPPETEER_HEADLESS'] = true;
         }
 
         return $rawOutput;
