@@ -17,6 +17,7 @@ class PuppeteerConnector
         foreach (static::$wsEndpointList as $key => $wsEndpoint) {
             if (str_starts_with($key, $id)) {
                 exec('PUPPETEER_WS_ENDPOINT='.escapeshellarg($wsEndpoint).' node '.escapeshellarg(__DIR__.'/closeBrowser.js'));
+                unset(static::$wsEndpointList[$key]);
             }
         }
     }
@@ -24,7 +25,7 @@ class PuppeteerConnector
     /**
      * @param array<string|int> $args
      */
-    public function execute(string $script, array $args = []): string
+    public function execute(string $script, array $args = [], int $scrapWait = 1000): string
     {
         $wsEndpoint = $this->getWsEndpoint();
 
@@ -41,7 +42,7 @@ class PuppeteerConnector
             $argsStr .= ' '.escapeshellarg($arg);
         }
 
-        $cmd = 'PUPPETEER_WS_ENDPOINT='.escapeshellarg($wsEndpoint).' '
+        $cmd = 'SCRAP_WAIT='.$scrapWait.' PUPPETEER_WS_ENDPOINT='.escapeshellarg($wsEndpoint).' '
             .'node '.escapeshellarg($script).' '.$argsStr.' > '.escapeshellarg($outputFileLog);
 
         \Safe\exec($cmd);
@@ -52,7 +53,16 @@ class PuppeteerConnector
 
     public function get(string $url, int $maxPages): string
     {
-        return $this->execute(__DIR__.'/scrap.js', [$url, $maxPages]);
+        $rawOutput = $this->execute(__DIR__.'/scrap.js', [$url, $maxPages]);
+
+        if ('captcha' === trim($rawOutput)) {
+            dump('retry');
+            $this->close();
+            $_SERVER['PUPPETEER_HEADLESS'] = false;
+            $rawOutput = $this->execute(__DIR__.'/scrap.js', [$url, $maxPages], 30000);
+        }
+
+        return $rawOutput;
     }
 
     public static function screenshot(string $path, string $wsEndpoint = ''): void
@@ -98,8 +108,9 @@ class PuppeteerConnector
             $cmd .= 'PROXY_GATE='.escapeshellarg($this->proxy).' ';
         }
 
-        if (isset($_SERVER['PUPPETEER_HEADLESS'])) {
-            $cmd .= 'PUPPETEER_HEADLESS='.$_SERVER['PUPPETEER_HEADLESS'].' '; // @phpstan-ignore-line
+        if (isset($_SERVER['PUPPETEER_HEADLESS'])
+            && \in_array($_SERVER['PUPPETEER_HEADLESS'], ['0', 'false', false], true)) {
+            $cmd .= 'PUPPETEER_HEADLESS=0 ';
         }
 
         $outputFileLog = sys_get_temp_dir().'/puppeteer-direct-'.$id;

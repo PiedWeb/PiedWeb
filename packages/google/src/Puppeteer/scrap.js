@@ -1,7 +1,7 @@
 /**
  *
  * PUPPETEER_WS_ENDPOINT='xxx' node packages/google/src/Puppeteer/scrap.js https://www.google.fr/search?q=pied+web
- * PUPPETEER_HEADLESS=0 PUPPETEER_WS_ENDPOINT='ws://127.0.0.1:37109/devtools/browser/a2943f64-8a79-488f-bac8-837b9b4f4ee2' node packages/google/src/Puppeteer/scrap.js https://www.google.fr/search?q=pied+web
+ * PUPPETEER_HEADLESS=0 PUPPETEER_WS_ENDPOINT='ws://127.0.0.1:46273/devtools/browser/e1eafb4f-b8ca-491a-84db-55c2cdefc7b5' node packages/google/src/Puppeteer/scrap.js https://www.google.fr/search?q=pied+web
 
  */
 const { Page } = require('puppeteer');
@@ -92,12 +92,19 @@ async function manageLoadMoreResultsViaBtn(page, maxPages, clicked = 1) {
   return await manageLoadMoreResultsViaBtn(page, maxPages, clicked);
 }
 
+async function detectCaptcha(page) {
+  return (await page.content()).includes('À propos de cette page');
+}
+
 /**  @param {string} url */
 async function get(url, maxPages) {
   const page = await connectBrowserPage();
   await page.goto(url, { waitUntil: 'domcontentloaded' });
-  await sleep(1000);
-  // if there is a captcha, close an restart the browser in headless = false
+  const scrapWait = process.env.SCRAP_WAIT ? parseInt(process.env.SCRAP_WAIT, 10) : 1000;
+  await sleep(scrapWait);
+  if (await detectCaptcha(page)) {
+    return 'captcha';
+  }
   await manageCookie(page);
   await manageLoadMoreResultsViaInfiniteScroll(page, maxPages);
   await manageLoadMoreResultsViaBtn(page, maxPages);

@@ -8,5 +8,5 @@ closeBrowser().then(() => process.exit(0));
 
 async function closeBrowser() {
   const page = await connectBrowserPage();
-  page.browser().close();
+  await page.browser().close();
 }
