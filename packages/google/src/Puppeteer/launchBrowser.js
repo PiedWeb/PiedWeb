@@ -19,11 +19,14 @@ async function launchBrowser() {
   const headless = process.env.PUPPETEER_HEADLESS === 'false' ? false : true;
   const windowSize = process.argv[3] ? process.argv[3] : '';
   const proxy = process.env.PROXY_GATE ? process.env.PROXY_GATE : '';
+  const userDataDir = process.env.PUPPETEER_USER_DATA_DIR || '/tmp/chrome-puppeteer-user-data';
 
   /** @type {Browser} */
   let browser = await puppeteer.launch({
+    defaultViewport: null,
     headless: headless,
     executablePath: process.env.CHROME_BIN ?? '/usr/bin/google-chrome',
+    userDataDir: userDataDir,
     args: [
       ...[
         '--disable-web-security',
@@ -31,10 +34,11 @@ async function launchBrowser() {
         '--accept-lang=' + (process.argv[2] ?? 'en'),
         '--no-sandbox',
         '--disable-setuid-sandbox',
-        // --proxy-server=127.0.0.1:9876
+        // '--single-process',
+        '--no-zygote',
       ],
       ...(proxy ? ['--proxy-server=' + proxy] : []),
-      ...(windowSize ? ['--window-size=' + windowSize] : []),
+      ...(windowSize ? ['--window-size=' + windowSize] : ['--window-size=360,840']),
     ],
   });
 

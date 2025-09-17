@@ -1,0 +1,11 @@
+/home/robin/localhost/PiedWebMono/node_modules/puppeteer-core/lib/cjs/puppeteer/node/BrowserLauncher.js:166
+                throw new Error(`The browser is already running for ${launchArgs.userDataDir}. Use a different \`userDataDir\` or stop the running browser first.`);
+                      ^
+
+Error: The browser is already running for /tmp/chrome-puppeteer-user-data. Use a different `userDataDir` or stop the running browser first.
+    at ChromeLauncher.launch (/home/robin/localhost/PiedWebMono/node_modules/puppeteer-core/lib/cjs/puppeteer/node/BrowserLauncher.js:166:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async PuppeteerExtra.launch (/home/robin/localhost/PiedWebMono/node_modules/puppeteer-extra/dist/index.cjs.js:128:25)
+    at async launchBrowser (/home/robin/localhost/PiedWebMono/packages/google/src/Puppeteer/launchBrowser.js:25:17)
+
+Node.js v22.12.0
