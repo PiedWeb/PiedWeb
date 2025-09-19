@@ -42,13 +42,28 @@ class PuppeteerConnector
             $argsStr .= ' '.escapeshellarg($arg);
         }
 
-        $cmd = 'SCRAP_WAIT='.$scrapWait.' PUPPETEER_WS_ENDPOINT='.escapeshellarg($wsEndpoint).' '
-            .'node '.escapeshellarg($script).' '.$argsStr.' > '.escapeshellarg($outputFileLog);
+        $captchaToken = $this->getCaptchaToken();
+        $cmd = null !== $captchaToken ? 'PUPPETEER_2CAPTCHA_TOKEN='.escapeshellarg($captchaToken).' ' : '';
+        $cmd .= 'SCRAP_WAIT='.$scrapWait.' ';
+        $cmd .= 'PUPPETEER_WS_ENDPOINT='.escapeshellarg($wsEndpoint).' ';
+        $cmd .= 'node '.escapeshellarg($script).' '.$argsStr.' > '.escapeshellarg($outputFileLog);
 
         \Safe\exec($cmd);
         $rawOutput = \Safe\file_get_contents($outputFileLog); // going with file io to avoid truncated output
 
         return $rawOutput;
+    }
+
+    private function getCaptchaToken(): ?string
+    {
+        if (! isset($_SERVER['PUPPETEER_2CAPTCHA_TOKEN'])) {
+            return null;
+        }
+        if (! \is_string($_SERVER['PUPPETEER_2CAPTCHA_TOKEN'])) { // @phpstan-ignore-line
+            return null;
+        }
+
+        return $_SERVER['PUPPETEER_2CAPTCHA_TOKEN'];
     }
 
     public function get(string $url, int $maxPages): string
