@@ -1,11 +1,30 @@
 /**
  *
  * PUPPETEER_WS_ENDPOINT='xxx' node packages/google/src/Puppeteer/scrap.js https://www.google.fr/search?q=pied+web
- * PUPPETEER_HEADLESS=0 PUPPETEER_WS_ENDPOINT='ws://127.0.0.1:46273/devtools/browser/e1eafb4f-b8ca-491a-84db-55c2cdefc7b5' node packages/google/src/Puppeteer/scrap.js https://www.google.fr/search?q=pied+web
+ * export PUPPETEER_HEADLESS=0
+ * export PUPPETEER_WS_ENDPOINT='ws://127.0.0.1:41879/devtools/browser/c549a5c4-f341-4600-8e3e-1c0a9c39c44d'
+ * export PUPPETEER_2CAPTCHA_TOKEN='XXX'
+ * node packages/google/src/Puppeteer/scrap.js https://www.google.fr/search?q=pied+web
 
  */
 const { Page } = require('puppeteer');
 const { connectBrowserPage } = require('./connectBrowserPage');
+const RecaptchaPlugin = require('puppeteer-extra-plugin-recaptcha');
+const puppeteer = require('puppeteer-extra');
+
+const captchaToken = process.env.PUPPETEER_2CAPTCHA_TOKEN;
+
+if (captchaToken) {
+  puppeteer.use(
+    RecaptchaPlugin({
+      provider: {
+        id: '2captcha',
+        token: captchaToken,
+      },
+      visualFeedback: true,
+    })
+  );
+}
 
 const url = process.argv[2];
 const maxPages = process.argv[3] ? parseInt(process.argv[3], 10) : 5;
@@ -102,6 +121,11 @@ async function get(url, maxPages) {
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   const scrapWait = process.env.SCRAP_WAIT ? parseInt(process.env.SCRAP_WAIT, 10) : 1000;
   await sleep(scrapWait);
+  if ((await detectCaptcha(page)) && captchaToken) {
+    console.log(' - try to solve captcha for ', url);
+    await page.solveRecaptchas();
+    await sleep(5000);
+  }
   if (await detectCaptcha(page)) {
     return 'captcha';
   }

@@ -2,6 +2,7 @@
   "dependencies": {
     "puppeteer": "^24",
     "puppeteer-extra": "^3",
+    "puppeteer-extra-plugin-recaptcha": "^3",
     "puppeteer-extra-plugin-stealth": "^2"
   }
 }
