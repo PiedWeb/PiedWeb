@@ -59,7 +59,7 @@ class PuppeteerConnector
             $this->close();
             $_SERVER['PUPPETEER_HEADLESS'] = false;
             $rawOutput = $this->execute(__DIR__.'/scrap.js', [$url, $maxPages], 30000);
-            $this->close();
+            $this->close(); // on referme le brower pour repasser en headless
             $_SERVER['PUPPETEER_HEADLESS'] = true;
         }
 
