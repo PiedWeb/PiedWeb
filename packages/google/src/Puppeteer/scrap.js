@@ -118,6 +118,7 @@ async function detectCaptcha(page) {
 /**  @param {string} url */
 async function get(url, maxPages) {
   const page = await connectBrowserPage();
+  // first go to https://www.google.com/webhp?hl=en&gl=en and type kw
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   const scrapWait = process.env.SCRAP_WAIT ? parseInt(process.env.SCRAP_WAIT, 10) : 1000;
   await sleep(scrapWait);

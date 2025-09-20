@@ -5,80 +5,14 @@ CHROME_BIN=/usr/bin/google-chrome \
 node packages/google/src/Puppeteer/launchBrowser.js 'fr' > ws.log 2>&1 &
 PUPPETEER_HEADLESS=0 node packages/google/src/Puppeteer/launchBrowser.js 'fr'
 
+PUPPETEER_LANG=en
+PUPPETEER_WINDOW_SIZE=1920,1080
+PUPPETEER_USER_DATA_DIR=...
+PROXY_GATE=...
+
 PUPPETEER_HEADLESS=0 node vendor/piedweb/google/src/Puppeteer/launchBrowser.js 'fr' '1920,1080' &
  */
 
-const { executablePath, Browser } = require('puppeteer');
-const puppeteer = require('puppeteer-extra');
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-const { exec } = require('child_process');
-const { promisify } = require('util');
-const execAsync = promisify(exec);
-puppeteer.use(StealthPlugin());
-
-/**
- * Tue uniquement les processus Chrome utilisant le même userDataDir
- * @param {string} userDataDir - Le répertoire de données utilisateur
- */
-async function killExistingBrowserProcesses(userDataDir) {
-  try {
-    const escapedUserDataDir = userDataDir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    try {
-      const killCommand = `pkill -f -- "--user-data-dir.*${escapedUserDataDir}"`;
-      await execAsync(killCommand);
-      await new Promise((resolve) => setTimeout(resolve, 500));
-    } catch (error) {
-      // Aucun processus trouvé, c'est normal
-    }
-
-    // Attendre un peu pour s'assurer que les processus sont bien terminés
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-  } catch (error) {
-    // Ignorer les erreurs de nettoyage
-  }
-}
-
-/**
- * @returns {Browser}
- */
-async function launchBrowser() {
-  const headless = ['false', '0'].includes(process.env.PUPPETEER_HEADLESS) ? false : true;
-  const windowSize = process.argv[3] ? process.argv[3] : '';
-  const proxy = process.env.PROXY_GATE ? process.env.PROXY_GATE : '';
-  const userDataDir = process.env.PUPPETEER_USER_DATA_DIR || null;
-
-  // Nettoyer les processus existants utilisant le même userDataDir
-  if (userDataDir) {
-    await killExistingBrowserProcesses(userDataDir);
-  }
-
-  const options = {
-    defaultViewport: null,
-    headless: headless,
-    executablePath: process.env.CHROME_BIN ?? '/usr/bin/google-chrome',
-    ...(userDataDir && { userDataDir: userDataDir }),
-    args: [
-      ...[
-        '--disable-web-security',
-        '--lang=' + (process.argv[2] ?? 'en'),
-        '--accept-lang=' + (process.argv[2] ?? 'en'),
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        // '--single-process',
-        // '--no-zygote',
-      ],
-      ...(proxy ? ['--proxy-server=' + proxy] : []),
-      ...(windowSize ? ['--window-size=' + windowSize] : ['--window-size=360,840']),
-    ],
-  };
-
-  /** @type {Browser} */
-  browser = await puppeteer.launch(options);
-
-  // Wait for the browser to launch and retrieve the WebSocket endpoint
-  console.log(await browser.wsEndpoint());
-
-  return browser;
-}
+const { launchBrowser } = require('./launchBrowserHelper');
 
 launchBrowser().then(() => process.stdin.resume());
