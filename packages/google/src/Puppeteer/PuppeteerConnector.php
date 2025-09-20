@@ -133,6 +133,7 @@ class PuppeteerConnector
         $cmd .= 'node '.escapeshellarg(__DIR__.'/launchBrowser.js').' '.escapeshellarg($this->language)
                     .' > '.escapeshellarg($outputFileLog).' 2>&1 &';
         \Safe\exec($cmd);
+        echo $cmd;
         for ($i = 0; $i < 5; ++$i) {
             sleep(1);
             static::$wsEndpointList[$id] = trim((string) file_get_contents($outputFileLog));

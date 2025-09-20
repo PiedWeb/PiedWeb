@@ -99,10 +99,10 @@ async function launchBrowser(
   }
 
   const options = {
-    pipe: true,
+    // pipe: true, // disable endpoint
     defaultViewport: null,
     headless: headless,
-    executablePath: chromeBin,
+    ...(chromeBin && { executablePath: chromeBin }),
     ...(userDataDir && { userDataDir: userDataDir }),
     args: [
       ...[
@@ -131,8 +131,7 @@ async function launchBrowser(
   /** @type {Browser} */
   const browser = await puppeteer.launch(options);
 
-  // Wait for the browser to launch and retrieve the WebSocket endpoint
-  console.log(browser.wsEndpoint());
+  console.log(await browser.wsEndpoint());
 
   return browser;
 }
