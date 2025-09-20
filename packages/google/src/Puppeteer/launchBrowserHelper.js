@@ -1,28 +1,9 @@
-const { executablePath, Browser } = require('puppeteer');
+const { Browser } = require('puppeteer');
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const { exec } = require('child_process');
 const { promisify } = require('util');
 const execAsync = promisify(exec);
-
-/**
- * Échappe un argument shell de manière sécurisée
- * @param {string} arg - L'argument à échapper
- * @returns {string} L'argument échappé
- */
-function escapeShellArg(arg) {
-  if (typeof arg !== 'string') {
-    return arg;
-  }
-
-  // Si l'argument ne contient pas de caractères spéciaux, pas besoin d'échapper
-  if (/^[a-zA-Z0-9\/_.-]+$/.test(arg)) {
-    return arg;
-  }
-
-  // Échappe les guillemets doubles et entoure de guillemets
-  return '"' + arg.replace(/["\\]/g, '\\$&') + '"';
-}
 
 puppeteer.use(StealthPlugin());
 
@@ -31,20 +12,13 @@ puppeteer.use(StealthPlugin());
  * @param {string} userDataDir - Le répertoire de données utilisateur
  */
 async function killExistingBrowserProcesses(userDataDir) {
+  const escapedUserDataDir = userDataDir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   try {
-    const escapedUserDataDir = userDataDir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    try {
-      const killCommand = `pkill -f -- "--user-data-dir.*${escapedUserDataDir}"`;
-      await execAsync(killCommand);
-      await new Promise((resolve) => setTimeout(resolve, 500));
-    } catch (error) {
-      // Aucun processus trouvé, c'est normal
-    }
-
-    // Attendre un peu pour s'assurer que les processus sont bien terminés
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const killCommand = `pkill -f -- "--user-data-dir.*${escapedUserDataDir}"`;
+    await execAsync(killCommand);
+    await new Promise((resolve) => setTimeout(resolve, 500));
   } catch (error) {
-    // Ignorer les erreurs de nettoyage
+    // Aucun processus trouvé, c'est normal
   }
 }
 
@@ -95,7 +69,7 @@ async function launchBrowser(
 
   // Nettoyer les processus existants utilisant le même userDataDir
   if (userDataDir) {
-    await killExistingBrowserProcesses(userDataDir);
+    await killExistingBrowserProcesses(userDataDir + (profile ? '/' + profile : ''));
   }
 
   const options = {
