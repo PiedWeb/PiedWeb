@@ -1,4 +1,11 @@
 {
+  "name": "@piedweb/google",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PiedWeb/PiedWebMono.git",
+    "directory": "packages/google"
+  },
   "dependencies": {
     "puppeteer": "^24",
     "puppeteer-extra": "^3",
