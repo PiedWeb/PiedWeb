@@ -41,7 +41,7 @@ class LinksVisualizer
 
         $records = $csv->getRecords();
         foreach ($records as $r) {
-            if (! isset($r['To'])) {
+            if (! isset($r['To'], $r['From'])) {
                 throw new \LogicException();
             }
 
@@ -49,15 +49,22 @@ class LinksVisualizer
                 continue;
             }
 
-            if (! isset($this->results['nodes'][$r['From']])) {
+            $from = \is_scalar($r['From']) ? $r['From'] : '';
+            $to = \is_scalar($r['To']) ? $r['To'] : '';
+
+            if ('' === $from || '' === $to) {
                 continue;
             }
 
-            if (! isset($this->results['nodes'][$r['To']])) {
+            if (! isset($this->results['nodes'][$from])) {
                 continue;
             }
 
-            $this->results['links'][] = ['target' => $r['From'], 'source' => $r['To']];
+            if (! isset($this->results['nodes'][$to])) {
+                continue;
+            }
+
+            $this->results['links'][] = ['target' => $from, 'source' => $to];
         }
 
         $this->results['nodes'] = array_values($this->results['nodes']);

@@ -228,7 +228,7 @@ class ExtendedClient extends Client
     {
         // $this->setOpt(CURLOPT_BUFFERSIZE, 128); // more progress info
         $this->setOpt(\CURLOPT_NOPROGRESS, false);
-        /** @psalm-suppress MissingClosureParamType */
+
         $this->setOpt(\CURLOPT_PROGRESSFUNCTION, static function ($handle, $totalBytes, $receivedBytes) use ($maxBytes) {
             if ($totalBytes > $maxBytes) {
                 return 1;

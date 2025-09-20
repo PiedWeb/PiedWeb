@@ -15,7 +15,6 @@ final class TextData
     ) {
     }
 
-    /** @psalm-suppress RedundantPropertyInitializationCheck */
     public function getTextAnalysis(): Analysis
     {
         return (new TextAnalyzer($this->getText(), false, 1))->exec();
@@ -113,7 +112,6 @@ final class TextData
         $textLenght = \strlen($this->getText());
         $htmlLenght = \strlen(CleanText::fixEncoding($this->html));
 
-        /** @psalm-suppress InvalidOperand */
         return (int) ($htmlLenght > 0 ? round($textLenght / $htmlLenght * 100) : 0);
     }
 }

@@ -35,8 +35,7 @@
     "phpunit/phpunit": "^11",
     "rector/rector": "^2",
     "symfony/var-dumper": "^6.3|^7",
-    "symplify/monorepo-builder": "^11",
-    "vimeo/psalm": "^6"
+    "symplify/monorepo-builder": "^11"
   },
   "extra": {
     "branch-alias": {
@@ -77,7 +76,6 @@
     "stan": "vendor/bin/phpstan analyze packages/*/src",
     "rector": "vendor/bin/rector process",
     "format": "vendor/bin/php-cs-fixer fix && vendor/bin/php-cs-fixer fix rector.php",
-    "psalm": "vendor/bin/psalm --no-suggestions --no-cache",
     "test": "vendor/bin/phpunit",
     "test-google": "vendor/bin/phpunit --stop-on-failure --testsuite google"
   },

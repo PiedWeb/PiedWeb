@@ -82,7 +82,6 @@ final class RecordPlayer
                  // we will retry network errror
                 && NetworkStatus::NETWORK_ERROR != ($r['network_status'] ?? true)
             ) {
-                /** @psalm-suppress PossibleRawObjectIteration */
                 foreach ($r as $k => $v) {
                     $kFunction = 'set'.Stringy::create($k)->camelize()
                         .(isset(Url::ARRAY_EXPORTED[$k]) ? 'FromString' : '');

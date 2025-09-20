@@ -10,7 +10,6 @@ class Client
 
     protected string $errorMessage = '';
 
-    /** @psalm-suppress PropertyNotSetInConstructor */
     protected string $target;
 
     protected ?Response $response = null;

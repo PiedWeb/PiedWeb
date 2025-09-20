@@ -491,7 +491,6 @@ final class Url
 
     public function setSource(string $source): void
     {
-        /** @psalm-suppress RiskyTruthyFalsyComparison */
         $this->source = realpath($source) ?: '';
     }
 

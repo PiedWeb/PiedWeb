@@ -10,7 +10,6 @@ final class CrawlerConfig
 {
     private ?string $id = null;
 
-    /** @psalm-suppress PropertyNotSetInConstructor */
     private UrlManipuler $startUrl;
 
     public ?RobotsTxt $robotsTxt = null;

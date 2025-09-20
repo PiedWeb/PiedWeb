@@ -135,7 +135,7 @@ class RisonDecoder extends Rison
             if (! $value && $this->eof) {
                 $this->parseError('Unexpected end of string');
             }
-
+            \assert(\is_scalar($key));
             $obj[$key] = $value;
         }
 

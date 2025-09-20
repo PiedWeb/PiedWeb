@@ -82,7 +82,6 @@ final class Crawler
             }
 
             if (0 !== $i) {
-                /** @psalm-suppress ArgumentTypeCoercion */
                 usleep($this->config->sleepBetweenReqInMs);
             }
 
@@ -141,7 +140,6 @@ final class Crawler
             return;
         }
 
-        /** @psalm-suppress UnsafeInstantiation */
         new $this->harvester($url, $this->config); // CrawlerUrl
 
         $this->updateInboundLinksAndUrlsToParse($url->getLinks());

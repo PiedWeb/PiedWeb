@@ -95,7 +95,7 @@ class TrendsExtractor
     public function getRelatedQueries(int $inProgression = 0): array
     {
         return [] === $this->relatedQueries ? []
-            : $this->relatedQueries['default']['rankedList'][0 !== $inProgression ? 1 : 0]['rankedKeyword'];
+            : $this->relatedQueries['default']['rankedList'][0 !== $inProgression ? 1 : 0]['rankedKeyword']; // @phpstan-ignore-line
     }
 
     /** @return array<string, int> */

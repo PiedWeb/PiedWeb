@@ -56,14 +56,9 @@ class PuppeteerConnector
 
     private function getCaptchaToken(): ?string
     {
-        if (! isset($_SERVER['PUPPETEER_2CAPTCHA_TOKEN'])) {
-            return null;
-        }
-        if (! \is_string($_SERVER['PUPPETEER_2CAPTCHA_TOKEN'])) { // @phpstan-ignore-line
-            return null;
-        }
+        $token = $_SERVER['PUPPETEER_2CAPTCHA_TOKEN'] ?? null;
 
-        return $_SERVER['PUPPETEER_2CAPTCHA_TOKEN'];
+        return \is_string($token) ? $token : null;
     }
 
     public function get(string $url, int $maxPages): string

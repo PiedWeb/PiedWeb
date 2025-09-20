@@ -245,7 +245,7 @@ class Puphpeteer
 
     private int $clickForMoreResults = 0;
 
-    /** @psalm-suppress UndefinedMagicMethod */
+
     private function clickMoreResults(): void
     {
         $blockContainingMoreResultsBtn = $this->getBrowserPage()->querySelector('h1 ::-p-text(Page Navigation)');
