@@ -22,7 +22,7 @@ if (captchaToken) {
         token: captchaToken,
       },
       visualFeedback: true,
-    })
+    }),
   );
 }
 
@@ -42,6 +42,7 @@ function sleep(ms) {
 async function manageCookie(page) {
   const selectors = [
     "::-p-xpath(//div[text()='Tout accepter']/ancestor::button)",
+    "::-p-xpath(//div[text()='Accept all']/ancestor::button)",
     'input[type="submit"][value="Tout accepter"]',
   ];
 
@@ -92,7 +93,8 @@ async function manageLoadMoreResultsViaBtn(page, maxPages, clicked = 1) {
   await navigationBlock.scrollIntoView();
   await sleep(250);
 
-  const moreBtnSelector = 'a[aria-label="Autres résultats de recherche"]';
+  const moreBtnSelector =
+    'a[aria-label="Autres résultats de recherche"],a[aria-label="More search results"]';
   let moreBtn = await page.$(moreBtnSelector);
   if (null === moreBtn) return console.log('Pas de boutons `Autres résultats`');
 
@@ -112,7 +114,8 @@ async function manageLoadMoreResultsViaBtn(page, maxPages, clicked = 1) {
 }
 
 async function detectCaptcha(page) {
-  return (await page.content()).includes('À propos de cette page');
+  const content = await page.content();
+  return content.includes('À propos de cette page') || content.includes('About this page');
 }
 
 /**  @param {string} url */

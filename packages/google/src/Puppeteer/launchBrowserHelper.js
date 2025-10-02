@@ -23,7 +23,7 @@ async function killExistingBrowserProcesses(userDataDir) {
 }
 
 function getAcceptLanguage(language) {
-  if (language === 'en') {
+  if (language === 'en' || language === 'en-US') {
     return 'en-US,en;q=0.9';
   }
 
@@ -52,14 +52,14 @@ async function launchBrowser(
   userDataDir = null,
   profile = null,
   lang = null,
-  chromeBin = null
+  chromeBin = null,
 ) {
   headless =
     headless === false
       ? false
       : ['false', '0'].includes(process.env.PUPPETEER_HEADLESS)
-      ? false
-      : true;
+        ? false
+        : true;
   windowSize = windowSize ?? process.env.PUPPETEER_WINDOW_SIZE ?? process.argv[3] ?? '360,840';
   proxy = proxy ?? process.env.PROXY_GATE ?? '';
   userDataDir = userDataDir ?? process.env.PUPPETEER_USER_DATA_DIR ?? null;
@@ -99,7 +99,7 @@ async function launchBrowser(
           ]
         : []),
     ],
-    ignoreDefaultArgs: ['--password-store=basic', '--use-mock-keychain'],
+    ignoreDefaultArgs: ['--password-store=basic', '--use-mock-keychain', '--disable-extensions'],
   };
 
   /** @type {Browser} */

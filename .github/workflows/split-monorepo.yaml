@@ -1,60 +1,60 @@
 name: Split Monorepo
 
 on:
-    push:
-        branches:
-            - main
-        tags:
-            - "*"
+  push:
+    branches:
+      - main
+    tags:
+      - '*'
 
 env:
-    GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 
 jobs:
-    split_monorepo:
-        runs-on: ubuntu-latest
-        strategy:
-            fail-fast: false
-            matrix:
-                package:
-                    - method-doc-block-generator
-                    - crawler
-                    - curl
-                    - extractor
-                    - google
-                    - text-analyzer
-                    - rison
-                    - composer-symlink
-                    - render-html-attributes
+  split_monorepo:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - method-doc-block-generator
+          - crawler
+          - curl
+          - extractor
+          - google
+          - text-analyzer
+          - rison
+          - composer-symlink
+          - render-html-attributes
 
-        steps:
-            - uses: actions/checkout@v3
+    steps:
+      - uses: actions/checkout@v3
 
-            # no tag
-            - if: "!startsWith(github.ref, 'refs/tags/')"
-              # Uses an action in the root directory
-              name: Monorepo Split of ${{ matrix.package }}
-              uses: danharrin/monorepo-split-github-action@v2.3.0
-              env:
-                  GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-              with:
-                  package_directory: "packages/${{ matrix.package }}"
-                  repository_organization: "piedweb"
-                  repository_name: "${{ matrix.package }}"
-                  user_name: "GitHub Action"
-                  user_email: "action@github.com"
+      # no tag
+      - if: "!startsWith(github.ref, 'refs/tags/')"
+        # Uses an action in the root directory
+        name: Monorepo Split of ${{ matrix.package }}
+        uses: danharrin/monorepo-split-github-action@v2.3.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        with:
+          package_directory: 'packages/${{ matrix.package }}'
+          repository_organization: 'piedweb'
+          repository_name: '${{ matrix.package }}'
+          user_name: 'GitHub Action'
+          user_email: 'action@github.com'
 
-            # with tag
-            - if: "startsWith(github.ref, 'refs/tags/')"
-              # Uses an action in the root directory
-              name: Monorepo Tagged Split of ${{ matrix.package }}
-              uses: danharrin/monorepo-split-github-action@v2.3.0
-              env:
-                  GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-              with:
-                  tag: ${GITHUB_REF#refs/tags/}
-                  package_directory: "packages/${{ matrix.package }}"
-                  repository_organization: "piedweb"
-                  repository_name: "${{ matrix.package }}"
-                  user_name: "GitHub Action"
-                  user_email: "action@github.com"
+      # with tag
+      - if: "startsWith(github.ref, 'refs/tags/')"
+        # Uses an action in the root directory
+        name: Monorepo Tagged Split of ${{ matrix.package }}
+        uses: danharrin/monorepo-split-github-action@v2.3.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        with:
+          tag: ${GITHUB_REF#refs/tags/}
+          package_directory: 'packages/${{ matrix.package }}'
+          repository_organization: 'piedweb'
+          repository_name: '${{ matrix.package }}'
+          user_name: 'GitHub Action'
+          user_email: 'action@github.com'

@@ -11,6 +11,6 @@ async function closeBrowser() {
     const page = await connectBrowserPage();
     await page.browser().close();
   } catch (error) {
-    console.error(error);
+    // console.error(error);
   }
 }
