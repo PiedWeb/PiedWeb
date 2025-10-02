@@ -65,7 +65,8 @@ async function launchBrowser(
   userDataDir = userDataDir ?? process.env.PUPPETEER_USER_DATA_DIR ?? null;
   lang = lang ?? process.env.PUPPETEER_LANG ?? process.argv[2] ?? 'en';
   chromeBin = chromeBin ?? process.env.CHROME_BIN ?? '/usr/bin/google-chrome';
-  profile = profile ?? process.env.PUPPETEER_PROFILE ?? null;
+  // default_pp_profile permit to avoid to solve captcha manually during tests and first usage, else defining profile is strongly recommended
+  profile = profile ?? process.env.PUPPETEER_PROFILE ?? '/tmp/default_pp_profile';
 
   // Nettoyer les processus existants utilisant le même userDataDir
   if (userDataDir) {

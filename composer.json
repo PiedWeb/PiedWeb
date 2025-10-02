@@ -32,10 +32,10 @@
     "phpstan/phpstan": "^2",
     "phpstan/phpstan-phpunit": "^2",
     "phpstan/phpstan-symfony": "^2",
-    "phpunit/phpunit": "^11",
+    "phpunit/phpunit": "^12",
     "rector/rector": "^2",
     "symfony/var-dumper": "^6.3|^7",
-    "symplify/monorepo-builder": "^11"
+    "symplify/monorepo-builder": "^12"
   },
   "extra": {
     "branch-alias": {

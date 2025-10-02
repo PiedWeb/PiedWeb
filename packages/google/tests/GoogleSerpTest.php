@@ -12,7 +12,7 @@ final class GoogleSerpTest extends TestCase
 {
     private function getSerpManager(string $kw = 'pied web'): GoogleSERPManager
     {
-        $manager = new GoogleSERPManager($kw, 'fr', 'fr-FR', ['hl' => 'fr']);
+        $manager = new GoogleSERPManager($kw, 'fr', 'fr-FR');
         $manager->generateGoogleSearchUrl();
 
         return $manager;

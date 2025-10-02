@@ -125,10 +125,15 @@ async function get(url, maxPages) {
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   const scrapWait = process.env.SCRAP_WAIT ? parseInt(process.env.SCRAP_WAIT, 10) : 1000;
   await sleep(scrapWait);
-  if ((await detectCaptcha(page)) && captchaToken) {
+  const hasCaptcha = await detectCaptcha(page);
+  if (hasCaptcha && captchaToken) {
     console.log(' - try to solve captcha for ', url);
     await page.solveRecaptchas();
     await sleep(5000);
+  }
+  if (hasCaptcha && process.env.APP_ENV === 'test') {
+    // give time to solve captcha manually during tests
+    await sleep(8000);
   }
   if (await detectCaptcha(page)) {
     return 'captcha';
