@@ -16,7 +16,7 @@ class PuppeteerConnector
         $id = (string) \Safe\getmypid();
         foreach (static::$wsEndpointList as $key => $wsEndpoint) {
             if (str_starts_with($key, $id)) {
-                exec('PUPPETEER_WS_ENDPOINT='.escapeshellarg($wsEndpoint).' node '.escapeshellarg(__DIR__.'/closeBrowser.js'));
+                @exec('PUPPETEER_WS_ENDPOINT='.escapeshellarg($wsEndpoint).' node '.escapeshellarg(__DIR__.'/closeBrowser.js'));
                 unset(static::$wsEndpointList[$key]);
             }
         }
