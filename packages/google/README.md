@@ -17,7 +17,7 @@ Via Curl or Puppeteer. This lib offers for now :
 ## Requirements
 
 - node (tested with v20)
-- [puppeteer](package.json) (tested with v23) `npm install puppeteer puppeteer-extra puppeteer-extra-plugin-stealth`
+- [puppeteer](package.json) (tested with v23) `npm install puppeteer puppeteer-extra puppeteer-extra-plugin-stealth puppeteer-extra-plugin-recaptcha`
 - php ^8.3
 - `composer require piedweb/google`
 

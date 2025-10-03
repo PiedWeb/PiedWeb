@@ -65,7 +65,7 @@ class PuppeteerConnector
     {
         $rawOutput = $this->execute(__DIR__.'/scrap.js', [$url, $maxPages]);
 
-        if ('captcha' === trim($rawOutput)) {
+        if ('captcha' === trim($rawOutput) && ! $this->isHeadless()) {
             $this->close();
             $_SERVER['PUPPETEER_HEADLESS'] = false;
             $rawOutput = $this->execute(__DIR__.'/scrap.js', [$url, $maxPages], 30000);
@@ -119,8 +119,7 @@ class PuppeteerConnector
             $cmd .= 'PROXY_GATE='.escapeshellarg($this->proxy).' ';
         }
 
-        if (isset($_SERVER['PUPPETEER_HEADLESS'])
-            && \in_array($_SERVER['PUPPETEER_HEADLESS'], ['0', 'false', false], true)) {
+        if (! $this->isHeadless()) {
             $cmd .= 'PUPPETEER_HEADLESS=0 ';
         }
 
@@ -128,13 +127,13 @@ class PuppeteerConnector
         $cmd .= 'node '.escapeshellarg(__DIR__.'/launchBrowser.js').' '.escapeshellarg($this->language)
                     .' > '.escapeshellarg($outputFileLog).' 2>&1 &';
         \Safe\exec($cmd);
-        // echo $cmd;
+
         for ($i = 0; $i < 5; ++$i) {
-            sleep(1);
-            static::$wsEndpointList[$id] = trim((string) file_get_contents($outputFileLog));
+            static::$wsEndpointList[$id] = trim((string) @file_get_contents($outputFileLog));
             if ('' !== static::$wsEndpointList[$id]) {
                 break;
             }
+            sleep(1);
         }
 
         register_shutdown_function([$this, 'close']);
@@ -142,5 +141,14 @@ class PuppeteerConnector
         self::$lastWsEndpointUsed = static::$wsEndpointList[$id];
 
         return static::$wsEndpointList[$id];
+    }
+
+    private function isHeadless(): bool
+    {
+        if (! isset($_SERVER['PUPPETEER_HEADLESS'])) {
+            return true;
+        }
+
+        return ! \in_array($_SERVER['PUPPETEER_HEADLESS'], ['0', 'false', false], true);
     }
 }

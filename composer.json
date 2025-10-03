@@ -76,7 +76,8 @@
     "stan": "vendor/bin/phpstan analyze packages/*/src",
     "rector": "vendor/bin/rector process",
     "format": "vendor/bin/php-cs-fixer fix && vendor/bin/php-cs-fixer fix rector.php",
-    "test": "vendor/bin/phpunit",
+    "test": "PUPPETEER_HEADLESS=0 vendor/bin/phpunit",
+    "testf": "PUPPETEER_HEADLESS=0 vendor/bin/phpunit --filter",
     "test-google": "vendor/bin/phpunit --stop-on-failure --testsuite google"
   },
   "config": {

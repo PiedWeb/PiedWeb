@@ -60,6 +60,7 @@ async function launchBrowser(
       : ['false', '0'].includes(process.env.PUPPETEER_HEADLESS)
         ? false
         : true;
+
   windowSize = windowSize ?? process.env.PUPPETEER_WINDOW_SIZE ?? process.argv[3] ?? '360,840';
   proxy = proxy ?? process.env.PROXY_GATE ?? '';
   userDataDir =

@@ -14,17 +14,19 @@ const puppeteer = require('puppeteer-extra');
 
 const captchaToken = process.env.PUPPETEER_2CAPTCHA_TOKEN;
 
-if (captchaToken) {
-  puppeteer.use(
-    RecaptchaPlugin({
-      provider: {
-        id: '2captcha',
-        token: captchaToken,
-      },
-      visualFeedback: true,
-    }),
-  );
-}
+puppeteer.use(
+  RecaptchaPlugin(
+    captchaToken
+      ? {
+          provider: {
+            id: '2captcha',
+            token: captchaToken,
+          },
+          visualFeedback: true,
+        }
+      : {},
+  ),
+);
 
 const url = process.argv[2];
 const maxPages = process.argv[3] ? parseInt(process.argv[3], 10) : 5;
@@ -126,13 +128,9 @@ async function get(url, maxPages) {
   const scrapWait = process.env.SCRAP_WAIT ? parseInt(process.env.SCRAP_WAIT, 10) : 1000;
   await sleep(scrapWait);
   const hasCaptcha = await detectCaptcha(page);
-  if (hasCaptcha && captchaToken) {
+  if (hasCaptcha && (captchaToken || process.env.APP_ENV === 'test' || !isHeadless())) {
     console.log(' - try to solve captcha for ', url);
     await page.solveRecaptchas();
-    await sleep(5000);
-  }
-  if (hasCaptcha && process.env.APP_ENV === 'test') {
-    // give time to solve captcha manually during tests
     await sleep(8000);
   }
   if (await detectCaptcha(page)) {
@@ -142,4 +140,8 @@ async function get(url, maxPages) {
   await manageLoadMoreResultsViaInfiniteScroll(page, maxPages);
   await manageLoadMoreResultsViaBtn(page, maxPages);
   return await page.content();
+}
+
+function isHeadless() {
+  return !['false', '0'].includes(process.env.PUPPETEER_HEADLESS);
 }

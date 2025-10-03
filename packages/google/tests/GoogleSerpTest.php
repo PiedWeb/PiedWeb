@@ -76,7 +76,8 @@ final class GoogleSerpTest extends TestCase
 
         $extractor = $this->getExtractor("qu'est ce que l'effet streisand");
         if (! $extractor->containsSerpFeature('PositionZero')) {
-            $this->assertStringContainsString('wikipedia.org',  $extractor->getResults()[0]->url);
+            $url = $extractor->getResults()[0]->url;
+            $this->assertStringContainsString('wikipedia.org',  $url);
             dump('Position Zero was not checked');
 
             return;
@@ -101,6 +102,6 @@ final class GoogleSerpTest extends TestCase
     {
         $extractor = $this->getExtractor('randonnée valgaudemar');
         $relatedSearches = $extractor->getRelatedSearches();
-        $this->assertContains('Rando Valgaudemar 3 jours', $relatedSearches);
+        $this->assertContains('Rando Valgaudemar 3 jours', $relatedSearches, implode(', ', $relatedSearches));
     }
 }
