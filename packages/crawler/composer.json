@@ -21,7 +21,7 @@
     "piedweb/text-analyzer": "*",
     "league/csv": "^9.8",
     "piedweb/curl": "*",
-    "voku/stringy": "^6.5",
+    "voku/stringy": "dev-php84",
     "symfony/console": "^6.4|^7"
   },
   "autoload": {
@@ -32,6 +32,12 @@
   "autoload-dev": {
     "psr-4": {
       "PiedWeb\\Crawler\\": "tests"
+    }
+  },
+  "repositories": {
+    "toma-r-stringy": {
+      "type": "vcs",
+      "url": "https://github.com/TomA-R/Stringy"
     }
   }
 }
