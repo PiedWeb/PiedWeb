@@ -10,7 +10,7 @@
     "ext-ctype": "*",
     "ext-iconv": "*",
     "fylax/forceutf8": "^4.0",
-    "jeremykendall/php-domain-parser": "^6.3|^7",
+    "jeremykendall/php-domain-parser": "^6.4",
     "kelvinzer0/curl-impersonate-php": "^3.2",
     "league/csv": "^9.8",
     "league/uri": "^7.3",
