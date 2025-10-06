@@ -17,13 +17,19 @@ class SERPExtractor
         'PositionZero' => ['div[data-md="471"]'],
         'KnowledgePanel' => ['//div[contains(concat(" ",normalize-space(@class)," ")," kp-wholepage ")]'],
         'News' => ['//span[text()="À la une"]'],
-        'PeolpleAlsoAsked' => ['//span[text()="Autres questions posées"]'],
+        'PeolpleAlsoAsked' => [
+            '//span[text()="Autres questions posées"]',
+            '//span[text()="People also ask"]',
+        ],
         'Video' => ['//span[text()="Vidéos"]',            '//div[contains( @aria-label,"second")]'],
         'Reviews' => ['//span[contains( @aria-label,"Note")]'],
     ];
 
     /** @var string[] */
-    final public const array RELATED = ['//span[text()="Recherches associées"]/ancestor::*[position() <  5]//a'];
+    final public const array RELATED = [
+        '//span[text()="Recherches associées"]/ancestor::*[position() <  5]//a',
+        '//span[text()="People also search for"]/ancestor::*[position() <  5]//a',
+    ];
 
     /** @var string[] */
     final public const array RELATED_DESKTOP = ["//a[@data-xbu][starts-with(@href, '/search')]/div"];

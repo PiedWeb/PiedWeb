@@ -15,4 +15,9 @@ PUPPETEER_HEADLESS=0 node vendor/piedweb/google/src/Puppeteer/launchBrowser.js '
 
 const { launchBrowser } = require('./launchBrowserHelper');
 
-launchBrowser().then(() => process.stdin.resume());
+launchBrowser()
+  .then(() => process.stdin.resume())
+  .catch((error) => {
+    console.error('Error in launchBrowser.js:', error);
+    process.exit(1);
+  });

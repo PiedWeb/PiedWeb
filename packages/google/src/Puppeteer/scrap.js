@@ -30,10 +30,15 @@ puppeteer.use(
 
 const url = process.argv[2];
 const maxPages = process.argv[3] ? parseInt(process.argv[3], 10) : 5;
-get(url, maxPages).then((source) => {
-  console.log(source);
-  process.exit(0);
-});
+get(url, maxPages)
+  .then((source) => {
+    console.log(source);
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error('Error in launchBrowser.js:', error);
+    process.exit(1);
+  });
 
 /** @param {int} ms */
 function sleep(ms) {
