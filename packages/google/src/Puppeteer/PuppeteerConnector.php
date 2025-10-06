@@ -133,6 +133,7 @@ class PuppeteerConnector
             if ('' !== static::$wsEndpointList[$id]) {
                 break;
             }
+
             sleep(1);
         }
 

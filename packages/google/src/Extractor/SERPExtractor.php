@@ -114,9 +114,9 @@ class SERPExtractor
             $mapsResults[$i] = new BusinessResult(
                 mid: $mid,
                 name: (new Crawler($node))->filter('[role]')->first()->text(''),
-                pixelPos: $this->getPixelPosFor($node->getNodePath() ?? ''),
-                position: $i + 1,
                 organicPos: $i + 1,
+                position: $i + 1,
+                pixelPos: $this->getPixelPosFor($node->getNodePath() ?? ''),
             ); // data-rc_ludocids
 
             ++$i;
@@ -152,8 +152,8 @@ class SERPExtractor
                 cid: $this->getCidFromLocalServiceResult(),
                 mid: $this->getMidFromLocalServiceResult(),
                 name: trim(Helper::htmlToPlainText($node->textContent)),
-                position: $i + 1,
                 organicPos: $i + 1,
+                position: $i + 1,
                 pixelPos: $this->getPixelPosFor($node->getNodePath() ?? '')
             );
             ++$i;
@@ -251,9 +251,9 @@ class SERPExtractor
         $toReturn = new SearchResult(
             organicPos: $organicPos,
             position: $position,
-            pixelPos: $this->getPixelPosFor($linkNode->getNodePath() ?? ''),
             url: $href,
             title: (new Crawler($linkNode))->text(''),
+            pixelPos: $this->getPixelPosFor($linkNode->getNodePath() ?? ''),
             ads : $ads
         );
 

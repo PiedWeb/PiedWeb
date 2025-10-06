@@ -207,8 +207,8 @@ final class Url
     public function getId(): int
     {
         if (0 === $this->id) {
-            $this->id = static::$autoIncrement;
-            ++static::$autoIncrement;
+            $this->id = self::$autoIncrement;
+            ++self::$autoIncrement;
         }
 
         return $this->id;

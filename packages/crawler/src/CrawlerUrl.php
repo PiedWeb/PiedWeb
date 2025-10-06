@@ -73,7 +73,7 @@ class CrawlerUrl
 
         if (! $request) {
             $this->url->setNetworkStatus(
-                42 != $this->getCurlClient()->getError() ? NetworkStatus::NETWORK_ERROR : NetworkStatus::TOO_BIG
+                42 !== $this->getCurlClient()->getError() ? NetworkStatus::NETWORK_ERROR : NetworkStatus::TOO_BIG
             );
             $responseToCache = 'curl_error_code:'.$this->getCurlClient()->getError();
         }

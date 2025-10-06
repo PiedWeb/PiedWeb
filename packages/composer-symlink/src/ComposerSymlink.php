@@ -109,7 +109,7 @@ final class ComposerSymlink
     {
         $packagePath = $vendorBaseDir.$vendorName.'/'.$packageName;
         $globalPackagePath = $this->globalVendorDir.$vendorName.'/'.$packageName;
-        $packageVersion = array_values(array_filter($this->packageListFromProject, fn ($pkg): bool => $pkg['name'] === $vendorName.'/'.$packageName))[0]['version'] ?? 'unknow';
+        $packageVersion = array_values(array_filter($this->packageListFromProject, fn (array $pkg): bool => $pkg['name'] === $vendorName.'/'.$packageName))[0]['version'] ?? 'unknow';
         $globalPackagePath .= '-'.$packageVersion;
         $this->globalPackageList[$globalPackagePath] = true;
 

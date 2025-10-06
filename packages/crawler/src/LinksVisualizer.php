@@ -51,8 +51,10 @@ class LinksVisualizer
 
             $from = \is_scalar($r['From']) ? $r['From'] : '';
             $to = \is_scalar($r['To']) ? $r['To'] : '';
-
-            if ('' === $from || '' === $to) {
+            if ('' === $from) {
+                continue;
+            }
+            if ('' === $to) {
                 continue;
             }
 
