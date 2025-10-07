@@ -28,11 +28,10 @@ class SERPExtractor
     /** @var string[] */
     final public const array RELATED = [
         '//span[text()="Recherches associées"]/ancestor::*[position() <  5]//a',
+        '//span[text()="Search for next"]/ancestor::*[position() <  5]//a',
         '//span[text()="People also search for"]/ancestor::*[position() <  5]//a',
+        "//a[@data-xbu][starts-with(@href, '/search')]/div",
     ];
-
-    /** @var string[] */
-    final public const array RELATED_DESKTOP = ["//a[@data-xbu][starts-with(@href, '/search')]/div"];
 
     // public const RESULT_SELECTOR = '//a[@role="presentation"]/parent::div/parent::div/parent::div';
     final public const string RESULT_SELECTOR = "(//h2[text()='Extrait optimisé sur le Web']/ancestor::block-component//a[@class])[1]|//a[@role='presentation']|//div[@data-md=\"471\"]//a";
@@ -331,8 +330,9 @@ class SERPExtractor
     public function getRelatedSearches(): array
     {
         $kw = [];
-        $xpaths = $this->isMobileSerp() ? self::RELATED : self::RELATED_DESKTOP;
+        $xpaths = self::RELATED;
         foreach ($xpaths as $xpath) {
+            dump($xpath);
             $nodes = $this->domCrawler->filterXPath($xpath);
             foreach ($nodes as $node) {
                 if ('' !== $node->textContent) {
