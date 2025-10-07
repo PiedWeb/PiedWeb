@@ -36,11 +36,6 @@ class SERPExtractor
     // public const RESULT_SELECTOR = '//a[@role="presentation"]/parent::div/parent::div/parent::div';
     final public const string RESULT_SELECTOR = "(//h2[text()='Extrait optimisé sur le Web']/ancestor::block-component//a[@class])[1]|//a[@role='presentation']|//div[@data-md=\"471\"]//a";
 
-    // (//h2[text()='Extrait optimisé sur le Web']/ancestor::block-component//a[@class])[1]|//a[@role="presentation"]
-    final public const string RESULT_SELECTOR_DESKTOP =
-        '//a[not(starts-with(@href, "/search"))]/parent::div/parent::div/parent::div[@data-hveid]
-        |//a[not(starts-with(@href, "/search"))]/parent::div/parent::div/parent::div[@data-sokoban-container]';
-
     private readonly Crawler $domCrawler;
 
     /**
@@ -55,11 +50,6 @@ class SERPExtractor
     ) {
         $this->domCrawler = new Crawler($html);
         $this->extractedAt = 0 === $this->extractedAt ? (int) (new \DateTime('now'))->format('ymdHi') : $this->extractedAt;
-    }
-
-    private function isMobileSerp(): bool
-    {
-        return $this->exists([self::RESULT_SELECTOR]);
     }
 
     public function getNbrResults(): int
@@ -332,7 +322,6 @@ class SERPExtractor
         $kw = [];
         $xpaths = self::RELATED;
         foreach ($xpaths as $xpath) {
-            dump($xpath);
             $nodes = $this->domCrawler->filterXPath($xpath);
             foreach ($nodes as $node) {
                 if ('' !== $node->textContent) {
