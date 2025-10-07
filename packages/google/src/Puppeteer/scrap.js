@@ -135,7 +135,13 @@ async function get(url, maxPages) {
   const hasCaptcha = await detectCaptcha(page);
   if (hasCaptcha && (captchaToken || process.env.APP_ENV === 'test' || !isHeadless())) {
     console.log(' - try to solve captcha for ', url);
-    await page.solveRecaptchas();
+    try {
+      await page.solveRecaptchas();
+    } catch (error) {
+      console.log(' - error solving captcha for ', url);
+      console.log(error);
+      return 'captcha';
+    }
     await sleep(8000);
   }
   if (await detectCaptcha(page)) {
