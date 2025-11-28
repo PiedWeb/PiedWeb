@@ -6,7 +6,7 @@
   "description": "Monorepo for PiedWeb's PHP Package.",
   "license": "MIT",
   "require": {
-    "php": ">=8.2",
+    "php": ">=8.3",
     "ext-ctype": "*",
     "ext-iconv": "*",
     "fylax/forceutf8": "^4.0",
@@ -15,13 +15,13 @@
     "league/csv": "^9.8",
     "league/uri": "^7.3",
     "spatie/robots-txt": "^2.0",
-    "symfony/cache": "^6.3|^7",
-    "symfony/console": "^6.3|^7",
-    "symfony/css-selector": "^6.3|^7",
-    "symfony/dom-crawler": "^6.3|^7",
+    "symfony/cache": "^7|^8",
+    "symfony/console": "^7|^8",
+    "symfony/css-selector": "^7|^8",
+    "symfony/dom-crawler": "^7|^8",
     "symfony/filesystem": "^7.1",
     "symfony/property-access": "^7.2",
-    "symfony/serializer": "^6.3|^7",
+    "symfony/serializer": "^7|^8",
     "thecodingmachine/safe": "dev-master",
     "twig/twig": "^3.19",
     "voku/stringy": "dev-php84"
@@ -34,7 +34,7 @@
     "phpstan/phpstan-symfony": "^2",
     "phpunit/phpunit": "^12",
     "rector/rector": "^2",
-    "symfony/var-dumper": "^6.3|^7",
+    "symfony/var-dumper": "^7|^8",
     "symplify/monorepo-builder": "^12"
   },
   "extra": {
