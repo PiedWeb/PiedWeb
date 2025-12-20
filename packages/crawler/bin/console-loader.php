@@ -15,6 +15,6 @@ $input = new ArgvInput();
 
 $application = new Application();
 
-$application->add(new PiedWeb\Crawler\Command\CrawlerCommand());
-$application->add(new PiedWeb\Crawler\Command\ShowExternalLinksCommand());
-$application->add(new PiedWeb\Crawler\Command\PageRankCommand());
+$application->addCommand(new PiedWeb\Crawler\Command\CrawlerCommand());
+$application->addCommand(new PiedWeb\Crawler\Command\ShowExternalLinksCommand());
+$application->addCommand(new PiedWeb\Crawler\Command\PageRankCommand());

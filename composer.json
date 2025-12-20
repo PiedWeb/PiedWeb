@@ -77,9 +77,9 @@
     "rector": "vendor/bin/rector process && composer format",
     "format": "vendor/bin/php-cs-fixer fix && vendor/bin/php-cs-fixer fix rector.php",
     "validate-monorepo": "vendor/bin/monorepo-builder validate",
-    "test": "PUPPETEER_HEADLESS=0 vendor/bin/phpunit",
-    "testf": "PUPPETEER_HEADLESS=0 vendor/bin/phpunit --filter",
-    "test-google": "vendor/bin/phpunit --stop-on-failure --testsuite google"
+    "test": "PUPPETEER_HEADLESS=0 vendor/bin/phpunit --testdox --no-progress --colors=always",
+    "testf": "PUPPETEER_HEADLESS=0 vendor/bin/phpunit --testdox --no-progress --colors=always --filter",
+    "test-google": "vendor/bin/phpunit --testdox --no-progress --colors=always --stop-on-failure --testsuite google"
   },
   "config": {
     "sort-packages": true,

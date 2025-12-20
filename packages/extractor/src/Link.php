@@ -4,7 +4,7 @@ namespace PiedWeb\Extractor;
 
 use PiedWeb\TextAnalyzer\CleanText;
 use Symfony\Component\DomCrawler\Crawler as DomCrawler;
-use Symfony\Component\Serializer\Annotation\Ignore;
+use Symfony\Component\Serializer\Attribute\Ignore;
 
 final class Link
 {
