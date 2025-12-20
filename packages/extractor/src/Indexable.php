@@ -10,6 +10,9 @@ final class Indexable
 {
     private readonly int $indexable;
 
+    /** @var int[] */
+    private readonly array $indexableList;
+
     /**
      * @var array<string, int>
      */
@@ -43,7 +46,8 @@ final class Indexable
         private readonly string $headers,
         private readonly string $isIndexableFor = 'googlebot'
     ) {
-        $this->indexable = $this->analyze();
+        $this->indexableList = $this->analyze();
+        $this->indexable = $this->indexableList[0] ?? self::INDEXABLE;
     }
 
     public function robotsTxtAllows(): bool
@@ -75,6 +79,14 @@ final class Indexable
         return $this->indexable;
     }
 
+    /**
+     * @return int[]
+     */
+    public function getIndexableList(): array
+    {
+        return $this->indexableList;
+    }
+
     public function getErrorMessage(): string
     {
         $class = new \ReflectionClass(self::class);
@@ -83,46 +95,42 @@ final class Indexable
         return $constants[$this->indexable];
     }
 
-    private function analyze(): int
+    /**
+     * @return int[]
+     */
+    private function analyze(): array
     {
+        $reasons = [];
+
         if (! $this->robotsTxtAllows()) {
-            return self::NOT_INDEXABLE['robots'];
+            $reasons[] = self::NOT_INDEXABLE['robots'];
         }
 
         if (! $this->headersAllow()) {
-            return self::NOT_INDEXABLE['header'];
+            $reasons[] = self::NOT_INDEXABLE['header'];
         }
 
         if (! $this->metaAllows()) {
-            return self::NOT_INDEXABLE['meta'];
+            $reasons[] = self::NOT_INDEXABLE['meta'];
         }
 
-        // canonical
         $canonicalExtractor = new CanonicalExtractor($this->url, $this->crawler);
         if ($canonicalExtractor->canonicalExists() && ! $canonicalExtractor->isCanonicalCorrect()) {
-            return self::NOT_INDEXABLE['canonical'];
+            $reasons[] = self::NOT_INDEXABLE['canonical'];
         }
 
-        // status 4XX
         if ($this->statusCode < 500 && $this->statusCode > 399) {
-            return self::NOT_INDEXABLE['4XX'];
+            $reasons[] = self::NOT_INDEXABLE['4XX'];
         }
 
-        // status 5XX
         if ($this->statusCode < 600 && $this->statusCode > 499) {
-            return self::NOT_INDEXABLE['5XX'];
+            $reasons[] = self::NOT_INDEXABLE['5XX'];
         }
 
-        // status 3XX
-        if ($this->statusCode >= 400) {
-            // weird
-            return self::INDEXABLE;
+        if ($this->statusCode > 299 && $this->statusCode < 400) {
+            $reasons[] = self::NOT_INDEXABLE['redir'];
         }
 
-        if ($this->statusCode <= 299) {
-            return self::INDEXABLE;
-        }
-
-        return self::NOT_INDEXABLE['redir'];
+        return $reasons;
     }
 }
