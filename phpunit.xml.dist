@@ -17,6 +17,7 @@
   <testsuites>
     <testsuite name="default">
       <directory>packages/*/tests/</directory>
+      <exclude>packages/google/tests/</exclude>
     </testsuite>
     <testsuite name="google">
       <directory>packages/google/tests/</directory>

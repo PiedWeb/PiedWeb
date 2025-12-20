@@ -251,6 +251,6 @@ class CrawlerUrl
     {
         $validator = new HtmlIsValid($this->url->getHtml());
         $this->url->setHtmlIsValid($validator->isValid());
-        $this->url->setHtmlIsValidStatus($validator->getInvalidReasonList());
+        $this->url->setHtmlIsInvalidReasonList($validator->getInvalidReasonList());
     }
 }
