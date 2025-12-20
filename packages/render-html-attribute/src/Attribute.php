@@ -11,24 +11,43 @@ namespace PiedWeb\RenderAttributes;
  */
 final class Attribute
 {
-    public static function merge(...$arrays): array
+    /**
+     * @param array<string, mixed> ...$arrays
+     *
+     * @return array<string, mixed>
+     */
+    public static function merge(array ...$arrays): array
     {
+        /** @var array<string, mixed> $result */
         $result = [];
 
         foreach ($arrays as $array) {
             $result = self::mergeRecursive($result, $array);
         }
 
+        /** @var array<string, mixed> */
         return $result;
     }
 
+    /**
+     * @param array<string, mixed> $arr1
+     * @param array<string, mixed> $arr2
+     *
+     * @return array<string, mixed>
+     */
     protected static function mergeRecursive(array $arr1, array $arr2): array
     {
         foreach ($arr2 as $key => $v) {
             if (\is_array($v)) {
-                $arr1[$key] = isset($arr1[$key]) ? self::mergeRecursive($arr1[$key], $v) : $v;
+                /** @var array<string, mixed> $existing */
+                $existing = isset($arr1[$key]) && \is_array($arr1[$key]) ? $arr1[$key] : [];
+                /** @var array<string, mixed> $vArray */
+                $vArray = $v;
+                $arr1[$key] = [] !== $existing ? self::mergeRecursive($existing, $vArray) : $v;
             } else {
-                $arr1[$key] = isset($arr1[$key]) ? $arr1[$key].($arr1[$key] != $v ? ' '.$v : '') : $v;
+                $vStr = \is_scalar($v) ? (string) $v : '';
+                $existingStr = isset($arr1[$key]) && \is_scalar($arr1[$key]) ? (string) $arr1[$key] : '';
+                $arr1[$key] = '' !== $existingStr ? $existingStr.($existingStr !== $vStr ? ' '.$vStr : '') : $vStr;
             }
         }
 
@@ -37,7 +56,7 @@ final class Attribute
 
     public static function render(string $name, string $value = ''): string
     {
-        if (\in_array($name, ['class', 'style'], true) && (! \is_string($value) || '' === $value)) {
+        if (\in_array($name, ['class', 'style'], true) && '' === $value) {
             return '';
         }
 
@@ -52,6 +71,8 @@ final class Attribute
 
     /**
      * Previously mapAttributes.
+     *
+     * @param array<int|string, string> $attributes
      */
     public static function renderAll(array $attributes): string
     {
@@ -64,14 +85,19 @@ final class Attribute
         return $result;
     }
 
-    public static function mergeAndRender(...$arrays): string
+    /**
+     * @param array<string, mixed> ...$arrays
+     */
+    public static function mergeAndRender(array ...$arrays): string
     {
+        /** @var array<string, mixed> $result */
         $result = [];
 
         foreach ($arrays as $array) {
             $result = self::mergeRecursive($result, $array);
         }
 
+        /** @var array<int|string, string> $result */
         return self::renderAll($result);
     }
 }
