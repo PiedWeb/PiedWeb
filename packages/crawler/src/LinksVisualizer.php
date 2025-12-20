@@ -36,7 +36,7 @@ class LinksVisualizer
 
     protected function loadLinks(): void
     {
-        $csv = Reader::createFromPath($this->config->getDataFolder().Recorder::LINKS_DIR.'/Index.csv', 'r');
+        $csv = Reader::from($this->config->getDataFolder().Recorder::LINKS_DIR.'/Index.csv', 'r');
         $csv->setHeaderOffset(0);
 
         $records = $csv->getRecords();
@@ -54,6 +54,7 @@ class LinksVisualizer
             if ('' === $from) {
                 continue;
             }
+
             if ('' === $to) {
                 continue;
             }

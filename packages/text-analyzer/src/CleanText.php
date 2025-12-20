@@ -167,7 +167,7 @@ class CleanText
         $html = strip_tags($html);
         $html = Helper::preg_replace_str("/[\t\n\r]+/", "\n", $html);
 
-        return trim(implode("\n", array_map('trim', explode("\n", Helper::preg_replace_str('/\s+/', ' ', $html)))));
+        return trim(implode("\n", array_map(trim(...), explode("\n", Helper::preg_replace_str('/\s+/', ' ', $html)))));
     }
 
     public static function stripHtmlTags(string $html): string

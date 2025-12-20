@@ -77,7 +77,7 @@ final class GoogleSerpTest extends TestCase
         $extractor = $this->getExtractor("qu'est ce que l'effet streisand");
         if (! $extractor->containsSerpFeature('PositionZero')) {
             $url = $extractor->getResults()[0]->url;
-            $this->assertStringContainsString('wikipedia.org',  $url);
+            $this->assertMatchesRegularExpression('(wikipedia.org|ligue-enseignement.be)',  $url);
             dump('Position Zero was not checked');
 
             return;

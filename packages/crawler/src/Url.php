@@ -178,11 +178,7 @@ final class Url
             if (! \is_string($value) && ! \is_int($value)
                 && ! \is_float($value) && ! \is_bool($value) && null !== $value) {
                 $stringGetter = 'get'.ucfirst($exportable).'String';
-                if (method_exists($this, $stringGetter)) {
-                    $value = $this->$stringGetter();
-                } else {
-                    $value = '';
-                }
+                $value = method_exists($this, $stringGetter) ? $this->$stringGetter() : '';
             }
 
             \assert(\is_scalar($value) || null === $value);

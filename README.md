@@ -24,8 +24,6 @@ composer test
 composer testf testCurlMobile # === vendor/bin/phpunit --filter testCurlMobile
 ```
 
-Tests are not runned in CI because of the captcha (no decaptcha solution in ci).
-
 ## Credits
 
 - [PiedWeb](https://piedweb.com)

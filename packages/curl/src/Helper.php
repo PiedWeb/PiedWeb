@@ -117,7 +117,7 @@ class Helper
     protected static function normalizeHeader(array|string $header): array
     {
         if (! \is_array($header)) {
-            return array_map('trim', explode(',', $header));
+            return array_map(trim(...), explode(',', $header));
         }
 
         $result = [];

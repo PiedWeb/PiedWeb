@@ -9,6 +9,7 @@ var
 **/tmp/*
 **/tmp/*.csv
 debug.html
+debug/
 test.html
 test.php
 debug.png
