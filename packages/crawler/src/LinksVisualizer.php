@@ -49,8 +49,8 @@ class LinksVisualizer
                 continue;
             }
 
-            $from = \is_scalar($r['From']) ? $r['From'] : '';
-            $to = \is_scalar($r['To']) ? $r['To'] : '';
+            $from = \is_scalar($r['From']) ? (string) $r['From'] : '';
+            $to = \is_scalar($r['To']) ? (string) $r['To'] : '';
             if ('' === $from) {
                 continue;
             }
