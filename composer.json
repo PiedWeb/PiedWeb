@@ -6,7 +6,7 @@
   "description": "Monorepo for PiedWeb's PHP Package.",
   "license": "MIT",
   "require": {
-    "php": ">=8.3",
+    "php": ">=8.4",
     "ext-ctype": "*",
     "ext-iconv": "*",
     "fylax/forceutf8": "^4.0",
@@ -19,8 +19,8 @@
     "symfony/console": "^7|^8",
     "symfony/css-selector": "^7|^8",
     "symfony/dom-crawler": "^7|^8",
-    "symfony/filesystem": "^7.1",
-    "symfony/property-access": "^7.2",
+    "symfony/filesystem": "^7|^8",
+    "symfony/property-access": "^7|^8",
     "symfony/serializer": "^7|^8",
     "thecodingmachine/safe": "dev-master",
     "twig/twig": "^3.19",
@@ -74,8 +74,9 @@
   },
   "scripts": {
     "stan": "vendor/bin/phpstan analyze packages/*/src",
-    "rector": "vendor/bin/rector process",
+    "rector": "vendor/bin/rector process && composer format",
     "format": "vendor/bin/php-cs-fixer fix && vendor/bin/php-cs-fixer fix rector.php",
+    "validate-monorepo": "vendor/bin/monorepo-builder validate",
     "test": "PUPPETEER_HEADLESS=0 vendor/bin/phpunit",
     "testf": "PUPPETEER_HEADLESS=0 vendor/bin/phpunit --filter",
     "test-google": "vendor/bin/phpunit --stop-on-failure --testsuite google"

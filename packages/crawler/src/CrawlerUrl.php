@@ -97,7 +97,7 @@ class CrawlerUrl
 
         if ('text/html' !== $response->getMimeType()) {
             $this->url->setNetworkStatus(NetworkStatus::NOT_HTML);
-        } elseif (200 === $response->getStatusCode()) {
+        } elseif ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300) {
             $this->url->setHtml($response->getBody());
         }
     }
