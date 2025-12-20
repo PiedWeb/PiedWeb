@@ -44,6 +44,7 @@ final class CrawlerConfig
             'canonical',
             'hrefLang',
             'socialProfiles',
+            'htmlIsValid',
         ],
         ?string $dataDirectory = null,
         public readonly int $autosave = 500, // number of Urls we can crawled before saving (0 = autosaving disabled),

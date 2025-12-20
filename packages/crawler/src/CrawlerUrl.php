@@ -6,6 +6,7 @@ use PiedWeb\Curl\ExtendedClient;
 use PiedWeb\Curl\Response;
 use PiedWeb\Extractor\CanonicalExtractor;
 use PiedWeb\Extractor\HrefLangExtractor;
+use PiedWeb\Extractor\HtmlIsValid;
 use PiedWeb\Extractor\Indexable;
 use PiedWeb\Extractor\InstagramUsernameExtractor;
 use PiedWeb\Extractor\Link;
@@ -120,6 +121,7 @@ class CrawlerUrl
             $this->harvestCanonical();
             $this->harvestHrefLang();
             $this->harvestSocialProfiles();
+            $this->harvestHtmlIsValid();
 
             return;
         }
@@ -167,6 +169,7 @@ class CrawlerUrl
         );
         $this->url->setIndexable($indexable->isIndexable());
         $this->url->setIndexableStatus($indexable->getIndexableStatus());
+        $this->url->setIndexableStatusList($indexable->getIndexableList());
     }
 
     public function harvestLinks(string $selector = LinksExtractor::SELECT_ALL): void
@@ -242,5 +245,12 @@ class CrawlerUrl
             (new CanonicalExtractor($this->url->getUrl(), $this->url->getDomCrawler()))
                 ->get()
         );
+    }
+
+    private function harvestHtmlIsValid(): void
+    {
+        $validator = new HtmlIsValid($this->url->getHtml());
+        $this->url->setHtmlIsValid($validator->isValid());
+        $this->url->setHtmlIsValidStatus($validator->getInvalidReasonList());
     }
 }

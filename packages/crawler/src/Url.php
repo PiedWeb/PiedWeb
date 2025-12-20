@@ -64,6 +64,9 @@ final class Url
 
     private int $indexableStatus = 0;
 
+    /** @var int[] */
+    private array $indexableStatusList = [];
+
     private string $mimeType = '';
 
     private int $wordCount = 0;
@@ -106,6 +109,11 @@ final class Url
     private ?string $canonical = null;
 
     private string $redirectUrl = '';
+
+    private bool $htmlIsValid = true;
+
+    /** @var int[] */
+    private array $htmlIsValidStatus = [];
 
     private \DateTimeInterface $updatedAt;
 
@@ -519,6 +527,22 @@ final class Url
         $this->indexableStatus = $indexableStatus;
     }
 
+    /**
+     * @return int[]
+     */
+    public function getIndexableStatusList(): array
+    {
+        return $this->indexableStatusList;
+    }
+
+    /**
+     * @param int[] $indexableStatusList
+     */
+    public function setIndexableStatusList(array $indexableStatusList): void
+    {
+        $this->indexableStatusList = $indexableStatusList;
+    }
+
     public function getStatusCode(): int
     {
         return $this->statusCode;
@@ -787,5 +811,31 @@ final class Url
     public function setLinkedin(string $linkedin): void
     {
         $this->linkedin = $linkedin;
+    }
+
+    public function getHtmlIsValid(): bool
+    {
+        return $this->htmlIsValid;
+    }
+
+    public function setHtmlIsValid(bool $htmlIsValid): void
+    {
+        $this->htmlIsValid = $htmlIsValid;
+    }
+
+    /**
+     * @return int[]
+     */
+    public function getHtmlIsValidStatus(): array
+    {
+        return $this->htmlIsValidStatus;
+    }
+
+    /**
+     * @param int[] $htmlIsValidStatus
+     */
+    public function setHtmlIsValidStatus(array $htmlIsValidStatus): void
+    {
+        $this->htmlIsValidStatus = $htmlIsValidStatus;
     }
 }

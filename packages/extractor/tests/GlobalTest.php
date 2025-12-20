@@ -8,6 +8,7 @@ use PiedWeb\Curl\Helper;
 use PiedWeb\Curl\Response;
 use PiedWeb\Extractor\CanonicalExtractor;
 use PiedWeb\Extractor\HrefLangExtractor;
+use PiedWeb\Extractor\HtmlIsValid;
 use PiedWeb\Extractor\Link;
 use PiedWeb\Extractor\LinksExtractor;
 use PiedWeb\Extractor\TextData;
@@ -160,5 +161,45 @@ final class GlobalTest extends TestCase
         // Assertions
         $this->assertEquals($link->url, $unserializedFromJson->url);
         $this->assertEquals($link->internal, $unserializedFromJson->internal);
+    }
+
+    public function testHtmlIsValid(): void
+    {
+        $validHtml = '<!DOCTYPE html><html><head><title>Test</title></head><body><p>Hello</p></body></html>';
+        $validator = new HtmlIsValid($validHtml);
+        $this->assertTrue($validator->isValid());
+        $this->assertSame([], $validator->getInvalidReasonList());
+    }
+
+    public function testHtmlIsValidMissingDoctype(): void
+    {
+        $html = '<html><head><title>Test</title></head><body><p>Hello</p></body></html>';
+        $validator = new HtmlIsValid($html);
+        $this->assertFalse($validator->isValid());
+        $this->assertContains(HtmlIsValid::INVALID_REASONS['no doctype'], $validator->getInvalidReasonList());
+        $this->assertContains('no doctype', $validator->getInvalidReasonLabels());
+    }
+
+    public function testHtmlIsValidMissingClosingTags(): void
+    {
+        $html = '<!DOCTYPE html><html><head><title>Test</title></head><body><p>Hello</p>';
+        $validator = new HtmlIsValid($html);
+        $this->assertFalse($validator->isValid());
+        $this->assertContains(HtmlIsValid::INVALID_REASONS['no closing html'], $validator->getInvalidReasonList());
+        $this->assertContains(HtmlIsValid::INVALID_REASONS['no closing body'], $validator->getInvalidReasonList());
+    }
+
+    public function testHtmlIsValidUnclosedTags(): void
+    {
+        $html = '<!DOCTYPE html><html><head><title>Test</title></head><body><div><p>Hello</p></body></html>';
+        $validator = new HtmlIsValid($html);
+        $this->assertFalse($validator->isValid());
+        $this->assertContains(HtmlIsValid::INVALID_REASONS['unclosed tags'], $validator->getInvalidReasonList());
+    }
+
+    public function testHtmlIsValidReasonLabel(): void
+    {
+        $this->assertSame('no doctype', HtmlIsValid::invalidReasonLabel(4));
+        $this->assertSame('unknown', HtmlIsValid::invalidReasonLabel(999));
     }
 }
