@@ -21,7 +21,7 @@ final class HrefLangExtractor
         foreach ($links as $link) {
             \assert(\is_array($link));
             \assert(isset($link[0]));
-            \assert(\is_scalar($link[0]));
+            \assert(\is_string($link[0]) || \is_int($link[0]));
             if (isset($toReturn[$link[0]])) {
                 continue;
             }
