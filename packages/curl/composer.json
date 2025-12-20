@@ -16,8 +16,8 @@
     }
   ],
   "require": {
-    "php": ">=8.3",
-    "thecodingmachine/safe": "^3 || dev-master",
+    "php": ">=8.4",
+    "thecodingmachine/safe": "^3",
     "kelvinzer0/curl-impersonate-php": "^3.2"
   },
   "autoload": {

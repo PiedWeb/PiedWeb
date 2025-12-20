@@ -16,7 +16,7 @@
     }
   ],
   "require": {
-    "php": ">=8.3",
+    "php": ">=8.4",
     "piedweb/curl": "*",
     "piedweb/extractor": "*",
     "symfony/cache": "^7|^8"

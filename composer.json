@@ -22,7 +22,7 @@
     "symfony/filesystem": "^7|^8",
     "symfony/property-access": "^7|^8",
     "symfony/serializer": "^7|^8",
-    "thecodingmachine/safe": "dev-master",
+    "thecodingmachine/safe": "^3",
     "twig/twig": "^3.19",
     "voku/stringy": "dev-php84"
   },
