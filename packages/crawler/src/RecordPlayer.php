@@ -28,7 +28,7 @@ final class RecordPlayer
             throw new \Exception("Previous crawl's data not found (index.csv)");
         }
 
-        $csv = Reader::createFromPath($indexFilePath, 'r');
+        $csv = Reader::from($indexFilePath);
         $csv->setHeaderOffset(0);
 
         $records = $csv->getRecords();
@@ -67,7 +67,7 @@ final class RecordPlayer
         $urls = [];
         $counter = 0;
 
-        $csv = Reader::createFromPath($dataFilePath, 'r');
+        $csv = Reader::from($dataFilePath);
         $csv->setHeaderOffset(0);
 
         $records = $csv->getRecords();

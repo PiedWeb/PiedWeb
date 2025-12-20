@@ -826,7 +826,7 @@ final class Url
     /**
      * @return int[]
      */
-    public function getHtmlIsValidStatus(): array
+    public function getHtmlIsInvalidReasonList(): array
     {
         return $this->htmlIsValidStatus;
     }
@@ -834,7 +834,7 @@ final class Url
     /**
      * @param int[] $htmlIsValidStatus
      */
-    public function setHtmlIsValidStatus(array $htmlIsValidStatus): void
+    public function setHtmlIsInvalidReasonList(array $htmlIsValidStatus): void
     {
         $this->htmlIsValidStatus = $htmlIsValidStatus;
     }

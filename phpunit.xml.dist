@@ -15,6 +15,9 @@
     <server name="SHELL_VERBOSITY" value="-1" />
   </php>
   <testsuites>
+    <testsuite name="default">
+      <directory>packages/*/tests/</directory>
+    </testsuite>
     <testsuite name="google">
       <directory>packages/google/tests/</directory>
     </testsuite>

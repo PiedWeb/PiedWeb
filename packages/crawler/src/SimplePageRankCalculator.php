@@ -39,7 +39,7 @@ final class SimplePageRankCalculator extends AbstractPageRankCalculator
 
     private function initLinksIndex(): void
     {
-        $csv = Reader::createFromPath($this->config->getDataFolder().Recorder::LINKS_DIR.'/Index.csv', 'r');
+        $csv = Reader::from($this->config->getDataFolder().Recorder::LINKS_DIR.'/Index.csv', 'r');
         $csv->setHeaderOffset(0);
 
         $records = $csv->getRecords();

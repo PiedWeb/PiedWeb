@@ -135,12 +135,12 @@ class Recorder
                 static fn (string $name): Stringy => Stringy::create($name)->underscored(),
                 Url::EXPORTABLE
             );
-            fputcsv($dataCsv, $header);
-            fputcsv($indexCsv, ['id', 'uri']);
+            fputcsv($dataCsv, $header, ',', '"', '');
+            fputcsv($indexCsv, ['id', 'uri'], ',', '"', '');
 
             foreach ($urls as $url) {
-                fputcsv($dataCsv, array_values($url->toArray()));
-                fputcsv($indexCsv, [$url->getId(), $url->getUri()]);
+                fputcsv($dataCsv, array_values($url->toArray()), ',', '"', '');
+                fputcsv($indexCsv, [$url->getId(), $url->getUri()], ',', '"', '');
             }
 
             fclose($dataCsv);
