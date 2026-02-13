@@ -3,7 +3,8 @@
 namespace PiedWeb\Crawler;
 
 use League\Csv\Reader;
-use Stringy\Stringy;
+
+use function Symfony\Component\String\u;
 
 final class RecordPlayer
 {
@@ -83,7 +84,7 @@ final class RecordPlayer
                 && NetworkStatus::NETWORK_ERROR != ($r['network_status'] ?? true)
             ) {
                 foreach ($r as $k => $v) {
-                    $kFunction = 'set'.Stringy::create($k)->camelize()
+                    $kFunction = 'set'.u($k)->camel()->toString()
                         .(isset(Url::ARRAY_EXPORTED[$k]) ? 'FromString' : '');
                     if (! method_exists($urls[$r['uri']], $kFunction)) {
                         continue;

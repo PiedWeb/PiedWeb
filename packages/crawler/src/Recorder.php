@@ -4,8 +4,9 @@ namespace PiedWeb\Crawler;
 
 use PiedWeb\Curl\Response;
 use PiedWeb\Extractor\Link;
-use Stringy\Stringy;
 use Symfony\Component\Filesystem\Filesystem;
+
+use function Symfony\Component\String\u;
 
 class Recorder
 {
@@ -132,7 +133,7 @@ class Recorder
 
         if (false !== $dataCsv && false !== $indexCsv) {
             $header = array_map(
-                static fn (string $name): Stringy => Stringy::create($name)->underscored(),
+                static fn (string $name): string => u($name)->snake()->toString(),
                 Url::EXPORTABLE
             );
             fputcsv($dataCsv, $header, ',', '"', '');

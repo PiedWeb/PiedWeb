@@ -23,8 +23,8 @@
     "symfony/property-access": "^7|^8",
     "symfony/serializer": "^7|^8",
     "thecodingmachine/safe": "^3",
-    "twig/twig": "^3.19",
-    "voku/stringy": "dev-php84"
+    "symfony/string": "^7|^8",
+    "twig/twig": "^3.19"
   },
   "require-dev": {
     "friendsofphp/php-cs-fixer": "^3.2",
@@ -89,10 +89,5 @@
   },
   "minimum-stability": "dev",
   "prefer-stable": true,
-  "repositories": {
-    "toma-r-stringy": {
-      "type": "vcs",
-      "url": "https://github.com/TomA-R/Stringy"
-    }
-  }
+  "repositories": {}
 }

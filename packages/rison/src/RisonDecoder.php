@@ -38,10 +38,10 @@ class RisonDecoder extends Rison
     protected function init(): void
     {
         $this->tokens = [
-            '!' => [$this, 'parseBang'],
-            '(' => [$this, 'parseObject'],
-            "'" => [$this, 'parseStringLiteral'],
-            '-' => [$this, 'parseNumber'],
+            '!' => $this->parseBang(...),
+            '(' => $this->parseObject(...),
+            "'" => $this->parseStringLiteral(...),
+            '-' => $this->parseNumber(...),
         ];
         $this->tokens += array_fill_keys(range(0, 9), $this->tokens['-']);
 
@@ -49,7 +49,7 @@ class RisonDecoder extends Rison
             't' => true,
             'f' => false,
             'n' => null,
-            '(' => [$this, 'parseArray'],
+            '(' => $this->parseArray(...),
         ];
 
         $this->idRegex = \sprintf('/[^%s%s][^%s]*/', $this->notIdstart, $this->notIdchar, $this->notIdchar);

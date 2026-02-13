@@ -19,7 +19,7 @@ return static function (RectorConfig $rectorConfig): void {
         array_values($composerConfig['autoload-dev']['psr-4']) // @phpstan-ignore-line
     );
     $rectorConfig->paths(array_map(
-        function (string $path) { return __DIR__.'/'.$path; },
+        static function (string $path) { return __DIR__.'/'.$path; },
         $paths
     ));
 

@@ -35,7 +35,7 @@ final class Attribute
      *
      * @return array<string, mixed>
      */
-    protected static function mergeRecursive(array $arr1, array $arr2): array
+    private static function mergeRecursive(array $arr1, array $arr2): array
     {
         foreach ($arr2 as $key => $v) {
             if (\is_array($v)) {

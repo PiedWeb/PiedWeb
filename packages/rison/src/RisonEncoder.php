@@ -21,14 +21,14 @@ class RisonEncoder extends Rison
     protected function init(): void
     {
         $this->encoders = [
-            'boolean' => [$this, 'encodeBoolean'],
-            'integer' => [$this, 'encodeInteger'],
-            'double' => [$this, 'encodeDouble'],
-            'string' => [$this, 'encodeString'],
-            'array' => [$this, 'encodeArray'],
-            'object' => [$this, 'encodeObject'],
-            'resource' => [$this, 'encodeResource'],
-            'null' => [$this, 'encodeNull'],
+            'boolean' => $this->encodeBoolean(...),
+            'integer' => $this->encodeInteger(...),
+            'double' => $this->encodeDouble(...),
+            'string' => $this->encodeString(...),
+            'array' => $this->encodeArray(...),
+            'object' => $this->encodeObject(...),
+            'resource' => $this->encodeResource(...),
+            'null' => $this->encodeNull(...),
         ];
 
         $this->idOkRegex = \sprintf('/^[^%s%s][^%s]*$/', $this->notIdstart, $this->notIdchar, $this->notIdchar);
@@ -100,7 +100,7 @@ class RisonEncoder extends Rison
             return $this->encodeObject($array);
         }
 
-        return '!('.implode(',', array_map([$this, 'encodeValue'], $array)).')';
+        return '!('.implode(',', array_map($this->encodeValue(...), $array)).')';
     }
 
     /**
