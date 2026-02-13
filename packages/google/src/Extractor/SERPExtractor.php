@@ -13,7 +13,13 @@ class SERPExtractor
     final public const array SERP_FEATURE_SELECTORS = [
         'Ads' => ['.//*[@id="tads"]|.//*[@id="bottomads"]'],
         'ImagePack' => ["//span[text()='Images']", "//h3[starts-with(text(), 'Images correspondant')]"],
-        'Local Pack' => ["//div[text()='Adresses']", "//div[text()='Entreprises']"],
+        'Local Pack' => [
+            '//*[@data-viewer-entrypoint]',
+            "//a[contains(@href,'/maps/dir/')]",
+            "//div[contains(@class,'rllt__details')]",
+            "//div[contains(@class,'VkpGBb')]",
+            "//*[@role='heading'][text()='Adresses' or text()='Entreprises' or text()='Lieux' or text()='Places']",
+        ],
         'PositionZero' => ['div[data-md="471"]'],
         'KnowledgePanel' => ['//div[contains(concat(" ",normalize-space(@class)," ")," kp-wholepage ")]'],
         'News' => ['//span[text()="À la une"]'],
@@ -77,6 +83,13 @@ class SERPExtractor
         return $alsoAsked;
     }
 
+    /** CSS selectors tried in order to find business names in the local pack. */
+    private const array BUSINESS_NAME_SELECTORS = [
+        '.dbg0pd',
+        '.rllt__details',
+        '.VkpGBb [role="heading"]',
+    ];
+
     /**
      * @return BusinessResult[]
      *
@@ -84,88 +97,178 @@ class SERPExtractor
      */
     public function extractBusinessResults(): array
     {
-        $selector = 'a[data-open-viewer]';
-        $nodes = $this->domCrawler->filter($selector);
-        $mapsResults = [];
-        $i = 0;
-        foreach ($nodes as $node) {
-            if (! $node instanceof \DOMElement) {
-                continue;
-            }
-
-            $href = $node->getAttribute('href');
-            if (1 !== preg_match('/mid=(\/g\/[\w\d]+)/', $href, $matches)) {
-                continue; // TODO log it
-            }
-
-            $mid = $matches[1];
-
-            $mapsResults[$i] = new BusinessResult(
-                mid: $mid,
-                name: (new Crawler($node))->filter('[role]')->first()->text(''),
-                organicPos: $i + 1,
-                position: $i + 1,
-                pixelPos: $this->getPixelPosFor($node->getNodePath() ?? ''),
-            ); // data-rc_ludocids
-
-            ++$i;
-        }
-
-        if (\count($mapsResults) < 1) {
+        $names = $this->extractBusinessNames();
+        if ([] === $names) {
             return $this->extractLocalServiceResults();
         }
 
-        return $mapsResults;
+        $results = [];
+        foreach ($names as $i => $name) {
+            ['mid' => $mid, 'cid' => $cid] = $this->findIdentifiersNear($name);
+
+            $results[] = new BusinessResult(
+                cid: $cid,
+                mid: $mid,
+                name: $name,
+                organicPos: $i + 1,
+                position: $i + 1,
+            );
+        }
+
+        return $results;
     }
 
     /**
+     * Try multiple CSS selectors to find business names, deduplicated.
+     *
+     * @return string[]
+     */
+    private function extractBusinessNames(): array
+    {
+        foreach (self::BUSINESS_NAME_SELECTORS as $selector) {
+            $nodes = $this->domCrawler->filter($selector);
+            if (0 === $nodes->count()) {
+                continue;
+            }
+
+            $names = [];
+            $seen = [];
+            foreach ($nodes as $node) {
+                if (! $node instanceof \DOMElement) {
+                    continue;
+                }
+
+                $name = $this->extractNameFromNode($node, $selector);
+                if ('' === $name || isset($seen[$name])) {
+                    continue;
+                }
+
+                $seen[$name] = true;
+                $names[] = $name;
+            }
+
+            if ([] !== $names) {
+                return $names;
+            }
+        }
+
+        return [];
+    }
+
+    private function extractNameFromNode(\DOMElement $node, string $usedSelector): string
+    {
+        // .dbg0pd and headings contain just the name
+        if (! str_contains($usedSelector, 'rllt__details')) {
+            return trim($node->textContent);
+        }
+
+        // .rllt__details contains name + rating + address; extract from .dbg0pd child or first text
+        $inner = new Crawler($node);
+        $nameNode = $inner->filter('.dbg0pd')->getNode(0);
+        if ($nameNode instanceof \DOMElement) {
+            return trim($nameNode->textContent);
+        }
+
+        $firstChild = $node->firstChild;
+        if ($firstChild instanceof \DOMText || $firstChild instanceof \DOMElement) {
+            $candidate = trim($firstChild->textContent);
+            if ('' !== $candidate) {
+                return $candidate;
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Search the raw HTML near a business name to find its mid (/g/...) and CID (0x...:0x...).
+     *
+     * @return array{mid: string, cid: string}
+     */
+    private function findIdentifiersNear(string $name): array
+    {
+        $mid = '';
+        $cid = '';
+        $pos = 0;
+
+        while (false !== ($pos = strpos($this->html, $name, $pos))) {
+            $start = max(0, $pos - 1000);
+            $window = substr($this->html, $start, 2000 + \strlen($name));
+
+            if ('' === $mid && 1 === preg_match('#/g/[\w\d]+#', $window, $m)) {
+                $mid = $m[0];
+            }
+
+            if ('' === $cid && 1 === preg_match('/0x[0-9a-f]+:0x([0-9a-f]+)/', $window, $m)) {
+                $cid = $this->hexCidToNumeric($m[1]);
+            }
+
+            if ('' !== $mid && '' !== $cid) {
+                break;
+            }
+
+            ++$pos;
+        }
+
+        return ['mid' => $mid, 'cid' => $cid];
+    }
+
+    /**
+     * Convert the entity part of a Google hex Place ID to a numeric CID.
+     */
+    private function hexCidToNumeric(string $hex): string
+    {
+        if (\function_exists('gmp_init')) {
+            return gmp_strval(gmp_init($hex, 16));
+        }
+
+        // bcmath fallback: convert hex to decimal digit by digit
+        $dec = '0';
+        foreach (str_split($hex) as $digit) {
+            $dec = bcadd(bcmul($dec, '16'), (string) hexdec($digit));
+        }
+
+        return $dec;
+    }
+
+    /**
+     * Fallback for local service ads / knowledge panel business cards.
+     *
      * @return BusinessResult[]
      */
     private function extractLocalServiceResults(): array
     {
-        // [data-docid]
-        $selector = '[data-prvwid="HEADER"] [role="heading"]';
-        $nodes = $this->domCrawler->filter($selector);
-        $mapsResults = [];
+        $nodes = $this->domCrawler->filter('[data-prvwid="HEADER"] [role="heading"]');
+        $results = [];
         $i = 0;
         foreach ($nodes as $node) {
             if (! $node instanceof \DOMElement) {
                 continue;
             }
 
-            if ('' === $node->textContent) {
+            $name = trim(Helper::htmlToPlainText($node->textContent));
+            if ('' === $name) {
                 continue;
             }
 
-            $mapsResults[$i] = new BusinessResult(
-                cid: $this->getCidFromLocalServiceResult(),
-                mid: $this->getMidFromLocalServiceResult(),
-                name: trim(Helper::htmlToPlainText($node->textContent)),
+            if (\in_array($name, ['Partager', 'Share', 'Suggérer une modification', 'Suggest an edit'], true)) {
+                continue;
+            }
+
+            ['mid' => $mid, 'cid' => $cid] = $this->findIdentifiersNear($name);
+
+            $results[$i] = new BusinessResult(
+                cid: $cid,
+                mid: $mid,
+                name: $name,
                 organicPos: $i + 1,
                 position: $i + 1,
-                pixelPos: $this->getPixelPosFor($node->getNodePath() ?? '')
+                pixelPos: $this->getPixelPosFor($node->getNodePath() ?? ''),
             );
             ++$i;
         }
 
-        return $mapsResults;
-    }
-
-    private function getMidFromLocalServiceResult(): string
-    {
-        preg_match('/,"(\/g\/[\w\d]+)",/', $this->html, $matches);
-
-        return $matches[1] ?? '';
-    }
-
-    private function getCidFromLocalServiceResult(): string
-    {
-        $node = $this->domCrawler->filter('[data-docid]')->getNode(0);
-        if (! $node instanceof \DOMElement) {
-            return '0';
-        }
-
-        return $node->getAttribute('data-docid');
+        return $results;
     }
 
     /**
