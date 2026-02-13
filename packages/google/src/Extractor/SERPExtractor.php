@@ -22,25 +22,26 @@ class SERPExtractor
         ],
         'PositionZero' => ['div[data-md="471"]'],
         'KnowledgePanel' => ['//div[contains(concat(" ",normalize-space(@class)," ")," kp-wholepage ")]'],
-        'News' => ['//span[text()="À la une"]'],
-        'PeolpleAlsoAsked' => [
+        'News' => ['//span[text()="À la une"]', '//span[text()="Top stories"]'],
+        'PeopleAlsoAsked' => [
             '//span[text()="Autres questions posées"]',
             '//span[text()="People also ask"]',
         ],
-        'Video' => ['//span[text()="Vidéos"]',            '//div[contains( @aria-label,"second")]'],
-        'Reviews' => ['//span[contains( @aria-label,"Note")]'],
+        'Video' => ['//span[text()="Vidéos"]', '//span[text()="Videos"]', '//div[contains(@aria-label,"second")]'],
+        'Reviews' => ['//span[contains(@aria-label,"Note")]', '//span[contains(@aria-label,"Rating")]', '//span[contains(@aria-label,"Rated")]'],
     ];
 
     /** @var string[] */
     final public const array RELATED = [
         '//span[text()="Recherches associées"]/ancestor::*[position() <  5]//a',
+        '//span[text()="Related searches"]/ancestor::*[position() <  5]//a',
         '//span[text()="Search for next"]/ancestor::*[position() <  5]//a',
         '//span[text()="People also search for"]/ancestor::*[position() <  5]//a',
         "//a[@data-xbu][starts-with(@href, '/search')]/div",
     ];
 
     // public const RESULT_SELECTOR = '//a[@role="presentation"]/parent::div/parent::div/parent::div';
-    final public const string RESULT_SELECTOR = "(//h2[text()='Extrait optimisé sur le Web']/ancestor::block-component//a[@class])[1]|//a[@role='presentation']|//div[@data-md=\"471\"]//a";
+    final public const string RESULT_SELECTOR = "(//h2[text()='Extrait optimisé sur le Web' or text()='Featured snippet from the web']/ancestor::block-component//a[@class])[1]|//a[@role='presentation']|//div[@data-md=\"471\"]//a";
 
     private readonly Crawler $domCrawler;
 
@@ -139,7 +140,10 @@ class SERPExtractor
                 }
 
                 $name = $this->extractNameFromNode($node, $selector);
-                if ('' === $name || isset($seen[$name])) {
+                if ('' === $name) {
+                    continue;
+                }
+                if (isset($seen[$name])) {
                     continue;
                 }
 
