@@ -3,7 +3,6 @@
 namespace PiedWeb\Google;
 
 use PiedWeb\Curl\ExtendedClient;
-use Webmozart\Assert\Assert;
 
 class GoogleSuggester
 {
@@ -49,7 +48,11 @@ class GoogleSuggester
         }
 
         $list = $data[1];
-        Assert::allString($list);
+        if (! \is_array($list)) {
+            return;
+        }
+
+        $list = array_filter($list, \is_string(...));
         /** @var list<string> $list */
         $this->results = array_merge($list, $this->results);
         $this->results = array_unique($this->results);

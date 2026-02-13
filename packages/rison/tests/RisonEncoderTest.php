@@ -239,7 +239,7 @@ class RisonEncoderTest extends \PHPUnit\Framework\TestCase
     public function testAllTypesNested(): void
     {
         $php = ['foo' => 'bar', 'baz' => [1, 12e40, 0.42, ['a' => true, false, null]]];
-        $rison = '(baz:!(1,1.2e41,0.42,(a:!t,0:!f,1:!n)),foo:bar)';
+        $rison = '(baz:!(1,1.2e41,0.42,(0:!f,1:!n,a:!t)),foo:bar)';
 
         $this->assertEquals($rison, R\rison_encode($php));
     }

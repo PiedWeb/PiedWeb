@@ -7,9 +7,9 @@ require_once __DIR__.\DIRECTORY_SEPARATOR.'Rison.php';
 class RisonEncoder extends Rison
 {
     /**
-     * @var array<string, callable(): string>
+     * @var array<string, callable>
      */
-    protected $encoders = [];
+    protected array $encoders = [];
 
     private string $idOkRegex;
 
@@ -66,7 +66,9 @@ class RisonEncoder extends Rison
 
     protected function encodeDouble(float $double): string
     {
-        return strtolower(str_replace('+', '', (string) $double));
+        $s = strtolower(str_replace('+', '', (string) $double));
+
+        return str_replace('.0e', 'e', $s);
     }
 
     protected function encodeResource(string $resource): never

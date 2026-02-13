@@ -311,11 +311,9 @@ class RisonDecoderTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(json_decode($json, true), R\rison_decode($rison));
     }
 
-    /**
-     * @expectedException \Kunststube\Rison\RisonParseErrorException
-     */
     public function testTwoLiterals(): void
     {
+        $this->expectException(R\RisonParseErrorException::class);
         $r = new RisonDecoder('foo bar');
         $r->decode();
     }

@@ -183,24 +183,14 @@ class SERPExtractor
 
         $i = 0;
         $iOrganic = 0;
-        $adUrls = [];
-
-        // First pass: collect ad URLs
-        foreach ($nodes as $k => $node) {
-            if (null !== $nodes->eq($k)->closest('#tads, #bottomads') && $node instanceof \DOMElement) {
-                $adUrls[] = $node->getAttribute('href');
-            }
-        }
 
         foreach ($nodes as $k => $node) {
-            $inAdContainer = null !== $nodes->eq($k)->closest('#tads, #bottomads');
-            if ($organicOnly && $inAdContainer) {
+            $ads = null !== $nodes->eq($k)->closest('#tads, #bottomads');
+            if ($organicOnly && $ads) {
                 continue;
             }
 
-            $ads = $inAdContainer || ($node instanceof \DOMElement && \in_array($node->getAttribute('href'), $adUrls, true));
-
-            $result = $this->extractResultFrom($node, $ads ? 0 : $iOrganic + 1,  $i + 1, $ads);
+            $result = $this->extractResultFrom($node, $ads ? 0 : $iOrganic + 1, $i + 1, $ads);
             if (! $result instanceof SearchResult) {
                 continue;
             }

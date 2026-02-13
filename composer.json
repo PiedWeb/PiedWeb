@@ -32,10 +32,10 @@
     "phpstan/phpstan": "^2",
     "phpstan/phpstan-phpunit": "^2",
     "phpstan/phpstan-symfony": "^2",
-    "phpunit/phpunit": "^12",
+    "phpunit/phpunit": "^13",
     "rector/rector": "^2",
     "symfony/var-dumper": "^7|^8",
-    "symplify/monorepo-builder": "^12"
+    "monorepo-php/monorepo": "^12"
   },
   "extra": {
     "branch-alias": {
@@ -52,7 +52,7 @@
       "PiedWeb\\TextAnalyzer\\": "packages/text-analyzer/src",
       "PiedWeb\\Rison\\": "packages/rison/src",
       "PiedWeb\\Perso\\": "packages/perso",
-      "PiedWeb\\RenderAttributes\\": "packages/render-html-attribute",
+      "PiedWeb\\RenderAttributes\\": "packages/render-html-attribute/src",
       "PiedWeb\\MethodDocBlockGenerator\\": "packages/method-doc-block-generator/src"
     },
     "files": [
@@ -77,7 +77,7 @@
     "rector": "vendor/bin/rector process && composer format",
     "format": "vendor/bin/php-cs-fixer fix && vendor/bin/php-cs-fixer fix rector.php",
     "validate-monorepo": "vendor/bin/monorepo-builder validate",
-    "test": "PUPPETEER_HEADLESS=0 vendor/bin/phpunit --testdox --no-progress --colors=always",
+    "test": "PUPPETEER_HEADLESS=0 vendor/bin/phpunit --testsuite default --testdox --no-progress --colors=always",
     "testf": "PUPPETEER_HEADLESS=0 vendor/bin/phpunit --testdox --no-progress --colors=always --filter",
     "test-google": "vendor/bin/phpunit --testdox --no-progress --colors=always --stop-on-failure --testsuite google"
   },

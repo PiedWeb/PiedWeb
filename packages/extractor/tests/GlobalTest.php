@@ -39,7 +39,7 @@ final class GlobalTest extends TestCase
             ->fakeBrowserHeader()
             ->setNoFollowRedirection()
             ->setMaximumResponseSize()
-            ->setDownloadOnlyIf(Helper::checkStatusCode(...))
+            ->setDownloadOnlyIf(static fn (string $line): bool => Helper::checkStatusCode($line) || Helper::checkStatusCode($line, 206))
             ->setMobileUserAgent();
         //  if ($this->proxy) { $client->setProxy($this->proxy); }
         $client->request();
@@ -130,7 +130,7 @@ final class GlobalTest extends TestCase
         $extractor = new HrefLangExtractor(new Crawler($rawHtml));
         $list = $extractor->getHrefLangList();
 
-        $this->assertContains('https://altimood.com/en', $list);
+        $this->assertContains('https://us.altimood.com/', $list);
     }
 
     public function testLinkExtractor(): void

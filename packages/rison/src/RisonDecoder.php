@@ -97,11 +97,9 @@ class RisonDecoder extends Rison
             $this->parseError(\sprintf("Invalid bang '!%s'", $c));
         }
 
-        if (! \is_array($this->bangs[$c])) {
-            return $this->bangs[$c];
-        }
+        $value = $this->bangs[$c];
 
-        return \call_user_func($this->bangs[$c]);
+        return $value instanceof \Closure ? $value() : $value;
     }
 
     /**
@@ -214,11 +212,15 @@ class RisonDecoder extends Rison
         do {
             $c = substr((string) $this->rison, $i++, 1);
 
+            if ('' === $c) {
+                break;
+            }
+
             if (ctype_digit($c)) {
                 continue;
             }
 
-            if (str_contains($permittedSigns, $c)) {
+            if ('' !== $permittedSigns && str_contains($permittedSigns, $c)) {
                 $permittedSigns = '';
 
                 continue;
