@@ -52,7 +52,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         with:
-          tag: ${GITHUB_REF#refs/tags/}
+          tag: ${{ github.ref_name }}
           package_directory: 'packages/${{ matrix.package }}'
           repository_organization: 'piedweb'
           repository_name: '${{ matrix.package }}'
