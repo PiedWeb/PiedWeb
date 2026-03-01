@@ -106,7 +106,8 @@ final class Crawler
 
     public function firstUrl(): Url
     {
-        if (($firstUrl = $this->urls[key($this->urls)] ?? null) === null) {
+        $firstKey = key($this->urls);
+        if (null === $firstKey || ($firstUrl = $this->urls[$firstKey] ?? null) === null) {
             throw new \Exception();
         }
 

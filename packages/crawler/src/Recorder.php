@@ -199,10 +199,10 @@ class Recorder
                 $content .= ',-1'.\PHP_EOL;
             } else {
                 $everAdded[] = $link->url;
-                $content .= ','.(isset($urls[$uri]) ? $urls[$uri]->getId() : 0).\PHP_EOL; // 0 = external
+                $content .= ','.(null !== $uri && isset($urls[$uri]) ? $urls[$uri]->getId() : 0).\PHP_EOL; // 0 = external
             }
 
-            if (isset($urls[$uri])) {
+            if (null !== $uri && isset($urls[$uri])) {
                 $this->recordInboundLink($link, $urls[$uri]);
             }
         }
