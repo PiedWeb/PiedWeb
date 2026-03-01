@@ -38,7 +38,9 @@ final class Attribute
     private static function mergeRecursive(array $arr1, array $arr2): array
     {
         foreach ($arr2 as $key => $v) {
-            if (\is_array($v)) {
+            if (null === $v) {
+                $arr1[$key] = null;
+            } elseif (\is_array($v)) {
                 /** @var array<string, mixed> $existing */
                 $existing = isset($arr1[$key]) && \is_array($arr1[$key]) ? $arr1[$key] : [];
                 /** @var array<string, mixed> $vArray */
@@ -72,14 +74,18 @@ final class Attribute
     /**
      * Previously mapAttributes.
      *
-     * @param array<int|string, string> $attributes
+     * @param array<int|string, string|null> $attributes
      */
     public static function renderAll(array $attributes): string
     {
         $result = '';
 
         foreach ($attributes as $name => $value) {
-            $result .= \is_int($name) ? self::render($value) : self::render($name, $value);
+            if (null === $value) {
+                continue;
+            }
+
+            $result .= \is_int($name) ? self::render($value) : self::render($name, (string) $value);
         }
 
         return $result;

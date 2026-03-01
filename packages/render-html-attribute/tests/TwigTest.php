@@ -45,4 +45,12 @@ class TwigTest extends TestCase
 
         $this->assertSame($this->render($twig), $expected);
     }
+
+    public function testNullValuesAreSkipped(): void
+    {
+        $twig = '{{ mergeAttr({src:"/image.svg", width:null, height:null, alt:"icon"})|raw }}';
+        $expected = ' src="/image.svg" alt="icon"';
+
+        $this->assertSame($this->render($twig), $expected);
+    }
 }
