@@ -8,7 +8,7 @@
 [![Type Coverage](https://shepherd.dev/github/PiedWeb/PiedWeb/coverage.svg)](https://shepherd.dev/github/PiedWeb/PiedWeb)
 [![Total Downloads](https://img.shields.io/packagist/dt/piedweb/google.svg?style=flat)](https://packagist.org/packages/piedweb/google)
 
-Via Curl or Puppeteer. This lib offers for now :
+Via Puppeteer. This lib offers for now :
 
 - SERP extraction
 - Suggests

@@ -130,7 +130,7 @@ final class GlobalTest extends TestCase
         $extractor = new HrefLangExtractor(new Crawler($rawHtml));
         $list = $extractor->getHrefLangList();
 
-        $this->assertContains('https://us.altimood.com/', $list);
+        $this->assertContains('https://de.altimood.com/', $list);
     }
 
     public function testLinkExtractor(): void

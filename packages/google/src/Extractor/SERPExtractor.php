@@ -15,6 +15,7 @@ class SERPExtractor
         'ImagePack' => ["//span[text()='Images']", "//h3[starts-with(text(), 'Images correspondant')]"],
         'Local Pack' => [
             '//*[@data-viewer-entrypoint]',
+            '//*[@data-prvwid]',
             "//a[contains(@href,'/maps/dir/')]",
             "//div[contains(@class,'rllt__details')]",
             "//div[contains(@class,'VkpGBb')]",
@@ -25,6 +26,7 @@ class SERPExtractor
         'News' => ['//span[text()="À la une"]', '//span[text()="Top stories"]'],
         'PeopleAlsoAsked' => [
             '//span[text()="Autres questions posées"]',
+            '//span[text()="Autres questions"]',
             '//span[text()="People also ask"]',
         ],
         'Video' => ['//span[text()="Vidéos"]', '//span[text()="Videos"]', '//div[contains(@aria-label,"second")]'],
@@ -41,7 +43,7 @@ class SERPExtractor
     ];
 
     // public const RESULT_SELECTOR = '//a[@role="presentation"]/parent::div/parent::div/parent::div';
-    final public const string RESULT_SELECTOR = "(//h2[text()='Extrait optimisé sur le Web' or text()='Featured snippet from the web']/ancestor::block-component//a[@class])[1]|//a[@role='presentation']|//div[@data-md=\"471\"]//a";
+    final public const string RESULT_SELECTOR = "(//h2[text()='Extrait optimisé sur le Web' or text()='Featured snippet from the web']/ancestor::block-component//a[@class])[1]|//div[@data-hveid]//a[@aria-label][@tabindex]|//a[@role='presentation']|//div[@data-md=\"471\"]//a";
 
     private readonly Crawler $domCrawler;
 
@@ -57,16 +59,6 @@ class SERPExtractor
     ) {
         $this->domCrawler = new Crawler($html);
         $this->extractedAt = 0 === $this->extractedAt ? (int) (new \DateTime('now'))->format('ymdHi') : $this->extractedAt;
-    }
-
-    public function getNbrResults(): int
-    {
-        $node = null;
-        if (! $this->exists(['//*[@id="resultStats"]|', '//*[@id="result-stats"]'], $node)) {
-            return 0;
-        }
-
-        return (int) Helper::preg_replace_str('/[^0-9]/', '', $node->nodeValue ?? '');
     }
 
     /**
@@ -325,6 +317,11 @@ class SERPExtractor
         }
 
         $href = $linkNode->getAttribute('href');
+        // skip fragment-only anchors (tooltips, UI elements)
+        if ('' === $href || '#' === $href[0]) {
+            return null;
+        }
+
         // skip shopping Results
         if (str_starts_with($href, 'https://www.google.')) {
             return null;
@@ -464,7 +461,7 @@ class SERPExtractor
                 continue;
             }
 
-            if ('' === $node->nodeValue) {
+            if ('' === $node->nodeValue && 0 === $node->childNodes->length) {
                 continue;
             }
 
@@ -479,7 +476,6 @@ class SERPExtractor
         return \Safe\json_encode([
             'version' => '1',
             'extractedAt' => $this->extractedAt,
-            'resultStat' => $this->getNbrResults(),
             'serpFeatures' => $this->getSerpFeatures(),
             'relatedSearches' => $this->getRelatedSearches(),
             'results' => $this->getResults(false),

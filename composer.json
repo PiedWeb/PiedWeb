@@ -79,7 +79,7 @@
     "validate-monorepo": "vendor/bin/monorepo-builder validate",
     "test": "PUPPETEER_HEADLESS=0 vendor/bin/phpunit --testsuite default --testdox --no-progress --colors=always",
     "testf": "PUPPETEER_HEADLESS=0 vendor/bin/phpunit --testdox --no-progress --colors=always --filter",
-    "test-google": "vendor/bin/phpunit --testdox --no-progress --colors=always --stop-on-failure --testsuite google"
+    "test-google": "PUPPETEER_HEADLESS=0 vendor/bin/phpunit --testdox --no-progress --colors=always --stop-on-failure --testsuite google"
   },
   "config": {
     "sort-packages": true,

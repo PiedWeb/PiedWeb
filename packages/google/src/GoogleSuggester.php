@@ -15,7 +15,13 @@ class GoogleSuggester
         public string $keyword,
         public string $lang = 'fr'
     ) {
-        $this->client = (new GoogleRequester())->getCurlClient();
+        $client = new ExtendedClient();
+        $client
+            ->setMobileUserAgent()
+            ->setDefaultSpeedOptions(60, 120, 20000)
+            ->setCookie('CONSENT=YES+')
+            ->fakeBrowserHeader();
+        $this->client = $client;
     }
 
     /** @return string[] */

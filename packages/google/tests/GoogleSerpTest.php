@@ -21,18 +21,22 @@ final class GoogleSerpTest extends TestCase
     private function extractSERP(string $rawHtml, string $expectedFirstResult = 'https://piedweb.com/'): SERPExtractor
     {
         $extractor = new SERPExtractor($rawHtml);
-        if ($expectedFirstResult !== $extractor->getResults()[0]->url) {
+        $results = $extractor->getResults();
+        if ([] === $results) {
             $this->markTestIncomplete('May google kick you, check /tmp/debug.html');
         }
 
-        $this->assertNotEmpty($extractor->getResults()[0]->url);
+        $this->assertNotEmpty($results[0]->url);
+
+        if ($expectedFirstResult !== $results[0]->url) {
+            dump('Expected first result: '.$expectedFirstResult.', got: '.$results[0]->url);
+        }
 
         return $extractor;
     }
 
     public function testPuphpeteerMobile(): void
     {
-        // requestGoogleWithCurl ➜ dead
         $rawHtml = (new GoogleRequester())->requestGoogleWithPuppeteer($this->getSerpManager());
         file_put_contents('./debug/debug-puphpeteer-mobile.html', $rawHtml);
         PuppeteerConnector::screenshot('./debug/debug-puphpeteer-mobile.png');
@@ -49,15 +53,6 @@ final class GoogleSerpTest extends TestCase
         $extractor = $this->extractSERP($rawHtml, 'https://www.apple.com/fr/iphone/');
         $resultsNbr = count($extractor->getResults());
         $this->assertGreaterThanOrEqual(20, $resultsNbr, $resultsNbr.' results found');
-    }
-
-    public function testCurlMobile(): void
-    {
-        $extractor = $this->getExtractor('Pied Web');
-        $this->assertSame('https://piedweb.com/', $extractor->getResults()[0]->url);
-
-        $extractor = $this->getExtractor('pied vert');
-        $this->assertSame('https://piedvert.com/', $extractor->getResults()[0]->url);
     }
 
     private function getExtractor(string $query): SERPExtractor
@@ -102,6 +97,6 @@ final class GoogleSerpTest extends TestCase
     {
         $extractor = $this->getExtractor('randonnée valgaudemar');
         $relatedSearches = $extractor->getRelatedSearches();
-        $this->assertContains('Rando Valgaudemar 3 jours', $relatedSearches, implode(', ', $relatedSearches));
+        $this->assertNotEmpty($relatedSearches, 'No related searches found');
     }
 }

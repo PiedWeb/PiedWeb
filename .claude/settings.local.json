@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(vendor/bin/phpstan analyse:*)",
+      "Bash(php -r:*)",
+      "Bash(php packages/crawler/bin/console-stan.php:*)",
+      "Bash(composer show:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(composer stan:*)",
+      "Bash(vendor/bin/phpunit:*)",
+      "Bash(composer test:*)"
+    ]
+  }
+}
