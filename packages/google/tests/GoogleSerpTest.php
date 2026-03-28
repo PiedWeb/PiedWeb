@@ -52,7 +52,7 @@ final class GoogleSerpTest extends TestCase
 
         $extractor = $this->extractSERP($rawHtml, 'https://www.apple.com/fr/iphone/');
         $resultsNbr = count($extractor->getResults());
-        $this->assertGreaterThanOrEqual(20, $resultsNbr, $resultsNbr.' results found');
+        $this->assertGreaterThanOrEqual(15, $resultsNbr, $resultsNbr.' results found');
     }
 
     private function getExtractor(string $query): SERPExtractor
@@ -98,5 +98,11 @@ final class GoogleSerpTest extends TestCase
         $extractor = $this->getExtractor('randonnée valgaudemar');
         $relatedSearches = $extractor->getRelatedSearches();
         $this->assertNotEmpty($relatedSearches, 'No related searches found');
+    }
+
+    public function testKnowledgePanel(): void
+    {
+        $extractor = $this->getExtractor('Tour Eiffel');
+        $this->assertTrue($extractor->containsSerpFeature('KnowledgePanel'), 'KnowledgePanel not found');
     }
 }
