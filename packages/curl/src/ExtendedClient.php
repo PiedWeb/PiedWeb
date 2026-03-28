@@ -149,7 +149,7 @@ class ExtendedClient extends Client
 
     public function getUserAgent(): string
     {
-        return $this->userAgent ?? throw new \Exception('userAgent must be setted');
+        return $this->userAgent ?? throw new \Exception('userAgent must be set');
     }
 
     /**

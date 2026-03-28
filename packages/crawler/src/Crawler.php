@@ -153,7 +153,7 @@ final class Crawler
 
     private function autosave(): void
     {
-        if (0 !== $this->counter && $this->counter / $this->config->autosave == round($this->counter / $this->config->autosave)) {
+        if (0 !== $this->counter && 0 === $this->counter % $this->config->autosave) {
             $this->debug('    --- auto-save');
             $this->config->getRecorder()->record($this->getUrls());
         }

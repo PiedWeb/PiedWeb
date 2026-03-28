@@ -58,7 +58,7 @@ final class GoogleSerpTest extends TestCase
     private function getExtractor(string $query): SERPExtractor
     {
         $rawHtml = (new GoogleRequester())->requestGoogleWithPuppeteer($this->getSerpManager($query), maxPages: 1);
-        file_put_contents('debug.html', $rawHtml);
+        file_put_contents('./debug/debug-'.preg_replace('/[^a-z0-9]+/', '-', strtolower($query)).'.html', $rawHtml);
 
         return new SERPExtractor($rawHtml);
     }

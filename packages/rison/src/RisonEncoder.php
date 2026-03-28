@@ -46,7 +46,8 @@ class RisonEncoder extends Rison
             throw new \InvalidArgumentException('Cannot encode value of type '.$type);
         }
 
-        return \call_user_func($this->encoders[$type], $value); // @phpstan-ignore-line
+        /** @var string */
+        return \call_user_func($this->encoders[$type], $value);
     }
 
     protected function encodeBoolean(bool $boolean): string
@@ -59,9 +60,9 @@ class RisonEncoder extends Rison
         return '!n';
     }
 
-    protected function encodeInteger(int $integer): int
+    protected function encodeInteger(int $integer): string
     {
-        return $integer;
+        return (string) $integer;
     }
 
     protected function encodeDouble(float $double): string

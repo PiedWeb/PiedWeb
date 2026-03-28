@@ -21,7 +21,7 @@ class SERPExtractor
             "//div[contains(@class,'VkpGBb')]",
             "//*[@role='heading'][text()='Adresses' or text()='Entreprises' or text()='Lieux' or text()='Places']",
         ],
-        'PositionZero' => ['div[data-md="471"]'],
+        'PositionZero' => ['//div[@data-md="471"]'],
         'KnowledgePanel' => ['//div[contains(concat(" ",normalize-space(@class)," ")," kp-wholepage ")]'],
         'News' => ['//span[text()="À la une"]', '//span[text()="Top stories"]'],
         'PeopleAlsoAsked' => [
