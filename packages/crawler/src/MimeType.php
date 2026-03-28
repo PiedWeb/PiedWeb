@@ -59,7 +59,7 @@ final class MimeType
         'video/webm' => 49,
         'image/webp' => 50,
         'font/woff' => 51,
-        'font/woff4' => 52,
+        'font/woff2' => 52,
         'application/xhtml+xml' => 53,
         'application/vnd.ms-excel ' => 54,
         'application/xml' => 55,
