@@ -45,3 +45,5 @@ test.php
 !.gitkeep
 
 Draft.md
+scripts/
+logs/
