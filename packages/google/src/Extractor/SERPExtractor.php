@@ -22,7 +22,7 @@ class SERPExtractor
             "//*[@role='heading'][text()='Adresses' or text()='Entreprises' or text()='Lieux' or text()='Places']",
         ],
         'PositionZero' => ['//div[@data-md="471"]'],
-        'KnowledgePanel' => ['//div[contains(concat(" ",normalize-space(@class)," ")," kp-wholepage ")]'],
+        'KnowledgePanel' => ['//div[@data-md="61"]', '//div[contains(concat(" ",normalize-space(@class)," ")," kp-wholepage ")]'],
         'News' => ['//span[text()="À la une"]', '//span[text()="Top stories"]'],
         'PeopleAlsoAsked' => [
             '//span[text()="Autres questions posées"]',
@@ -296,11 +296,12 @@ class SERPExtractor
         }
 
         $toReturn = $this->extractFromXpath(self::RESULT_SELECTOR, $organicOnly);
-        if ([] !== $toReturn) {
-            $this->lastExtractionMethod = 'xpath';
-        } else {
-            $toReturn = $this->extractFromResultBlocks($organicOnly);
+        $blocksResults = \count($toReturn) < 3 ? $this->extractFromResultBlocks($organicOnly) : [];
+        if (\count($blocksResults) > \count($toReturn)) {
+            $toReturn = $blocksResults;
             $this->lastExtractionMethod = 'blocks';
+        } else {
+            $this->lastExtractionMethod = [] !== $toReturn ? 'xpath' : 'blocks';
         }
 
         if (false === $organicOnly) {
@@ -484,7 +485,7 @@ class SERPExtractor
             organicPos: $organicPos,
             position: $position,
             url: $href,
-            title: (new Crawler($linkNode))->text(''),
+            title: (new Crawler($linkNode))->text('') ?: $linkNode->getAttribute('aria-label'),
             pixelPos: $this->getPixelPosFor($linkNode->getNodePath() ?? ''),
             ads : $ads
         );

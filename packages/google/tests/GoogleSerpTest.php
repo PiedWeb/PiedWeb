@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use PiedWeb\Google\Extractor\SERPExtractor;
 use PiedWeb\Google\GoogleRequester;
@@ -125,9 +126,7 @@ final class GoogleSerpTest extends TestCase
         yield 'en local' => ['coffee shop london', 'com', 'en', 3];
     }
 
-    /**
-     * @dataProvider organicExtractionProvider
-     */
+    #[DataProvider('organicExtractionProvider')]
     public function testOrganicExtraction(string $query, string $tld, string $language, int $minResults): void
     {
         $extractor = $this->getExtractor($query, $tld, $language);
