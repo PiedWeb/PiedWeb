@@ -45,12 +45,31 @@ class SERPExtractor
     // public const RESULT_SELECTOR = '//a[@role="presentation"]/parent::div/parent::div/parent::div';
     final public const string RESULT_SELECTOR = "(//h2[text()='Extrait optimisé sur le Web' or text()='Featured snippet from the web']/ancestor::block-component//a[@class])[1]|//div[@data-hveid]//a[@aria-label][@tabindex]|//a[@role='presentation']|//div[@data-md=\"471\"]//a";
 
+    /** XPaths matching result container blocks (each child = one SERP result). */
+    private const array RESULT_BLOCK_XPATHS = [
+        '//div[@id="rso"]/div',
+        '//div[@id="botstuff"]//div[starts-with(@id, "arc-srp")]/div/div/div',
+    ];
+
+    /** XPaths for SERP features to skip when extracting organic result blocks. */
+    private const array SKIP_BLOCK_XPATHS = [
+        './/g-scrolling-carousel',
+        './/*[@data-q]',
+        './/*[contains(@class, "kp-wholepage")]',
+    ];
+
     private readonly Crawler $domCrawler;
 
     /**
      * @var SearchResult[]|null
      */
     private ?array $results = null;
+
+    /**
+     * Which extraction strategy produced the last getResults() call.
+     * 'xpath' = primary RESULT_SELECTOR, 'blocks' = structural fallback.
+     */
+    private string $lastExtractionMethod = '';
 
     public function __construct(
         public string $html,
@@ -276,7 +295,26 @@ class SERPExtractor
             return $this->results;
         }
 
-        $xpath = self::RESULT_SELECTOR;
+        $toReturn = $this->extractFromXpath(self::RESULT_SELECTOR, $organicOnly);
+        if ([] !== $toReturn) {
+            $this->lastExtractionMethod = 'xpath';
+        } else {
+            $toReturn = $this->extractFromResultBlocks($organicOnly);
+            $this->lastExtractionMethod = 'blocks';
+        }
+
+        if (false === $organicOnly) {
+            $this->results = $toReturn;
+        }
+
+        return $toReturn;
+    }
+
+    /**
+     * @return SearchResult[]
+     */
+    private function extractFromXpath(string $xpath, bool $organicOnly): array
+    {
         $nodes = $this->domCrawler->filterXpath($xpath);
         $toReturn = [];
 
@@ -301,11 +339,113 @@ class SERPExtractor
             }
         }
 
-        if (false === $organicOnly) {
-            $this->results = $toReturn;
+        return $toReturn;
+    }
+
+    /**
+     * Structural fallback: iterate result container blocks in #rso and botstuff,
+     * skip known SERP features, and extract the first external tracked link per block.
+     * Does not depend on any CSS class name.
+     *
+     * @return SearchResult[]
+     */
+    private function extractFromResultBlocks(bool $organicOnly): array
+    {
+        $toReturn = [];
+        $i = 0;
+        $iOrganic = 0;
+        $seenUrls = [];
+
+        foreach (self::RESULT_BLOCK_XPATHS as $blockXpath) {
+            foreach ($this->domCrawler->filterXpath($blockXpath) as $block) {
+                $blockCrawler = new Crawler($block);
+
+                if ($this->isSkippableBlock($blockCrawler)) {
+                    continue;
+                }
+
+                $link = $this->findBlockMainLink($blockCrawler);
+                if (! $link instanceof \DOMElement) {
+                    continue;
+                }
+
+                $href = $link->getAttribute('href');
+                if (isset($seenUrls[$href])) {
+                    continue;
+                }
+
+                $ads = null !== $blockCrawler->closest('#tads, #bottomads');
+                if ($organicOnly && $ads) {
+                    continue;
+                }
+
+                $result = $this->extractResultFrom($link, $ads ? 0 : $iOrganic + 1, $i + 1, $ads);
+                if (! $result instanceof SearchResult) {
+                    continue;
+                }
+
+                $seenUrls[$href] = true;
+                $toReturn[$i] = $result;
+                ++$i;
+                if (! $ads) {
+                    ++$iOrganic;
+                }
+            }
         }
 
         return $toReturn;
+    }
+
+    private function isSkippableBlock(Crawler $blockCrawler): bool
+    {
+        foreach (self::SKIP_BLOCK_XPATHS as $xpath) {
+            if ($blockCrawler->filterXpath($xpath)->count() > 0) {
+                return true;
+            }
+        }
+
+        // Blocks with links to >2 different domains are aggregations (news, shopping)
+        $links = $blockCrawler->filterXpath('.//a[@ping][starts-with(@href, "http")][not(starts-with(@href, "https://www.google"))]');
+        $domains = [];
+        foreach ($links as $link) {
+            if (! $link instanceof \DOMElement) {
+                continue;
+            }
+
+            $href = $link->getAttribute('href');
+            if (str_contains($href, '#:~:text=')) {
+                continue;
+            }
+
+            $host = parse_url($href, \PHP_URL_HOST);
+            if (\is_string($host)) {
+                $domains[$host] = true;
+            }
+        }
+
+        return \count($domains) > 2;
+    }
+
+    private function findBlockMainLink(Crawler $blockCrawler): ?\DOMElement
+    {
+        $links = $blockCrawler->filterXpath(
+            './/a[@ping][starts-with(@href, "http")][not(starts-with(@href, "https://www.google"))]'
+        );
+
+        foreach ($links as $link) {
+            if (! $link instanceof \DOMElement) {
+                continue;
+            }
+
+            $href = $link->getAttribute('href');
+            if (str_contains($href, '#:~:text=')) {
+                continue;
+            }
+
+            return $link;
+        }
+
+        return null;
     }
 
     private function extractResultFrom(\DOMNode $linkNode, int $organicPos, int $position, bool $ads = false): ?SearchResult
@@ -469,6 +609,11 @@ class SERPExtractor
         }
 
         throw new \LogicException('`'.implode('`, ', $xpaths).'` not found');
+    }
+
+    public function getLastExtractionMethod(): string
+    {
+        return $this->lastExtractionMethod;
     }
 
     public function toJson(): string

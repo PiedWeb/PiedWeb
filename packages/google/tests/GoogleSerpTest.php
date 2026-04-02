@@ -28,6 +28,10 @@ final class GoogleSerpTest extends TestCase
 
         $this->assertNotEmpty($results[0]->url);
 
+        if ('blocks' === $extractor->getLastExtractionMethod()) {
+            dump('⚠ Primary RESULT_SELECTOR returned 0 results — structural fallback used. Google may have changed their SERP layout.');
+        }
+
         if ($expectedFirstResult !== $results[0]->url) {
             dump('Expected first result: '.$expectedFirstResult.', got: '.$results[0]->url);
         }
@@ -104,5 +108,35 @@ final class GoogleSerpTest extends TestCase
     {
         $extractor = $this->getExtractor('Tour Eiffel');
         $this->assertTrue($extractor->containsSerpFeature('KnowledgePanel'), 'KnowledgePanel not found');
+    }
+
+    /**
+     * Offline test: primary RESULT_SELECTOR extracts results from an old-layout SERP fixture.
+     */
+    public function testFixturePrimaryXpath(): void
+    {
+        $html = (string) \Safe\gzdecode((string) file_get_contents(__DIR__.'/fixtures/serp-primary.html.gz'));
+        $extractor = new SERPExtractor($html);
+        $results = $extractor->getResults();
+
+        $this->assertNotEmpty($results, 'Primary xpath selector returned 0 results from fixture');
+        $this->assertSame('xpath', $extractor->getLastExtractionMethod());
+        $this->assertGreaterThanOrEqual(10, count($results));
+    }
+
+    /**
+     * Offline test: structural fallback extracts results from a new-layout SERP fixture
+     * where the primary RESULT_SELECTOR returns 0.
+     */
+    public function testFixtureStructuralFallback(): void
+    {
+        $html = (string) \Safe\gzdecode((string) file_get_contents(__DIR__.'/fixtures/serp-fallback.html.gz'));
+        $extractor = new SERPExtractor($html);
+        $results = $extractor->getResults();
+
+        $this->assertNotEmpty($results, 'Structural fallback returned 0 results — block extraction is broken');
+        $this->assertSame('blocks', $extractor->getLastExtractionMethod());
+        $this->assertGreaterThanOrEqual(8, count($results));
+        $this->assertStringContainsString('pagesjaunes.fr', $results[0]->url);
     }
 }
