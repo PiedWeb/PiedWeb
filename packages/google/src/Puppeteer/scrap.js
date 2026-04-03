@@ -79,7 +79,7 @@ async function manageLoadMoreResultsViaInfiniteScroll(page, maxPages) {
   while (true) {
     let scrollHeight = await page.evaluate(() => document.body.scrollHeight);
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await sleep(350);
+    await sleep(1200);
     const isHeighten = await page.evaluate((scrollHeight) => {
       return document.body.scrollHeight > scrollHeight;
     }, scrollHeight);
