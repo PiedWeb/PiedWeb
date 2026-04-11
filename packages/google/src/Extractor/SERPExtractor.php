@@ -295,13 +295,14 @@ class SERPExtractor
             return $this->results;
         }
 
-        $toReturn = $this->extractFromXpath(self::RESULT_SELECTOR, $organicOnly);
-        $blocksResults = \count($toReturn) < 3 ? $this->extractFromResultBlocks($organicOnly) : [];
-        if (\count($blocksResults) > \count($toReturn)) {
-            $toReturn = $blocksResults;
+        $xpathResults = $this->extractFromXpath(self::RESULT_SELECTOR, $organicOnly);
+        $blocksResults = $this->extractFromResultBlocks($organicOnly);
+        if (\count($blocksResults) > \count($xpathResults)) {
             $this->lastExtractionMethod = 'blocks';
+            $toReturn = $blocksResults;
         } else {
-            $this->lastExtractionMethod = [] !== $toReturn ? 'xpath' : 'blocks';
+            $this->lastExtractionMethod = [] !== $xpathResults ? 'xpath' : 'blocks';
+            $toReturn = $xpathResults;
         }
 
         if (false === $organicOnly) {
