@@ -75,8 +75,13 @@ final class GoogleSerpTest extends TestCase
         // TODO : change test for ➜ https://www.google.fr/search?q=steve+jobs+date+de+naissance
 
         $extractor = $this->getExtractor("qu'est ce que l'effet streisand");
+        $results = $extractor->getResults();
+        if ([] === $results) {
+            $this->markTestIncomplete('May google kick you, check /tmp/debug.html');
+        }
+
         if (! $extractor->containsSerpFeature('PositionZero')) {
-            $url = $extractor->getResults()[0]->url;
+            $url = $results[0]->url;
             $this->assertMatchesRegularExpression('(wikipedia.org|ligue-enseignement.be)',  $url);
             dump('Position Zero was not checked');
 
@@ -92,6 +97,12 @@ final class GoogleSerpTest extends TestCase
         foreach (['plombier champsaur', 'pied web consultant'] as $kw) {
             $extractor = $this->getExtractor($kw);
             file_put_contents('./debug/debugExtractMaps - '.$kw.'.html', $extractor->html);
+            if ([] === $extractor->getResults()) {
+                $this->markTestIncomplete('May google kick you, check /tmp/debug.html');
+
+                return;
+            }
+
             $mapsResults = $extractor->extractBusinessResults();
             dump($mapsResults[0] ?? null);
             $this->assertArrayHasKey(0, $mapsResults, $kw);
@@ -101,6 +112,10 @@ final class GoogleSerpTest extends TestCase
     public function testRelatedSearches(): void
     {
         $extractor = $this->getExtractor('randonnée valgaudemar');
+        if ([] === $extractor->getResults()) {
+            $this->markTestIncomplete('May google kick you, check /tmp/debug.html');
+        }
+
         $relatedSearches = $extractor->getRelatedSearches();
         $this->assertNotEmpty($relatedSearches, 'No related searches found');
     }
@@ -108,6 +123,10 @@ final class GoogleSerpTest extends TestCase
     public function testKnowledgePanel(): void
     {
         $extractor = $this->getExtractor('Tour Eiffel');
+        if ([] === $extractor->getResults()) {
+            $this->markTestIncomplete('May google kick you, check /tmp/debug.html');
+        }
+
         $this->assertTrue($extractor->containsSerpFeature('KnowledgePanel'), 'KnowledgePanel not found');
     }
 
