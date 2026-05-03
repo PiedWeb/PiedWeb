@@ -43,7 +43,7 @@ class SERPExtractor
     ];
 
     // public const RESULT_SELECTOR = '//a[@role="presentation"]/parent::div/parent::div/parent::div';
-    final public const string RESULT_SELECTOR = "(//h2[text()='Extrait optimisé sur le Web' or text()='Featured snippet from the web']/ancestor::block-component//a[@class])[1]|//a[@class='UBFage']|//div[@data-hveid]//a[@aria-label][@tabindex]|//a[@role='presentation']|//div[@data-md=\"471\"]//a";
+    final public const string RESULT_SELECTOR = "(//h2[text()='Extrait optimisé sur le Web' or text()='Featured snippet from the web']/ancestor::block-component//a[@class])[1]|//a[contains(@class,'UBFage')]|//div[@data-hveid]//a[@aria-label][@tabindex]|//a[@role='presentation']|//div[@data-md=\"471\"]//a";
 
     /** XPaths matching result container blocks (each child = one SERP result). */
     private const array RESULT_BLOCK_XPATHS = [
