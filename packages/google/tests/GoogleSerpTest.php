@@ -194,4 +194,30 @@ final class GoogleSerpTest extends TestCase
         $this->assertGreaterThanOrEqual(8, count($results));
         $this->assertStringContainsString('pagesjaunes.fr', $results[0]->url);
     }
+
+    /**
+     * Regression: inline image-pack thumbnails (links inside an aggregator block
+     * with >2 distinct domains) must not pollute organic positions.
+     * Fixture is the prod SERP for "paysage allemand" where the image-pack used
+     * to push grandangle.fr/alamyimages.fr/amazon.fr/sncf-connect.com ahead of
+     * the real first organic result, germany.travel.
+     */
+    public function testFixtureImagePackIsFiltered(): void
+    {
+        $html = (string) \Safe\gzdecode((string) file_get_contents(__DIR__.'/fixtures/serp-image-pack.html.gz'));
+        $extractor = new SERPExtractor($html);
+        $results = $extractor->getResults();
+
+        $this->assertNotEmpty($results);
+        $this->assertStringContainsString(
+            'germany.travel',
+            $results[0]->url,
+            'Image-pack thumbnails must not appear before real organic results'
+        );
+
+        $topUrls = array_map(static fn ($r) => $r->url, array_slice($results, 0, 4));
+        foreach ($topUrls as $url) {
+            $this->assertStringNotContainsString('alamyimages.fr', $url);
+        }
+    }
 }

@@ -406,7 +406,15 @@ class SERPExtractor
             }
         }
 
-        // Blocks with links to >2 different domains are aggregations (news, shopping)
+        return $this->isAggregatorBlock($blockCrawler);
+    }
+
+    /**
+     * Aggregator block = result container linking to >2 distinct external domains
+     * (image-pack, news, shopping). Used to drop these from organic results.
+     */
+    private function isAggregatorBlock(Crawler $blockCrawler): bool
+    {
         $links = $blockCrawler->filterXpath('.//a[@ping][starts-with(@href, "http")][not(starts-with(@href, "https://www.google"))]');
         $domains = [];
         foreach ($links as $link) {
@@ -426,6 +434,35 @@ class SERPExtractor
         }
 
         return \count($domains) > 2;
+    }
+
+    /**
+     * Closest ancestor matching a top-level result block, mirroring RESULT_BLOCK_XPATHS:
+     * - direct child of #rso, OR
+     * - 3rd-level descendant of an arc-srp container in #botstuff.
+     */
+    private function getEnclosingResultBlock(\DOMElement $linkNode): ?\DOMElement
+    {
+        $doc = $linkNode->ownerDocument;
+        if (! $doc instanceof \DOMDocument) {
+            return null;
+        }
+
+        $found = (new \DOMXPath($doc))->query(
+            'ancestor::div['
+                .'parent::*[@id="rso"]'
+                .' or parent::div[parent::div[parent::div[starts-with(@id, "arc-srp")]]]'
+            .'][1]',
+            $linkNode
+        );
+
+        if (false === $found || 0 === $found->length) {
+            return null;
+        }
+
+        $node = $found->item(0);
+
+        return $node instanceof \DOMElement ? $node : null;
     }
 
     private function findBlockMainLink(Crawler $blockCrawler): ?\DOMElement
@@ -456,6 +493,13 @@ class SERPExtractor
         // $linkNode = $domCrawler->filter('a')->getNode(0);
         if (! $linkNode instanceof \DOMElement) {
             throw new \Exception('Google changes his selector.');
+        }
+
+        // Drop candidates inside aggregator blocks (image-pack, news, shopping).
+        // Identified structurally by their enclosing #rso/arc-srp block linking to >2 distinct domains.
+        $block = $this->getEnclosingResultBlock($linkNode);
+        if ($block instanceof \DOMElement && $this->isAggregatorBlock(new Crawler($block))) {
+            return null;
         }
 
         $href = $linkNode->getAttribute('href');
