@@ -45,6 +45,27 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * page.evaluate() can throw when the frame detaches mid-call — e.g. Google's infinite scroll
+ * navigates to #ip=1 which destroys the execution context. Retry a few times before giving up.
+ * Returns null on persistent failure so callers can stop cleanly with partial results.
+ * @param {Page} page
+ */
+async function safeEvaluate(page, fn, ...args) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      return await page.evaluate(fn, ...args);
+    } catch (e) {
+      const msg = String((e && e.message) || e);
+      if (!/detached frame|Execution context|context was destroyed|Target closed/i.test(msg)) {
+        throw e;
+      }
+      await sleep(500);
+    }
+  }
+  return null;
+}
+
 /**  @param {Page} page */
 async function manageCookie(page) {
   const selectors = [
@@ -77,12 +98,20 @@ async function manageCookie(page) {
 async function manageLoadMoreResultsViaInfiniteScroll(page, maxPages) {
   let i = 1;
   while (true) {
-    let scrollHeight = await page.evaluate(() => document.body.scrollHeight);
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    let scrollHeight = await safeEvaluate(page, () => document.body.scrollHeight);
+    if (scrollHeight === null) break;
+    const scrolled = await safeEvaluate(page, () => {
+      window.scrollTo(0, document.body.scrollHeight);
+      return true;
+    });
+    if (scrolled === null) break;
     await sleep(1200);
-    const isHeighten = await page.evaluate((scrollHeight) => {
-      return document.body.scrollHeight > scrollHeight;
-    }, scrollHeight);
+    const isHeighten = await safeEvaluate(
+      page,
+      (scrollHeight) => document.body.scrollHeight > scrollHeight,
+      scrollHeight,
+    );
+    if (isHeighten === null) break;
     // limiter à maxPages pages
     if (!isHeighten || i >= maxPages) break;
     i++;
