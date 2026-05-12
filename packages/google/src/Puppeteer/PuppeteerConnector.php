@@ -65,6 +65,12 @@ class PuppeteerConnector
     {
         $rawOutput = $this->execute(__DIR__.'/scrap.js', [$url, $maxPages]);
 
+        // scrap.js crashed (e.g. detached frame on Google's #ip=1 infinite-scroll navigation): retry once on a fresh browser
+        if ('' === trim($rawOutput)) {
+            $this->close();
+            $rawOutput = $this->execute(__DIR__.'/scrap.js', [$url, $maxPages]);
+        }
+
         if ('captcha' === trim($rawOutput) && ! $this->isHeadless()) {
             $this->close();
             $_SERVER['PUPPETEER_HEADLESS'] = false;
