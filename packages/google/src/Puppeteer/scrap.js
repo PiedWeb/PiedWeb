@@ -162,6 +162,7 @@ async function get(url, maxPages) {
   const scrapWait = process.env.SCRAP_WAIT ? parseInt(process.env.SCRAP_WAIT, 10) : 1000;
   await sleep(scrapWait);
   const hasCaptcha = await detectCaptcha(page);
+  let captchaSolved = false;
   if (hasCaptcha && (captchaToken || process.env.APP_ENV === 'test' || !isHeadless())) {
     console.log(' - try to solve captcha for ', url);
     try {
@@ -172,6 +173,7 @@ async function get(url, maxPages) {
       return 'captcha';
     }
     await sleep(8000);
+    captchaSolved = true;
   }
   if (await detectCaptcha(page)) {
     return 'captcha';
@@ -179,7 +181,9 @@ async function get(url, maxPages) {
   await manageCookie(page);
   await manageLoadMoreResultsViaInfiniteScroll(page, maxPages);
   await manageLoadMoreResultsViaBtn(page, maxPages);
-  return await page.content();
+  const content = await page.content();
+  // Prepended marker lets PHP count captchas that were encountered AND solved (not just failures).
+  return captchaSolved ? '<!--CAPTCHA_SOLVED-->\n' + content : content;
 }
 
 function isHeadless() {

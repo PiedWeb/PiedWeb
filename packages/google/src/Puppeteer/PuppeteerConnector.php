@@ -11,6 +11,12 @@ class PuppeteerConnector
 
     private static string $lastWsEndpointUsed = '';
 
+    /**
+     * True when the previous get() encountered a captcha that was successfully solved.
+     * Lets callers count captcha-encounters even when extraction succeeded.
+     */
+    public bool $lastCaptchaSolved = false;
+
     public function close(): void
     {
         $id = (string) \Safe\getmypid();
@@ -63,6 +69,8 @@ class PuppeteerConnector
 
     public function get(string $url, int $maxPages): string
     {
+        $this->lastCaptchaSolved = false;
+
         $rawOutput = $this->execute(__DIR__.'/scrap.js', [$url, $maxPages]);
 
         // scrap.js crashed (e.g. detached frame on Google's #ip=1 infinite-scroll navigation): retry once on a fresh browser
@@ -77,6 +85,18 @@ class PuppeteerConnector
             $rawOutput = $this->execute(__DIR__.'/scrap.js', [$url, $maxPages], 30000);
             $this->close(); // on referme le brower pour repasser en headless
             $_SERVER['PUPPETEER_HEADLESS'] = true;
+        }
+
+        return $this->stripCaptchaSolvedMarker($rawOutput);
+    }
+
+    private function stripCaptchaSolvedMarker(string $rawOutput): string
+    {
+        $marker = "<!--CAPTCHA_SOLVED-->\n";
+        if (str_starts_with($rawOutput, $marker)) {
+            $this->lastCaptchaSolved = true;
+
+            return substr($rawOutput, \strlen($marker));
         }
 
         return $rawOutput;
