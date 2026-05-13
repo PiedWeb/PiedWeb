@@ -40,6 +40,7 @@ class SERPExtractor
         '//span[text()="Search for next"]/ancestor::*[position() <  5]//a',
         '//span[text()="People also search for"]/ancestor::*[position() <  5]//a',
         "//a[@data-xbu][starts-with(@href, '/search')]/div",
+        "//a[contains(@class,'nPDzT')][starts-with(@href, '/search')]",
     ];
 
     // public const RESULT_SELECTOR = '//a[@role="presentation"]/parent::div/parent::div/parent::div';
