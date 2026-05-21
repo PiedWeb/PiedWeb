@@ -69,20 +69,25 @@ async function emulate(page) {
     isLandscape: false,
   });
 
-  // CDP's UA override leaves the legacy navigator.platform untouched ("Linux x86_64"), which
-  // contradicts the Android UA/client hints above. Align it to a mobile ARM value, masking the
-  // getter's toString so it still reads as native code.
+  // CDP's UA override leaves legacy/hardware navigator fields untouched, so they leak the real
+  // host: platform "Linux x86_64", and the server's core/RAM counts — both impossible for the
+  // Android phone the UA claims (deviceMemory is even spec-capped at 8, so the host's 32 is a
+  // dead giveaway). Align them to a plausible mobile profile, masking each getter's toString so
+  // it still reads as native code.
   await page.evaluateOnNewDocument(() => {
-    const getter = function platform() {
-      return 'Linux armv8l';
+    const nativeGetter = (name, value) => {
+      const getter = { [name]: () => value }[name]; // named fn for a believable toString
+      Object.defineProperty(getter, 'toString', {
+        value: () => `function get ${name}() { [native code] }`,
+      });
+      Object.defineProperty(getter.toString, 'toString', {
+        value: () => 'function toString() { [native code] }',
+      });
+      return getter;
     };
-    Object.defineProperty(getter, 'toString', {
-      value: () => 'function get platform() { [native code] }',
-    });
-    Object.defineProperty(getter.toString, 'toString', {
-      value: () => 'function toString() { [native code] }',
-    });
-    Object.defineProperty(navigator, 'platform', { get: getter, configurable: true });
+    Object.defineProperty(navigator, 'platform', { get: nativeGetter('platform', 'Linux armv8l'), configurable: true });
+    Object.defineProperty(navigator, 'hardwareConcurrency', { get: nativeGetter('hardwareConcurrency', 8), configurable: true });
+    Object.defineProperty(navigator, 'deviceMemory', { get: nativeGetter('deviceMemory', 8), configurable: true });
   });
 }
 

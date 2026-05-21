@@ -80,6 +80,9 @@ async function launchBrowser(
   const options = {
     // pipe: true, // disable endpoint
     defaultViewport: null,
+    // Startup timeout for the WS endpoint. Default 30s (unchanged); opt-in to a
+    // longer value via PUPPETEER_LAUNCH_TIMEOUT to absorb slow snap cold starts.
+    timeout: Number(process.env.PUPPETEER_LAUNCH_TIMEOUT) || 30000,
     headless: headless,
     ...(chromeBin && { executablePath: chromeBin }),
     ...(userDataDir && { userDataDir: userDataDir }),

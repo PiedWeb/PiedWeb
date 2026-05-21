@@ -1,93 +1,94 @@
 {
-  "name": "piedweb/piedweb",
-  "replace": {
-    "piedweb/curl": "self.version"
-  },
-  "description": "Monorepo for PiedWeb's PHP Package.",
-  "license": "MIT",
-  "require": {
-    "php": ">=8.4",
-    "ext-ctype": "*",
-    "ext-iconv": "*",
-    "fylax/forceutf8": "^4.0",
-    "jeremykendall/php-domain-parser": "^6.4",
-    "kelvinzer0/curl-impersonate-php": "^3.2",
-    "league/csv": "^9.8",
-    "league/uri": "^7.3",
-    "spatie/robots-txt": "^2.0",
-    "symfony/cache": "^7|^8",
-    "symfony/console": "^7|^8",
-    "symfony/css-selector": "^7|^8",
-    "symfony/dom-crawler": "^7|^8",
-    "symfony/filesystem": "^7|^8",
-    "symfony/property-access": "^7|^8",
-    "symfony/serializer": "^7|^8",
-    "thecodingmachine/safe": "^3",
-    "symfony/string": "^7|^8",
-    "twig/twig": "^3.19"
-  },
-  "require-dev": {
-    "friendsofphp/php-cs-fixer": "^3.2",
-    "phpstan/extension-installer": "^1.1",
-    "phpstan/phpstan": "^2",
-    "phpstan/phpstan-phpunit": "^2",
-    "phpstan/phpstan-symfony": "^2",
-    "phpunit/phpunit": "^13",
-    "rector/rector": "^2",
-    "symfony/var-dumper": "^7|^8",
-    "monorepo-php/monorepo": "^12"
-  },
-  "extra": {
-    "branch-alias": {
-      "dev-master": "1.0-dev"
-    }
-  },
-  "autoload": {
-    "psr-4": {
-      "PiedWeb\\Curl\\": "packages/curl/src",
-      "PiedWeb\\Google\\": "packages/google/src",
-      "PiedWeb\\Extractor\\": "packages/extractor/src",
-      "PiedWeb\\Crawler\\": "packages/crawler/src",
-      "PiedWeb\\ComposerSymlink\\": "packages/composer-symlink/src",
-      "PiedWeb\\TextAnalyzer\\": "packages/text-analyzer/src",
-      "PiedWeb\\Rison\\": "packages/rison/src",
-      "PiedWeb\\Perso\\": "packages/perso",
-      "PiedWeb\\RenderAttributes\\": "packages/render-html-attribute/src",
-      "PiedWeb\\MethodDocBlockGenerator\\": "packages/method-doc-block-generator/src"
+    "name": "piedweb/piedweb",
+    "replace": {
+        "piedweb/curl": "self.version"
     },
-    "files": [
-      "packages/rison/src/rison_functions.php"
-    ]
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "PiedWeb\\Curl\\Test\\": "packages/curl/tests",
-      "PiedWeb\\Google\\Test\\": "packages/google/tests",
-      "PiedWeb\\Extractor\\Test\\": "packages/extractor/tests",
-      "PiedWeb\\Crawler\\Test\\": "packages/crawler/tests",
-      "PiedWeb\\TextAnalyzer\\Test\\": "packages/text-analyzer/tests",
-      "PiedWeb\\Rison\\Test\\": "packages/rison/tests",
-      "PiedWeb\\ComposerSymlink\\Test\\": "packages/composer-symlink/tests",
-      "PiedWeb\\MethodDocBlockGenerator\\Test\\": "packages/method-doc-block-generator/tests",
-      "PiedWeb\\RenderAttributes\\Test\\": "packages/render-html-attribute/tests"
-    }
-  },
-  "scripts": {
-    "stan": "vendor/bin/phpstan analyze packages/*/src",
-    "rector": "vendor/bin/rector process && composer format",
-    "format": "vendor/bin/php-cs-fixer fix && vendor/bin/php-cs-fixer fix rector.php",
-    "validate-monorepo": "vendor/bin/monorepo-builder validate",
-    "test": "PUPPETEER_HEADLESS=0 vendor/bin/phpunit --testsuite default --testdox --no-progress --colors=always",
-    "testf": "PUPPETEER_HEADLESS=0 vendor/bin/phpunit --testdox --no-progress --colors=always --filter",
-    "test-google": "vendor/bin/phpunit --testdox --no-progress --colors=always --stop-on-failure --testsuite google"
-  },
-  "config": {
-    "sort-packages": true,
-    "allow-plugins": {
-      "phpstan/extension-installer": true
-    }
-  },
-  "minimum-stability": "dev",
-  "prefer-stable": true,
-  "repositories": {}
+    "description": "Monorepo for PiedWeb's PHP Package.",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.4",
+        "ext-ctype": "*",
+        "ext-iconv": "*",
+        "fylax/forceutf8": "^4.0",
+        "jeremykendall/php-domain-parser": "^6.4",
+        "kelvinzer0/curl-impersonate-php": "^3.2",
+        "league/csv": "^9.8",
+        "league/uri": "^7.3",
+        "spatie/robots-txt": "^2.0",
+        "symfony/cache": "^7|^8",
+        "symfony/console": "^7|^8",
+        "symfony/css-selector": "^7|^8",
+        "symfony/dom-crawler": "^7|^8",
+        "symfony/filesystem": "^7|^8",
+        "symfony/property-access": "^7|^8",
+        "symfony/serializer": "^7|^8",
+        "thecodingmachine/safe": "^3",
+        "symfony/string": "^7|^8",
+        "twig/twig": "^3.19"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.2",
+        "phpstan/extension-installer": "^1.1",
+        "phpstan/phpstan": "^2",
+        "phpstan/phpstan-phpunit": "^2",
+        "phpstan/phpstan-symfony": "^2",
+        "phpunit/phpunit": "^13",
+        "rector/rector": "^2",
+        "symfony/var-dumper": "^7|^8",
+        "monorepo-php/monorepo": "^12"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0-dev"
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "PiedWeb\\Curl\\": "packages/curl/src",
+            "PiedWeb\\Google\\": "packages/google/src",
+            "PiedWeb\\Extractor\\": "packages/extractor/src",
+            "PiedWeb\\Crawler\\": "packages/crawler/src",
+            "PiedWeb\\ComposerSymlink\\": "packages/composer-symlink/src",
+            "PiedWeb\\TextAnalyzer\\": "packages/text-analyzer/src",
+            "PiedWeb\\Rison\\": "packages/rison/src",
+            "PiedWeb\\Perso\\": "packages/perso",
+            "PiedWeb\\RenderAttributes\\": "packages/render-html-attribute/src",
+            "PiedWeb\\MethodDocBlockGenerator\\": "packages/method-doc-block-generator/src"
+        },
+        "files": [
+            "packages/rison/src/rison_functions.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PiedWeb\\Curl\\Test\\": "packages/curl/tests",
+            "PiedWeb\\Google\\Test\\": "packages/google/tests",
+            "PiedWeb\\Extractor\\Test\\": "packages/extractor/tests",
+            "PiedWeb\\Crawler\\Test\\": "packages/crawler/tests",
+            "PiedWeb\\TextAnalyzer\\Test\\": "packages/text-analyzer/tests",
+            "PiedWeb\\Rison\\Test\\": "packages/rison/tests",
+            "PiedWeb\\ComposerSymlink\\Test\\": "packages/composer-symlink/tests",
+            "PiedWeb\\MethodDocBlockGenerator\\Test\\": "packages/method-doc-block-generator/tests",
+            "PiedWeb\\RenderAttributes\\Test\\": "packages/render-html-attribute/tests"
+        }
+    },
+    "scripts": {
+        "stan": "vendor/bin/phpstan analyze packages/*/src",
+        "rector": "vendor/bin/rector process && composer format",
+        "format": "vendor/bin/php-cs-fixer fix && vendor/bin/php-cs-fixer fix rector.php",
+        "validate-monorepo": "vendor/bin/monorepo-builder validate",
+        "test": "PUPPETEER_HEADLESS=0 vendor/bin/phpunit --testsuite default --testdox --no-progress --colors=always",
+        "testf": "PUPPETEER_HEADLESS=0 vendor/bin/phpunit --testdox --no-progress --colors=always --filter",
+        "test-google": "vendor/bin/phpunit --testdox --no-progress --colors=always --stop-on-failure --testsuite google",
+        "test:fingerprint": "node packages/google/tests/fingerprint-check.js"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "phpstan/extension-installer": true
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "repositories": {}
 }

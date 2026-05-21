@@ -9,6 +9,7 @@
  */
 const { Page } = require('puppeteer');
 const { connectBrowserPage } = require('./connectBrowserPage');
+const { movePointerHuman } = require('./human');
 const RecaptchaPlugin = require('puppeteer-extra-plugin-recaptcha');
 const puppeteer = require('puppeteer-extra');
 
@@ -160,6 +161,9 @@ async function get(url, maxPages) {
   // first go to https://www.google.com/webhp?hl=en&gl=en and type kw
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   const scrapWait = process.env.SCRAP_WAIT ? parseInt(process.env.SCRAP_WAIT, 10) : 1000;
+  // Spend the post-load wait moving the cursor like a human instead of sitting idle, so the
+  // page accrues real mouse-dynamics signal (best-effort; never throws).
+  await movePointerHuman(page);
   await sleep(scrapWait);
   const hasCaptcha = await detectCaptcha(page);
   let captchaSolved = false;

@@ -4,5 +4,8 @@
     "puppeteer-extra": "^3",
     "puppeteer-extra-plugin-recaptcha": "^3.6.8",
     "puppeteer-extra-plugin-stealth": "^2"
+  },
+  "scripts": {
+    "test:fingerprint": "node packages/google/tests/fingerprint-check.js"
   }
 }
