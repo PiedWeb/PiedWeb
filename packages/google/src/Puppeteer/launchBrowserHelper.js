@@ -85,7 +85,11 @@ async function launchBrowser(
     ...(userDataDir && { userDataDir: userDataDir }),
     args: [
       ...[
-        '--disable-web-security',
+        // SERP scraper needs cross-origin relaxation; the flag is a bot tell, so let the
+        // Cloudflare-fetch path (or any caller) drop it via PUPPETEER_DISABLE_WEB_SECURITY=0.
+        ...(['false', '0'].includes(process.env.PUPPETEER_DISABLE_WEB_SECURITY)
+          ? []
+          : ['--disable-web-security']),
         '--lang=' + lang,
         '--accept-lang=' + getAcceptLanguage(lang),
         '--no-sandbox',
