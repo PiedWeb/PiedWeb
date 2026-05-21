@@ -75,19 +75,40 @@ async function emulate(page) {
   // dead giveaway). Align them to a plausible mobile profile, masking each getter's toString so
   // it still reads as native code.
   await page.evaluateOnNewDocument(() => {
-    const nativeGetter = (name, value) => {
-      const getter = { [name]: () => value }[name]; // named fn for a believable toString
-      Object.defineProperty(getter, 'toString', {
+    // mask a getter's toString chain so it reads as native code (defeats Proxy/defineProperty checks)
+    const mask = (name, fn) => {
+      Object.defineProperty(fn, 'toString', {
         value: () => `function get ${name}() { [native code] }`,
       });
-      Object.defineProperty(getter.toString, 'toString', {
+      Object.defineProperty(fn.toString, 'toString', {
         value: () => 'function toString() { [native code] }',
       });
-      return getter;
+      return fn;
     };
+    const nativeGetter = (name, value) => mask(name, () => value);
+
     Object.defineProperty(navigator, 'platform', { get: nativeGetter('platform', 'Linux armv8l'), configurable: true });
     Object.defineProperty(navigator, 'hardwareConcurrency', { get: nativeGetter('hardwareConcurrency', 8), configurable: true });
     Object.defineProperty(navigator, 'deviceMemory', { get: nativeGetter('deviceMemory', 8), configurable: true });
+
+    // Headless reports innerHeight > outerHeight (impossible on a real window). Mobile Chrome runs
+    // effectively fullscreen, so mirror outer onto inner to keep the relationship coherent.
+    Object.defineProperty(window, 'outerWidth', { get: mask('outerWidth', () => window.innerWidth), configurable: true });
+    Object.defineProperty(window, 'outerHeight', { get: mask('outerHeight', () => window.innerHeight), configurable: true });
+
+    // Headless on a server has no GPU → WebGL renders via SwiftShader/Mesa, a known datacenter
+    // signature. Report a plausible mobile GPU for the unmasked vendor/renderer params.
+    const GL = { 37445: 'Qualcomm', 37446: 'Adreno (TM) 640' }; // UNMASKED_VENDOR / UNMASKED_RENDERER
+    for (const proto of [window.WebGLRenderingContext, window.WebGL2RenderingContext]) {
+      if (!proto || !proto.prototype) continue;
+      const orig = proto.prototype.getParameter;
+      const patched = function getParameter(p) {
+        return p in GL ? GL[p] : orig.apply(this, arguments);
+      };
+      Object.defineProperty(patched, 'toString', { value: () => 'function getParameter() { [native code] }' });
+      Object.defineProperty(patched.toString, 'toString', { value: () => 'function toString() { [native code] }' });
+      proto.prototype.getParameter = patched;
+    }
   });
 }
 
