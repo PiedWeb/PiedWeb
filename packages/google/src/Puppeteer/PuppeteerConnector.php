@@ -54,7 +54,9 @@ class PuppeteerConnector
         $cmd .= 'PUPPETEER_WS_ENDPOINT='.escapeshellarg($wsEndpoint).' ';
         $cmd .= 'node '.escapeshellarg($script).' '.$argsStr.' > '.escapeshellarg($outputFileLog);
 
-        \Safe\exec($cmd);
+        // Guard: kill scrap.js if it hangs (e.g. stuck puppeteer.connect on a dead WS endpoint).
+        // Wrap in sh -c so env-var prefixes (SCRAP_WAIT=… PUPPETEER_WS_ENDPOINT=…) are parsed by the shell.
+        \Safe\exec('timeout 60 sh -c '.escapeshellarg($cmd));
         $rawOutput = \Safe\file_get_contents($outputFileLog); // going with file io to avoid truncated output
 
         return $rawOutput;
