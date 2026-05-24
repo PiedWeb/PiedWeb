@@ -9,6 +9,13 @@ class PuppeteerConnector
      */
     public static array $wsEndpointList = [];
 
+    /**
+     * Public egress IP per proxy, probed once and cached for the process lifetime.
+     *
+     * @var array<string, string>
+     */
+    private static array $exitIpCache = [];
+
     private static string $lastWsEndpointUsed = '';
 
     /**
@@ -122,6 +129,52 @@ class PuppeteerConnector
     }
 
     /**
+     * Resolve the public egress IP behind the current proxy, probed once per proxy per process.
+     *
+     * Empty when there is no proxy (direct egress) or when the probe fails — callers then skip
+     * IP-keying and fall back to the inherited profile.
+     */
+    public function resolveExitIp(): string
+    {
+        if ('' === $this->proxy) {
+            return '';
+        }
+
+        if (! isset(self::$exitIpCache[$this->proxy])) {
+            self::$exitIpCache[$this->proxy] = self::probeExitIp($this->proxy);
+        }
+
+        return self::$exitIpCache[$this->proxy];
+    }
+
+    private static function probeExitIp(string $proxy): string
+    {
+        $handle = curl_init('https://api.ipify.org');
+        if (false === $handle) {
+            return '';
+        }
+
+        curl_setopt_array($handle, [
+            \CURLOPT_PROXY => $proxy,
+            \CURLOPT_RETURNTRANSFER => true,
+            \CURLOPT_CONNECTTIMEOUT => 5,
+            \CURLOPT_TIMEOUT => 10,
+        ]);
+        $output = curl_exec($handle);
+
+        $ip = \is_string($output) ? trim($output) : '';
+
+        return false !== filter_var($ip, \FILTER_VALIDATE_IP) ? $ip : '';
+    }
+
+    private function exitProfileBase(): string
+    {
+        $base = $_SERVER['PUPPETEER_EXIT_PROFILE_BASE'] ?? null;
+
+        return \is_string($base) && '' !== $base ? $base : sys_get_temp_dir().'/pp-exit-profiles';
+    }
+
+    /**
      *  @psalm-suppress NullableReturnStatement
      *  @psalm-suppress InvalidNullableReturnType
      *
@@ -129,7 +182,11 @@ class PuppeteerConnector
      */
     public function getWsEndpoint(bool $create = true): string
     {
-        $id = \Safe\getmypid().'-'.$this->language.'-'.$this->proxy;
+        // Bind the browser identity to the egress IP: an IP change yields a new id (fresh
+        // browser) and a per-IP profile dir below, so one IP's cf_clearance / Google cookies
+        // are never replayed from another IP (a strong bot signal).
+        $exitIp = $this->resolveExitIp();
+        $id = \Safe\getmypid().'-'.$this->language.'-'.$this->proxy.('' !== $exitIp ? '-'.$exitIp : '');
 
         if (isset(static::$wsEndpointList[$id])) {
             self::$lastWsEndpointUsed = static::$wsEndpointList[$id];
@@ -147,11 +204,19 @@ class PuppeteerConnector
             $cmd .= 'PROXY_GATE='.escapeshellarg($this->proxy).' ';
         }
 
+        // Persistent profile per exit IP (reused when the IP recurs → keeps the warm
+        // captcha-cleared session, no re-solve). Distinct dirs also stop launchBrowser's
+        // same-userDataDir pkill from killing a concurrent other-IP browser.
+        if ('' !== $exitIp) {
+            $cmd .= 'PUPPETEER_USER_DATA_DIR='.escapeshellarg($this->exitProfileBase().'/'.$exitIp).' ';
+        }
+
         if (! $this->isHeadless()) {
             $cmd .= 'PUPPETEER_HEADLESS=0 ';
         }
 
-        $outputFileLog = sys_get_temp_dir().'/puppeteer-direct-'.$id;
+        $safeId = (string) preg_replace('/[^A-Za-z0-9_.-]/', '_', $id);
+        $outputFileLog = sys_get_temp_dir().'/puppeteer-direct-'.$safeId;
         $cmd .= 'node '.escapeshellarg(__DIR__.'/launchBrowser.js').' '.escapeshellarg($this->language)
                     .' > '.escapeshellarg($outputFileLog).' 2>&1 &';
         \Safe\exec($cmd);
