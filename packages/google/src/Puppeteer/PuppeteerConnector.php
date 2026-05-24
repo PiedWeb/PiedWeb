@@ -24,6 +24,12 @@ class PuppeteerConnector
      */
     public bool $lastCaptchaSolved = false;
 
+    /**
+     * Real wire bytes downloaded by the previous get() (all paginations + subresources),
+     * parsed from scrap.js' NETBYTES marker. 0 when the scrape failed or returned a captcha.
+     */
+    public int $lastTransferBytes = 0;
+
     public function close(): void
     {
         $id = (string) \Safe\getmypid();
@@ -79,6 +85,7 @@ class PuppeteerConnector
     public function get(string $url, int $maxPages): string
     {
         $this->lastCaptchaSolved = false;
+        $this->lastTransferBytes = 0;
 
         $rawOutput = $this->execute(__DIR__.'/scrap.js', [$url, $maxPages]);
 
@@ -96,7 +103,19 @@ class PuppeteerConnector
             $_SERVER['PUPPETEER_HEADLESS'] = true;
         }
 
-        return $this->stripCaptchaSolvedMarker($rawOutput);
+        // NETBYTES is the outermost marker (prepended last by scrap.js), so strip it before captcha.
+        return $this->stripCaptchaSolvedMarker($this->stripNetBytesMarker($rawOutput));
+    }
+
+    private function stripNetBytesMarker(string $rawOutput): string
+    {
+        if (1 === preg_match('/^<!--NETBYTES:(\d+)-->\r?\n/', $rawOutput, $m)) {
+            $this->lastTransferBytes = (int) $m[1];
+
+            return substr($rawOutput, \strlen($m[0]));
+        }
+
+        return $rawOutput;
     }
 
     private function stripCaptchaSolvedMarker(string $rawOutput): string

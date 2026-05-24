@@ -158,6 +158,19 @@ async function detectCaptcha(page) {
 /**  @param {string} url */
 async function get(url, maxPages) {
   const page = await connectBrowserPage();
+  // Sum real wire bytes (compressed body + headers) for every request this scrape makes across
+  // all paginations — so PHP can account true SERP bandwidth, not just the final HTML size.
+  // Best-effort: a CDP failure must never break the scrape.
+  let netBytes = 0;
+  try {
+    const cdp = await page.createCDPSession();
+    await cdp.send('Network.enable');
+    cdp.on('Network.loadingFinished', (e) => {
+      netBytes += e.encodedDataLength || 0;
+    });
+  } catch (e) {
+    // ignore: bandwidth accounting is non-critical
+  }
   // first go to https://www.google.com/webhp?hl=en&gl=en and type kw
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   const scrapWait = process.env.SCRAP_WAIT ? parseInt(process.env.SCRAP_WAIT, 10) : 1000;
@@ -186,8 +199,10 @@ async function get(url, maxPages) {
   await manageLoadMoreResultsViaInfiniteScroll(page, maxPages);
   await manageLoadMoreResultsViaBtn(page, maxPages);
   const content = await page.content();
-  // Prepended marker lets PHP count captchas that were encountered AND solved (not just failures).
-  return captchaSolved ? '<!--CAPTCHA_SOLVED-->\n' + content : content;
+  // Prepended markers (stripped by PuppeteerConnector, outermost first): NETBYTES carries the
+  // real wire bytes for this scrape; CAPTCHA_SOLVED lets PHP count solved (not just failed) captchas.
+  const withCaptcha = captchaSolved ? '<!--CAPTCHA_SOLVED-->\n' + content : content;
+  return '<!--NETBYTES:' + Math.round(netBytes) + '-->\n' + withCaptcha;
 }
 
 function isHeadless() {

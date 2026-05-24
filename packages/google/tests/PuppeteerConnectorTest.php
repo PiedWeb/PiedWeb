@@ -19,6 +19,41 @@ final class PuppeteerConnectorTest extends TestCase
         $this->assertSame('', (new PuppeteerConnector('fr', 'socks5h://127.0.0.1:1'))->resolveExitIp());
     }
 
+    public function testStripNetBytesMarkerCapturesTransferBytesAndStrips(): void
+    {
+        $connector = new PuppeteerConnector('fr');
+        $method = new ReflectionMethod(PuppeteerConnector::class, 'stripNetBytesMarker');
+
+        $body = (string) $method->invoke($connector, "<!--NETBYTES:2097152-->\n<html>serp</html>");
+
+        $this->assertSame('<html>serp</html>', $body);
+        $this->assertSame(2097152, $connector->lastTransferBytes);
+    }
+
+    public function testStripNetBytesMarkerLeavesUnmarkedOutputUntouched(): void
+    {
+        $connector = new PuppeteerConnector('fr');
+        $method = new ReflectionMethod(PuppeteerConnector::class, 'stripNetBytesMarker');
+
+        $this->assertSame('<html>serp</html>', $method->invoke($connector, '<html>serp</html>'));
+        $this->assertSame(0, $connector->lastTransferBytes);
+    }
+
+    public function testNetBytesAndCaptchaMarkersStripInOrder(): void
+    {
+        // scrap.js prepends NETBYTES outermost, then CAPTCHA_SOLVED — get() strips in that order.
+        $connector = new PuppeteerConnector('fr');
+        $stripNet = new ReflectionMethod(PuppeteerConnector::class, 'stripNetBytesMarker');
+        $stripCaptcha = new ReflectionMethod(PuppeteerConnector::class, 'stripCaptchaSolvedMarker');
+
+        $raw = "<!--NETBYTES:500-->\n<!--CAPTCHA_SOLVED-->\n<html>serp</html>";
+        $body = (string) $stripCaptcha->invoke($connector, (string) $stripNet->invoke($connector, $raw));
+
+        $this->assertSame('<html>serp</html>', $body);
+        $this->assertSame(500, $connector->lastTransferBytes);
+        $this->assertTrue($connector->lastCaptchaSolved);
+    }
+
     public function testExitProfileBaseDefaultAndOverride(): void
     {
         $method = (new ReflectionMethod(PuppeteerConnector::class, 'exitProfileBase'));
