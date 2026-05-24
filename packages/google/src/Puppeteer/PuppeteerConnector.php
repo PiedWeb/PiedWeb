@@ -166,6 +166,16 @@ class PuppeteerConnector
         return self::$exitIpCache[$this->proxy];
     }
 
+    /**
+     * The proxy Chrome should actually route through. Empty when none is configured OR when its
+     * exit IP can't be probed (a DOWN exit) — in both cases the browser launches with direct
+     * egress (this host's own IP) rather than through a dead proxy, which would fail every fetch.
+     */
+    public function effectiveProxy(): string
+    {
+        return '' !== $this->resolveExitIp() ? $this->proxy : '';
+    }
+
     private static function probeExitIp(string $proxy): string
     {
         $handle = curl_init('https://api.ipify.org');
@@ -205,7 +215,8 @@ class PuppeteerConnector
         // browser) and a per-IP profile dir below, so one IP's cf_clearance / Google cookies
         // are never replayed from another IP (a strong bot signal).
         $exitIp = $this->resolveExitIp();
-        $id = \Safe\getmypid().'-'.$this->language.'-'.$this->proxy.('' !== $exitIp ? '-'.$exitIp : '');
+        $proxy = $this->effectiveProxy(); // '' when no proxy or a dead one → direct-egress fallback
+        $id = \Safe\getmypid().'-'.$this->language.'-'.$proxy.('' !== $exitIp ? '-'.$exitIp : '');
 
         if (isset(static::$wsEndpointList[$id])) {
             self::$lastWsEndpointUsed = static::$wsEndpointList[$id];
@@ -219,8 +230,8 @@ class PuppeteerConnector
 
         $cmd = '';
 
-        if ('' !== $this->proxy) {
-            $cmd .= 'PROXY_GATE='.escapeshellarg($this->proxy).' ';
+        if ('' !== $proxy) {
+            $cmd .= 'PROXY_GATE='.escapeshellarg($proxy).' ';
         }
 
         // Persistent profile per exit IP (reused when the IP recurs → keeps the warm

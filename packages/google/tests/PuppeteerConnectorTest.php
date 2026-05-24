@@ -19,6 +19,18 @@ final class PuppeteerConnectorTest extends TestCase
         $this->assertSame('', (new PuppeteerConnector('fr', 'socks5h://127.0.0.1:1'))->resolveExitIp());
     }
 
+    public function testEffectiveProxyIsEmptyWithoutProxy(): void
+    {
+        $this->assertSame('', (new PuppeteerConnector('fr'))->effectiveProxy());
+    }
+
+    public function testEffectiveProxyFallsBackToDirectWhenProxyIsDown(): void
+    {
+        // A configured but unreachable proxy (closed port) must not be routed through — Chrome
+        // would fail every fetch. effectiveProxy() returns '' so the browser launches direct.
+        $this->assertSame('', (new PuppeteerConnector('fr', 'socks5h://127.0.0.1:1'))->effectiveProxy());
+    }
+
     public function testStripNetBytesMarkerCapturesTransferBytesAndStrips(): void
     {
         $connector = new PuppeteerConnector('fr');
