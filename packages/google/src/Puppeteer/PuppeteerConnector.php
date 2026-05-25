@@ -176,6 +176,16 @@ class PuppeteerConnector
         return '' !== $this->resolveExitIp() ? $this->proxy : '';
     }
 
+    /**
+     * Chrome's --proxy-server rejects socks5h:// (ERR_NO_SUPPORTED_PROXIES) and does proxy-side
+     * DNS for socks5 anyway, so map the curl-style socks5h scheme to socks5 for the browser.
+     * curl keeps socks5h (for remote DNS); only the browser launch goes through here.
+     */
+    public static function chromeProxy(string $proxy): string
+    {
+        return str_starts_with($proxy, 'socks5h://') ? 'socks5://'.substr($proxy, 10) : $proxy;
+    }
+
     private static function probeExitIp(string $proxy): string
     {
         $handle = curl_init('https://api.ipify.org');
@@ -231,7 +241,7 @@ class PuppeteerConnector
         $cmd = '';
 
         if ('' !== $proxy) {
-            $cmd .= 'PROXY_GATE='.escapeshellarg($proxy).' ';
+            $cmd .= 'PROXY_GATE='.escapeshellarg(self::chromeProxy($proxy)).' ';
         }
 
         // Persistent profile per exit IP (reused when the IP recurs → keeps the warm

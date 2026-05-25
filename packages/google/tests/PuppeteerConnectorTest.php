@@ -31,6 +31,14 @@ final class PuppeteerConnectorTest extends TestCase
         $this->assertSame('', (new PuppeteerConnector('fr', 'socks5h://127.0.0.1:1'))->effectiveProxy());
     }
 
+    public function testChromeProxyMapsSocks5hToSocks5(): void
+    {
+        // Chrome's --proxy-server rejects socks5h:// (ERR_NO_SUPPORTED_PROXIES).
+        $this->assertSame('socks5://1.2.3.4:1080', PuppeteerConnector::chromeProxy('socks5h://1.2.3.4:1080'));
+        $this->assertSame('socks5://1.2.3.4:1080', PuppeteerConnector::chromeProxy('socks5://1.2.3.4:1080'));
+        $this->assertSame('', PuppeteerConnector::chromeProxy(''));
+    }
+
     public function testStripNetBytesMarkerCapturesTransferBytesAndStrips(): void
     {
         $connector = new PuppeteerConnector('fr');
