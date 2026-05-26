@@ -109,10 +109,13 @@ class PuppeteerConnector
 
     private function stripNetBytesMarker(string $rawOutput): string
     {
-        if (1 === preg_match('/^<!--NETBYTES:(\d+)-->\r?\n/', $rawOutput, $m)) {
-            $this->lastTransferBytes = (int) $m[1];
+        // scrap.js prepends this marker, but a stray diagnostic line on stdout could land ahead of
+        // it — so match past any leading lines (not only byte 0) and drop everything up to and
+        // including the marker. The marker is our own HTML comment, never present in the SERP body.
+        if (1 === preg_match('/<!--NETBYTES:(\d+)-->\r?\n/', $rawOutput, $m, \PREG_OFFSET_CAPTURE)) {
+            $this->lastTransferBytes = (int) $m[1][0];
 
-            return substr($rawOutput, \strlen($m[0]));
+            return substr($rawOutput, $m[0][1] + \strlen($m[0][0]));
         }
 
         return $rawOutput;
@@ -120,11 +123,14 @@ class PuppeteerConnector
 
     private function stripCaptchaSolvedMarker(string $rawOutput): string
     {
+        // Same leading-noise tolerance as stripNetBytesMarker: find the marker anywhere in the
+        // small prefix scrap.js prepends (before the <html> document) and strip up to it.
         $marker = "<!--CAPTCHA_SOLVED-->\n";
-        if (str_starts_with($rawOutput, $marker)) {
+        $pos = strpos($rawOutput, $marker);
+        if (false !== $pos) {
             $this->lastCaptchaSolved = true;
 
-            return substr($rawOutput, \strlen($marker));
+            return substr($rawOutput, $pos + \strlen($marker));
         }
 
         return $rawOutput;

@@ -133,7 +133,7 @@ async function manageLoadMoreResultsViaBtn(page, maxPages, clicked = 1) {
   const moreBtnSelector =
     'a[aria-label="Autres résultats de recherche"],a[aria-label="More search results"]';
   let moreBtn = await page.$(moreBtnSelector);
-  if (null === moreBtn) return console.log('Pas de boutons `Autres résultats`');
+  if (null === moreBtn) return console.error('Pas de boutons `Autres résultats`');
 
   await moreBtn.evaluate((el) => el.scrollIntoView()); // bretelles
   await moreBtn.scrollIntoView(moreBtn);
@@ -143,7 +143,7 @@ async function manageLoadMoreResultsViaBtn(page, maxPages, clicked = 1) {
     await page.waitForSelector(moreBtnSelector, { visible: true, timeout: 1000 }); // et ceinture
     await moreBtn.tap();
   } catch (error) {
-    console.log(`moreBtn found but not able to click it`);
+    console.error(`moreBtn found but not able to click it`);
   }
   await sleep(500);
   clicked++;
@@ -181,12 +181,14 @@ async function get(url, maxPages) {
   const hasCaptcha = await detectCaptcha(page);
   let captchaSolved = false;
   if (hasCaptcha && (captchaToken || process.env.APP_ENV === 'test' || !isHeadless())) {
-    console.log(' - try to solve captcha for ', url);
+    // Diagnostics go to stderr only: stdout must stay clean so PuppeteerConnector finds the
+    // NETBYTES/CAPTCHA_SOLVED markers (and the bare 'captcha' signal) at the very start.
+    console.error(' - try to solve captcha for ', url);
     try {
       await page.solveRecaptchas();
     } catch (error) {
-      console.log(' - error solving captcha for ', url);
-      console.log(error);
+      console.error(' - error solving captcha for ', url);
+      console.error(error);
       return 'captcha';
     }
     await sleep(8000);

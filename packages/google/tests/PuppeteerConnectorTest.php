@@ -74,6 +74,24 @@ final class PuppeteerConnectorTest extends TestCase
         $this->assertTrue($connector->lastCaptchaSolved);
     }
 
+    public function testMarkersStripDespiteLeadingDiagnosticNoise(): void
+    {
+        // A stray scrap.js diagnostic line on stdout used to shift the markers off byte 0, so the
+        // anchored matchers missed them and lastCaptchaSolved/lastTransferBytes stayed at 0 — the
+        // captcha-solved counter never moved. Both strippers must now match past leading lines.
+        $connector = new PuppeteerConnector('fr');
+        $stripNet = new ReflectionMethod(PuppeteerConnector::class, 'stripNetBytesMarker');
+        $stripCaptcha = new ReflectionMethod(PuppeteerConnector::class, 'stripCaptchaSolvedMarker');
+
+        $raw = " - try to solve captcha for  https://www.google.fr/search?q=x\n"
+            ."<!--NETBYTES:777-->\n<!--CAPTCHA_SOLVED-->\n<html>serp</html>";
+        $body = (string) $stripCaptcha->invoke($connector, (string) $stripNet->invoke($connector, $raw));
+
+        $this->assertSame('<html>serp</html>', $body);
+        $this->assertSame(777, $connector->lastTransferBytes);
+        $this->assertTrue($connector->lastCaptchaSolved);
+    }
+
     public function testExitProfileBaseDefaultAndOverride(): void
     {
         $method = (new ReflectionMethod(PuppeteerConnector::class, 'exitProfileBase'));
