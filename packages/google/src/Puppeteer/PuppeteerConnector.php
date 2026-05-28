@@ -277,10 +277,33 @@ class PuppeteerConnector
         }
 
         register_shutdown_function([$this, 'close']);
+        $this->installSignalTraps();
 
         self::$lastWsEndpointUsed = static::$wsEndpointList[$id];
 
         return static::$wsEndpointList[$id];
+    }
+
+    /**
+     * Ensure close() runs when the worker is killed by SIGTERM/SIGINT/SIGHUP — register_shutdown_function
+     * only covers graceful exit, so without this the daemonized launchBrowser.js + Chrome leak forever
+     * on Ctrl+C, systemd stop, kill, timeout. SIGKILL/OOM/SEGV are uncatchable; idle leaks self-heal on
+     * the next launch via launchBrowserHelper.killExistingBrowserProcesses().
+     */
+    private function installSignalTraps(): void
+    {
+        if (! \function_exists('pcntl_signal')) {
+            return;
+        }
+
+        pcntl_async_signals(true);
+        foreach ([\SIGTERM, \SIGINT, \SIGHUP] as $sig) {
+            pcntl_signal($sig, function (int $sig): void {
+                $this->close();
+                pcntl_signal($sig, \SIG_DFL);
+                posix_kill(posix_getpid(), $sig);
+            });
+        }
     }
 
     private function isHeadless(): bool
