@@ -30,6 +30,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        # splitsh-lite needs the full history; a shallow clone makes it reuse the previous split
+        # tip and silently drop new commits (the subtree gets re-tagged with stale content).
+        with:
+          fetch-depth: 0
 
       # no tag
       - if: "!startsWith(github.ref, 'refs/tags/')"
