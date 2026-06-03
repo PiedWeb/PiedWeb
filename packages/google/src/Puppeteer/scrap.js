@@ -142,8 +142,7 @@ async function manageLoadMoreResultsViaInfiniteScroll(page, maxPages) {
  * @param {Page} page
  * @param {int} maxPages
  */
-async function manageLoadMoreResultsViaBtn(page, maxPages, clicked = 1, retriesLeft = 3) {
-  if (clicked >= maxPages) return;
+async function manageLoadMoreResultsViaBtn(page, maxPages, retriesLeft = 3) {
   try {
     let navigationBlock = await page.$('h1 ::-p-text(Page Navigation)');
     if (navigationBlock === null) return;
@@ -166,23 +165,24 @@ async function manageLoadMoreResultsViaBtn(page, maxPages, clicked = 1, retriesL
     await moreBtn.evaluate((el) => el.scrollIntoView({ block: 'center' }));
     await sleep(750);
     if (!(await moreBtn.isVisible())) return;
+
+    // Tapping this button flips the SERP into continuous-results mode (URL gains #ip=1); Google then
+    // appends the next result batches as you scroll. tap() is the honest touch event, but Google
+    // overlays the anchor with a sibling div (e.g. .KxvlWc) that captures elementHandle.tap()'s
+    // hit-test → it throws "not clickable" and a coordinate tap lands on the overlay without firing
+    // the anchor's jsaction. Fall back to a DOM click, which dispatches on the anchor itself and
+    // does engage #ip=1. tap() stays primary so SERPs where it works keep the genuine touch event.
     try {
       await moreBtn.tap();
     } catch (error) {
-      // Google wraps the pagination anchor in an overlay div (e.g. .KxvlWc) that sits on top of its
-      // clickable point, so elementHandle.tap()'s hit-test resolves the overlay instead of the <a>
-      // and throws "not clickable". Fall back to a coordinate tap over the button center: the exact
-      // same CDP touch event (identical fingerprint to .tap()) but with no hit-test, so the touch
-      // lands on the visual button as a real finger would. tap() stays primary so SERPs where it
-      // already works are untouched.
-      const box = await moreBtn.boundingBox();
-      if (null === box) return console.error('moreBtn found but not able to click it');
-      await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+      await moreBtn.evaluate((el) => el.click());
     }
-    await sleep(500);
-    clicked++;
-    // progress made → restore the full retry budget for the next step
-    return await manageLoadMoreResultsViaBtn(page, maxPages, clicked, 3);
+    await sleep(1000);
+
+    // #ip=1 is active now → the remaining pages load on scroll, exactly like native continuous
+    // scroll. Reuse that loader (it caps itself at maxPages) instead of re-clicking a button that
+    // Google has already removed from the continuous-results DOM.
+    return await manageLoadMoreResultsViaInfiniteScroll(page, maxPages);
   } catch (e) {
     // Google's continuous scroll can detach/replace the main frame mid-pagination (navigation
     // to #ip=1) — the raw page.$ / scrollIntoView / tap calls above then throw "detached Frame".
@@ -193,7 +193,7 @@ async function manageLoadMoreResultsViaBtn(page, maxPages, clicked = 1, retriesL
     if (/detached frame|Execution context|context was destroyed|Target closed/i.test(msg)) {
       if (retriesLeft <= 0) return; // persistent detach → keep results already loaded
       await sleep(800); // let the new continuous-scroll frame attach & settle
-      return await manageLoadMoreResultsViaBtn(page, maxPages, clicked, retriesLeft - 1);
+      return await manageLoadMoreResultsViaBtn(page, maxPages, retriesLeft - 1);
     }
     throw e;
   }
