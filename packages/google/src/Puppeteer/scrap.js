@@ -98,21 +98,40 @@ async function manageCookie(page) {
  */
 async function manageLoadMoreResultsViaInfiniteScroll(page, maxPages) {
   let i = 1;
+  let retriesLeft = 3;
+  // On a persistent detach (safeEvaluate returns null after its own retries), the main frame was
+  // replaced by the continuous-scroll navigation. Wait for the new frame to attach and retry the
+  // iteration rather than breaking with partial results; give up only once the budget is spent.
+  const recover = async () => {
+    if (retriesLeft-- <= 0) return false;
+    await sleep(800);
+    return true;
+  };
   while (true) {
     let scrollHeight = await safeEvaluate(page, () => document.body.scrollHeight);
-    if (scrollHeight === null) break;
+    if (scrollHeight === null) {
+      if (await recover()) continue;
+      break;
+    }
     const scrolled = await safeEvaluate(page, () => {
       window.scrollTo(0, document.body.scrollHeight);
       return true;
     });
-    if (scrolled === null) break;
+    if (scrolled === null) {
+      if (await recover()) continue;
+      break;
+    }
     await sleep(1200);
     const isHeighten = await safeEvaluate(
       page,
       (scrollHeight) => document.body.scrollHeight > scrollHeight,
       scrollHeight,
     );
-    if (isHeighten === null) break;
+    if (isHeighten === null) {
+      if (await recover()) continue;
+      break;
+    }
+    retriesLeft = 3; // progress made → restore the full retry budget for the next iteration
     // limiter à maxPages pages
     if (!isHeighten || i >= maxPages) break;
     i++;
@@ -123,7 +142,7 @@ async function manageLoadMoreResultsViaInfiniteScroll(page, maxPages) {
  * @param {Page} page
  * @param {int} maxPages
  */
-async function manageLoadMoreResultsViaBtn(page, maxPages, clicked = 1) {
+async function manageLoadMoreResultsViaBtn(page, maxPages, clicked = 1, retriesLeft = 3) {
   if (clicked >= maxPages) return;
   try {
     let navigationBlock = await page.$('h1 ::-p-text(Page Navigation)');
@@ -148,15 +167,19 @@ async function manageLoadMoreResultsViaBtn(page, maxPages, clicked = 1) {
     }
     await sleep(500);
     clicked++;
-    return await manageLoadMoreResultsViaBtn(page, maxPages, clicked);
+    // progress made → restore the full retry budget for the next step
+    return await manageLoadMoreResultsViaBtn(page, maxPages, clicked, 3);
   } catch (e) {
     // Google's continuous scroll can detach/replace the main frame mid-pagination (navigation
     // to #ip=1) — the raw page.$ / scrollIntoView / tap calls above then throw "detached Frame".
-    // Same tolerance as safeEvaluate: stop paginating and keep the results already loaded,
-    // instead of letting it bubble to get()'s catch and exit(1) on the whole scrape.
+    // The detach is NOT terminal: a fresh page.$ targets the new main frame. So retry the step
+    // (up to retriesLeft) on the now-attached frame; only accept partial results once the budget
+    // is exhausted, instead of bubbling to get()'s catch and exit(1) on the whole scrape.
     const msg = String((e && e.message) || e);
     if (/detached frame|Execution context|context was destroyed|Target closed/i.test(msg)) {
-      return;
+      if (retriesLeft <= 0) return; // persistent detach → keep results already loaded
+      await sleep(800); // let the new continuous-scroll frame attach & settle
+      return await manageLoadMoreResultsViaBtn(page, maxPages, clicked, retriesLeft - 1);
     }
     throw e;
   }
@@ -189,12 +212,27 @@ async function get(url, maxPages) {
     if (!['false', '0'].includes(process.env.SCRAP_BLOCK_RESOURCES)) {
       await cdp.send('Network.setBlockedURLs', {
         urls: [
-          '*.jpg', '*.jpeg', '*.png', '*.gif', '*.webp', '*.svg', '*.ico', '*.bmp',
-          '*.mp4', '*.webm', '*.ogg',
-          '*.woff', '*.woff2', '*.ttf', '*.otf',
-          '*/gen_204*', '*/client_204*',
-          '*play.google.com/log*', '*doubleclick.net*',
-          '*googleadservices.com*', '*google-analytics.com*',
+          '*.jpg',
+          '*.jpeg',
+          '*.png',
+          '*.gif',
+          '*.webp',
+          '*.svg',
+          '*.ico',
+          '*.bmp',
+          '*.mp4',
+          '*.webm',
+          '*.ogg',
+          '*.woff',
+          '*.woff2',
+          '*.ttf',
+          '*.otf',
+          '*/gen_204*',
+          '*/client_204*',
+          '*play.google.com/log*',
+          '*doubleclick.net*',
+          '*googleadservices.com*',
+          '*google-analytics.com*',
         ],
       });
       await cdp.send('Network.setExtraHTTPHeaders', { headers: { 'Save-Data': 'on' } });
