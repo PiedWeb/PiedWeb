@@ -92,6 +92,25 @@ final class PuppeteerConnectorTest extends TestCase
         $this->assertTrue($connector->lastCaptchaSolved);
     }
 
+    public function testIsValidWsEndpointAcceptsWsUrls(): void
+    {
+        $method = new ReflectionMethod(PuppeteerConnector::class, 'isValidWsEndpoint');
+
+        $this->assertTrue($method->invoke(null, 'ws://127.0.0.1:38971/devtools/browser/abc'));
+        $this->assertTrue($method->invoke(null, 'wss://127.0.0.1:38971/devtools/browser/abc'));
+    }
+
+    public function testIsValidWsEndpointRejectsErrorBlobAndEmpty(): void
+    {
+        // launchBrowser.js writes this blob when Chrome dies mid-startup (ECONNREFUSED on the
+        // devtools port). It must never be mistaken for an endpoint, so getWsEndpoint() relaunches.
+        $method = new ReflectionMethod(PuppeteerConnector::class, 'isValidWsEndpoint');
+
+        $errorBlob = "Error in launchBrowser.js: ErrorEvent {\n  Symbol(kError): Error: connect ECONNREFUSED 127.0.0.1:38971\n}";
+        $this->assertFalse($method->invoke(null, $errorBlob));
+        $this->assertFalse($method->invoke(null, ''));
+    }
+
     public function testExitProfileBaseDefaultAndOverride(): void
     {
         $method = (new ReflectionMethod(PuppeteerConnector::class, 'exitProfileBase'));

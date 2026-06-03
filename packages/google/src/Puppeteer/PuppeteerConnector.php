@@ -265,23 +265,51 @@ class PuppeteerConnector
         $outputFileLog = sys_get_temp_dir().'/puppeteer-direct-'.$safeId;
         $cmd .= 'node '.escapeshellarg(__DIR__.'/launchBrowser.js').' '.escapeshellarg($this->language)
                     .' > '.escapeshellarg($outputFileLog).' 2>&1 &';
-        \Safe\exec($cmd);
 
-        for ($i = 0; $i < 5; ++$i) {
-            static::$wsEndpointList[$id] = trim((string) @file_get_contents($outputFileLog));
-            if ('' !== static::$wsEndpointList[$id]) {
-                break;
+        // Chrome occasionally dies mid-startup (a concurrent same-profile launch's pkill, a stale
+        // SingletonLock, a cold-start OOM) right after publishing its devtools URL, so
+        // puppeteer.launch() throws ECONNREFUSED and launchBrowser.js writes a multi-line error
+        // blob instead of a ws:// endpoint. Treat a non-ws:// output as a failed launch and
+        // relaunch on a fresh Chrome (the next launch's killExistingBrowserProcesses clears the
+        // dead one first), rather than caching the error blob and failing every downstream connect.
+        $wsEndpoint = '';
+        for ($attempt = 0; $attempt < 3; ++$attempt) {
+            @unlink($outputFileLog);
+            \Safe\exec($cmd);
+
+            for ($i = 0; $i < 5; ++$i) {
+                $output = trim((string) @file_get_contents($outputFileLog));
+                if (self::isValidWsEndpoint($output)) {
+                    $wsEndpoint = $output;
+
+                    break 2;
+                }
+
+                if ('' !== $output) {
+                    break; // launch failed (error blob) — relaunch on a fresh Chrome
+                }
+
+                sleep(1);
             }
-
-            sleep(1);
         }
+
+        static::$wsEndpointList[$id] = $wsEndpoint;
 
         register_shutdown_function([$this, 'close']);
         $this->installSignalTraps();
 
-        self::$lastWsEndpointUsed = static::$wsEndpointList[$id];
+        self::$lastWsEndpointUsed = $wsEndpoint;
 
-        return static::$wsEndpointList[$id];
+        return $wsEndpoint;
+    }
+
+    /**
+     * A successful launchBrowser.js prints a single ws:// devtools URL on stdout; a failed one
+     * prints an "Error in launchBrowser.js: …" blob. Only the former is a usable endpoint.
+     */
+    private static function isValidWsEndpoint(string $output): bool
+    {
+        return str_starts_with($output, 'ws://') || str_starts_with($output, 'wss://');
     }
 
     /**
