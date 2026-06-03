@@ -150,20 +150,34 @@ async function manageLoadMoreResultsViaBtn(page, maxPages, clicked = 1, retriesL
     await navigationBlock.scrollIntoView();
     await sleep(250);
 
-    const moreBtnSelector =
-      'a[aria-label="Autres résultats de recherche"],a[aria-label="More search results"]';
+    // Google serves several pagination-control variants depending on the SERP/experiment:
+    // the continuous-scroll "Autres résultats / More search results" anchor and the classic
+    // "Page suivante / Next page" (a#pnnext). Match them all so we keep paginating across variants.
+    const moreBtnSelector = [
+      'a[aria-label="Autres résultats de recherche"]',
+      'a[aria-label="More search results"]',
+      'a[aria-label="Page suivante"]',
+      'a[aria-label="Next page"]',
+      'a#pnnext',
+    ].join(',');
     let moreBtn = await page.$(moreBtnSelector);
     if (null === moreBtn) return console.error('Pas de boutons `Autres résultats`');
 
-    await moreBtn.evaluate((el) => el.scrollIntoView()); // bretelles
-    await moreBtn.scrollIntoView(moreBtn);
+    await moreBtn.evaluate((el) => el.scrollIntoView({ block: 'center' }));
     await sleep(750);
     if (!(await moreBtn.isVisible())) return;
     try {
-      await page.waitForSelector(moreBtnSelector, { visible: true, timeout: 1000 }); // et ceinture
       await moreBtn.tap();
     } catch (error) {
-      console.error(`moreBtn found but not able to click it`);
+      // Google wraps the pagination anchor in an overlay div (e.g. .KxvlWc) that sits on top of its
+      // clickable point, so elementHandle.tap()'s hit-test resolves the overlay instead of the <a>
+      // and throws "not clickable". Fall back to a coordinate tap over the button center: the exact
+      // same CDP touch event (identical fingerprint to .tap()) but with no hit-test, so the touch
+      // lands on the visual button as a real finger would. tap() stays primary so SERPs where it
+      // already works are untouched.
+      const box = await moreBtn.boundingBox();
+      if (null === box) return console.error('moreBtn found but not able to click it');
+      await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
     }
     await sleep(500);
     clicked++;
