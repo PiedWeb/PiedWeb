@@ -16,6 +16,10 @@
 - [Google](packages/google/README.md)
 - [RenderHtmlAttributes](packages/render-html-attributes/README.md)
 
+## ⚠️ Pending verification
+
+- **2026-06-05 — check SERP captcha rate after the bandwidth-saver change.** On 2026-06-02 `packages/google/src/Puppeteer/scrap.js` started blocking images/media/fonts + Google beacons (`Save-Data: on`, opt-out via `SCRAP_BLOCK_RESOURCES=false`) to cut SERP egress. Confirm it did **not** blow up the captcha count: compare `app_stats` SERP bytes/SERP **and** captcha (`incrementSearchExtractCaptchaCount`/`SolvedCount`) before vs after, on both Super (FR) and SuperEN (EN). If captchas spiked, set `SCRAP_BLOCK_RESOURCES=false` to roll back.
+
 ## Development
 
 ```bash

@@ -553,8 +553,11 @@ class SERPExtractor
             .'node '.escapeshellarg(__DIR__.'/../Puppeteer/pixelPos.js').' '.escapeshellarg($xpath);
         \Safe\exec($cmd, $output);
 
+        // Empty output = pixelPos.js could not reach the browser WS endpoint.
+        // Treat a missing pixel position as 0 (same as no wsEndpoint/xpath above)
+        // rather than throwing — a transient browser hiccup must not abort the batch.
         /** @var string */
-        $pixelPos = $output[0] ?? throw new \Exception();
+        $pixelPos = $output[0] ?? '0';
 
         return (int) $pixelPos;
     }

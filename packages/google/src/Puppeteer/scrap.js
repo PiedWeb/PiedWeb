@@ -125,29 +125,41 @@ async function manageLoadMoreResultsViaInfiniteScroll(page, maxPages) {
  */
 async function manageLoadMoreResultsViaBtn(page, maxPages, clicked = 1) {
   if (clicked >= maxPages) return;
-  let navigationBlock = await page.$('h1 ::-p-text(Page Navigation)');
-  if (navigationBlock === null) return;
-  await navigationBlock.scrollIntoView();
-  await sleep(250);
-
-  const moreBtnSelector =
-    'a[aria-label="Autres résultats de recherche"],a[aria-label="More search results"]';
-  let moreBtn = await page.$(moreBtnSelector);
-  if (null === moreBtn) return console.error('Pas de boutons `Autres résultats`');
-
-  await moreBtn.evaluate((el) => el.scrollIntoView()); // bretelles
-  await moreBtn.scrollIntoView(moreBtn);
-  await sleep(750);
-  if (!(await moreBtn.isVisible())) return;
   try {
-    await page.waitForSelector(moreBtnSelector, { visible: true, timeout: 1000 }); // et ceinture
-    await moreBtn.tap();
-  } catch (error) {
-    console.error(`moreBtn found but not able to click it`);
+    let navigationBlock = await page.$('h1 ::-p-text(Page Navigation)');
+    if (navigationBlock === null) return;
+    await navigationBlock.scrollIntoView();
+    await sleep(250);
+
+    const moreBtnSelector =
+      'a[aria-label="Autres résultats de recherche"],a[aria-label="More search results"]';
+    let moreBtn = await page.$(moreBtnSelector);
+    if (null === moreBtn) return console.error('Pas de boutons `Autres résultats`');
+
+    await moreBtn.evaluate((el) => el.scrollIntoView()); // bretelles
+    await moreBtn.scrollIntoView(moreBtn);
+    await sleep(750);
+    if (!(await moreBtn.isVisible())) return;
+    try {
+      await page.waitForSelector(moreBtnSelector, { visible: true, timeout: 1000 }); // et ceinture
+      await moreBtn.tap();
+    } catch (error) {
+      console.error(`moreBtn found but not able to click it`);
+    }
+    await sleep(500);
+    clicked++;
+    return await manageLoadMoreResultsViaBtn(page, maxPages, clicked);
+  } catch (e) {
+    // Google's continuous scroll can detach/replace the main frame mid-pagination (navigation
+    // to #ip=1) — the raw page.$ / scrollIntoView / tap calls above then throw "detached Frame".
+    // Same tolerance as safeEvaluate: stop paginating and keep the results already loaded,
+    // instead of letting it bubble to get()'s catch and exit(1) on the whole scrape.
+    const msg = String((e && e.message) || e);
+    if (/detached frame|Execution context|context was destroyed|Target closed/i.test(msg)) {
+      return;
+    }
+    throw e;
   }
-  await sleep(500);
-  clicked++;
-  return await manageLoadMoreResultsViaBtn(page, maxPages, clicked);
 }
 
 async function detectCaptcha(page) {
@@ -168,8 +180,27 @@ async function get(url, maxPages) {
     cdp.on('Network.loadingFinished', (e) => {
       netBytes += e.encodedDataLength || 0;
     });
+    // Bandwidth saver (opt-out via SCRAP_BLOCK_RESOURCES=false): drop the subresources a real
+    // mobile Chrome in data-saver mode would also skip — images, media, fonts — plus Google's
+    // telemetry beacons. We keep CSS (cookie/more-button visibility checks rely on it), the main
+    // document and JS/XHR (results are JS-rendered). Paired with a Save-Data: on request header so
+    // the pattern stays coherent with a genuine lite-mode client rather than reading as automation.
+    // Done over the existing CDP session (no setRequestInterception — its added latency is a tell).
+    if (!['false', '0'].includes(process.env.SCRAP_BLOCK_RESOURCES)) {
+      await cdp.send('Network.setBlockedURLs', {
+        urls: [
+          '*.jpg', '*.jpeg', '*.png', '*.gif', '*.webp', '*.svg', '*.ico', '*.bmp',
+          '*.mp4', '*.webm', '*.ogg',
+          '*.woff', '*.woff2', '*.ttf', '*.otf',
+          '*/gen_204*', '*/client_204*',
+          '*play.google.com/log*', '*doubleclick.net*',
+          '*googleadservices.com*', '*google-analytics.com*',
+        ],
+      });
+      await cdp.send('Network.setExtraHTTPHeaders', { headers: { 'Save-Data': 'on' } });
+    }
   } catch (e) {
-    // ignore: bandwidth accounting is non-critical
+    // ignore: bandwidth accounting / blocking is non-critical
   }
   // first go to https://www.google.com/webhp?hl=en&gl=en and type kw
   await page.goto(url, { waitUntil: 'domcontentloaded' });

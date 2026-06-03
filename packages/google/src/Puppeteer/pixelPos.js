@@ -4,10 +4,19 @@
  */
 const { connectBrowserPage } = require('./connectBrowserPage');
 
-pixelPos().then((pixelPos) => {
-  console.log(pixelPos);
-  process.exit(0);
-});
+pixelPos()
+  .then((pixelPos) => {
+    console.log(pixelPos);
+    process.exit(0);
+  })
+  .catch(() => {
+    // Browser/WS endpoint unreachable (e.g. shared Chrome crashed under memory
+    // pressure). Pixel position is a secondary datum — degrade to 0 instead of
+    // letting an unhandled rejection abort the node process (Node 25 default),
+    // which would leave stdout empty and crash the whole search:extract batch.
+    console.log(0);
+    process.exit(0);
+  });
 
 async function pixelPos() {
   const page = await connectBrowserPage(false);

@@ -220,4 +220,17 @@ final class GoogleSerpTest extends TestCase
             $this->assertStringNotContainsString('alamyimages.fr', $url);
         }
     }
+
+    public function testPixelPosDegradesToZeroWhenBrowserUnreachable(): void
+    {
+        // Regression (2026-06-03 10h SERP-extraction outage): a dead/unreachable
+        // browser WS endpoint made getPixelPosFor() throw an empty Exception that
+        // aborted the entire search:extract batch. A missing pixel position is a
+        // secondary datum and must now degrade to 0 instead of throwing.
+        $extractor = new SERPExtractor('<html></html>', 0, 'ws://127.0.0.1:1/devtools/browser/dead');
+
+        $method = new ReflectionMethod($extractor, 'getPixelPosFor');
+
+        $this->assertSame(0, $method->invoke($extractor, '//div[@id="unreachable"]'));
+    }
 }
