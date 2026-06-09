@@ -22,7 +22,7 @@
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const { launchBrowser } = require('../src/Puppeteer/launchBrowserHelper');
-const { emulate } = require('../src/Puppeteer/connectBrowserPage');
+const { emulate, emulateDesktop } = require('../src/Puppeteer/connectBrowserPage');
 
 puppeteer.use(StealthPlugin());
 
@@ -118,6 +118,43 @@ async function main() {
   } catch (e) {
     console.log('\n=== TLS dump skipped:', String(e.message || e), '===');
   }
+
+  // ---- 4. desktop CF-fetch path (emulateDesktop) — content-safe headless hardening -------
+  // The Cloudflare rescue uses connectBrowserPage(false)+emulateDesktop: it must mask the
+  // headless/datacenter tells WITHOUT switching the page to its mobile variant (that would change
+  // the extracted HTML). Probe on about:blank — no network needed, WebGL/navigator still resolve.
+  const deskPage = await browser.newPage();
+  await emulateDesktop(deskPage);
+  await deskPage.goto('about:blank');
+  const desk = await deskPage.evaluate(() => {
+    let gpu = {};
+    try {
+      const gl = document.createElement('canvas').getContext('webgl');
+      const ext = gl.getExtension('WEBGL_debug_renderer_info');
+      gpu = { vendor: gl.getParameter(ext.UNMASKED_VENDOR_WEBGL), renderer: gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) };
+    } catch (e) {
+      gpu = { error: String(e) };
+    }
+    return {
+      userAgent: navigator.userAgent,
+      platform: navigator.platform,
+      deviceMemory: navigator.deviceMemory,
+      hardwareConcurrency: navigator.hardwareConcurrency,
+      outerHeight: window.outerHeight,
+      innerHeight: window.innerHeight,
+      gpu,
+    };
+  });
+  console.log('\n=== emulateDesktop (CF-fetch path) ===');
+  console.log(JSON.stringify(desk, null, 2));
+
+  // content-safe: must stay DESKTOP (no mobile UA/platform switch — that changes page content)
+  if (/Mobile|Android/.test(desk.userAgent)) critical.push('emulateDesktop switched to a mobile UA (would change extracted content)');
+  // headless/datacenter tells must be masked
+  if (desk.deviceMemory > 8) critical.push(`emulateDesktop deviceMemory ${desk.deviceMemory} exceeds the spec cap of 8 (host RAM leaking)`);
+  if (/swiftshader|llvmpipe|software/i.test(desk.gpu.renderer || '')) critical.push(`emulateDesktop WebGL renderer "${desk.gpu.renderer}" is still a software/datacenter tell`);
+  if (desk.outerHeight && desk.innerHeight && desk.outerHeight < desk.innerHeight) critical.push('emulateDesktop outerHeight < innerHeight (headless window leak)');
+  await deskPage.close();
 
   await browser.close();
 

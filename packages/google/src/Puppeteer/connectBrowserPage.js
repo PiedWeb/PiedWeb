@@ -112,4 +112,59 @@ async function emulate(page) {
   });
 }
 
-module.exports = { connectBrowserPage, emulate };
+/**
+ * Content-safe headless hardening for the desktop CF-fetch path (connectBrowserPage(false)).
+ *
+ * Unlike {@see emulate}, this overrides NO content-affecting signal — no mobile UA, no viewport, no
+ * navigator.platform — so the page that comes back is the same desktop HTML curl would have fetched
+ * (the CF rescue must not switch the site to its mobile variant). It only masks the headless /
+ * datacenter tells Cloudflare Turnstile reads: SwiftShader WebGL, the innerHeight > outerHeight
+ * window leak, and the server's leaked core/RAM counts. UA and platform stay the honest desktop Linux.
+ *
+ * @param {Page} page
+ */
+async function emulateDesktop(page) {
+  await page.evaluateOnNewDocument(() => {
+    // mask a getter's toString chain so it reads as native code (defeats Proxy/defineProperty checks)
+    const mask = (name, fn) => {
+      Object.defineProperty(fn, 'toString', {
+        value: () => `function get ${name}() { [native code] }`,
+      });
+      Object.defineProperty(fn.toString, 'toString', {
+        value: () => 'function toString() { [native code] }',
+      });
+      return fn;
+    };
+    const nativeGetter = (name, value) => mask(name, () => value);
+
+    // deviceMemory is spec-capped at 8, so the host's 32 is impossible; hardwareConcurrency leaks the
+    // server's core count. Cap both to a common desktop profile (UA/platform stay the honest Linux desktop).
+    Object.defineProperty(navigator, 'hardwareConcurrency', { get: nativeGetter('hardwareConcurrency', 8), configurable: true });
+    Object.defineProperty(navigator, 'deviceMemory', { get: nativeGetter('deviceMemory', 8), configurable: true });
+
+    // Headless reports innerHeight > outerHeight (impossible on a real window). Mirror outer onto inner.
+    Object.defineProperty(window, 'outerWidth', { get: mask('outerWidth', () => window.innerWidth), configurable: true });
+    Object.defineProperty(window, 'outerHeight', { get: mask('outerHeight', () => window.innerHeight), configurable: true });
+
+    // Headless on a server has no GPU → WebGL renders via SwiftShader/Mesa, a known datacenter
+    // signature. Report a plausible Intel-integrated desktop GPU, matching the GPU backend to the
+    // PRESENTED platform (the stealth plugin normalises the UA to Windows; a Linux Mesa/OpenGL
+    // string under a Win32 navigator.platform would be its own contradiction). 37445/37446 =
+    // UNMASKED_VENDOR_WEBGL / UNMASKED_RENDERER_WEBGL.
+    const GL = /Win/i.test(navigator.platform)
+      ? { 37445: 'Google Inc. (Intel)', 37446: 'ANGLE (Intel, Intel(R) UHD Graphics 630 Direct3D11 vs_5_0 ps_5_0, D3D11)' }
+      : { 37445: 'Google Inc. (Intel)', 37446: 'ANGLE (Intel, Mesa Intel(R) UHD Graphics (CML GT2), OpenGL 4.6 (Core Profile))' };
+    for (const proto of [window.WebGLRenderingContext, window.WebGL2RenderingContext]) {
+      if (!proto || !proto.prototype) continue;
+      const orig = proto.prototype.getParameter;
+      const patched = function getParameter(p) {
+        return p in GL ? GL[p] : orig.apply(this, arguments);
+      };
+      Object.defineProperty(patched, 'toString', { value: () => 'function getParameter() { [native code] }' });
+      Object.defineProperty(patched.toString, 'toString', { value: () => 'function toString() { [native code] }' });
+      proto.prototype.getParameter = patched;
+    }
+  });
+}
+
+module.exports = { connectBrowserPage, emulate, emulateDesktop };
