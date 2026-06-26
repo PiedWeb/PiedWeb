@@ -594,7 +594,10 @@ class SERPExtractor
     public function getPositionsZero(): SearchResult
     {
         $linkNodePositionZero = $this->domCrawler
-            ->filter('div[data-md="471"] a')
+            ->filterXpath(
+                '//h2[text()=\'Extrait optimisé sur le Web\' or text()=\'Featured snippet from the web\']'
+                .'/following::a[starts-with(@href,\'http\')][not(starts-with(@href,\'https://www.google\'))][not(starts-with(@href,\'https://support.google\'))][not(ancestor::div[@data-md=\'78\'])][1]'
+            )
             ->getNode(0);
 
         if (! $linkNodePositionZero instanceof \DOMNode || ! $linkNodePositionZero instanceof \DOMElement) {
