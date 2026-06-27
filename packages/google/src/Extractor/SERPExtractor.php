@@ -596,7 +596,7 @@ class SERPExtractor
         $linkNodePositionZero = $this->domCrawler
             ->filterXpath(
                 '//h2[text()=\'Extrait optimisé sur le Web\' or text()=\'Featured snippet from the web\']'
-                .'/following::a[starts-with(@href,\'http\')][not(starts-with(@href,\'https://www.google\'))][not(starts-with(@href,\'https://support.google\'))][not(ancestor::div[@data-md=\'78\'])][1]'
+                .'/following::a[starts-with(@href,\'http\')][not(starts-with(@href,\'https://www.google\'))][not(starts-with(@href,\'https://support.google\'))][not(ancestor::div[@data-md=\'78\'])][not(contains(@href,\'#:~:text=\'))][1]'
             )
             ->getNode(0);
 
