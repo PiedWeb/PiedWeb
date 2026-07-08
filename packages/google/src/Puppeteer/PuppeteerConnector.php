@@ -63,6 +63,11 @@ class PuppeteerConnector
 
         $captchaToken = $this->getCaptchaToken();
         $cmd = null !== $captchaToken ? 'PUPPETEER_2CAPTCHA_TOKEN='.escapeshellarg($captchaToken).' ' : '';
+        // Credential-auth proxy: scrap.js feeds these to page.authenticate (Chrome launched with the
+        // credential-free gate can't authenticate the proxy itself).
+        if ('' !== $this->proxyUser) {
+            $cmd .= 'PROXY_USER='.escapeshellarg($this->proxyUser).' PROXY_PASS='.escapeshellarg($this->proxyPass).' ';
+        }
         $cmd .= 'SCRAP_WAIT='.$scrapWait.' ';
         $cmd .= 'PUPPETEER_WS_ENDPOINT='.escapeshellarg($wsEndpoint).' ';
         $cmd .= 'node '.escapeshellarg($script).' '.$argsStr.' > '.escapeshellarg($outputFileLog);
@@ -147,10 +152,18 @@ class PuppeteerConnector
     }
 
     /**
-     * @param string $language if language or proxy are changed, a new chrome will be launched
+     * @param string $language  if language or proxy are changed, a new chrome will be launched
+     * @param string $proxy     credential-free gateway for --proxy-server (Chrome cannot embed creds)
+     * @param string $proxyUser proxy username (product/country/session label); scrap.js feeds it to
+     *                          page.authenticate — Chrome cannot authenticate a proxy on its own
+     * @param string $proxyPass proxy password for page.authenticate
      */
-    public function __construct(public string $language = 'fr', public string $proxy = '')
-    {
+    public function __construct(
+        public string $language = 'fr',
+        public string $proxy = '',
+        public string $proxyUser = '',
+        public string $proxyPass = '',
+    ) {
     }
 
     /**
@@ -166,7 +179,7 @@ class PuppeteerConnector
         }
 
         if (! isset(self::$exitIpCache[$this->proxy])) {
-            self::$exitIpCache[$this->proxy] = self::probeExitIp($this->proxy);
+            self::$exitIpCache[$this->proxy] = self::probeExitIp($this->proxy, $this->proxyUser, $this->proxyPass);
         }
 
         return self::$exitIpCache[$this->proxy];
@@ -192,19 +205,25 @@ class PuppeteerConnector
         return str_starts_with($proxy, 'socks5h://') ? 'socks5://'.substr($proxy, 10) : $proxy;
     }
 
-    private static function probeExitIp(string $proxy): string
+    private static function probeExitIp(string $proxy, string $proxyUser = '', string $proxyPass = ''): string
     {
         $handle = curl_init('https://api.ipify.org');
         if (false === $handle) {
             return '';
         }
 
-        curl_setopt_array($handle, [
+        $opts = [
             \CURLOPT_PROXY => $proxy,
             \CURLOPT_RETURNTRANSFER => true,
             \CURLOPT_CONNECTTIMEOUT => 5,
             \CURLOPT_TIMEOUT => 10,
-        ]);
+        ];
+        // Authenticated commercial gateway: without creds the probe fails and effectiveProxy() would
+        // wrongly fall back to direct egress, so the browser would never use the proxy.
+        if ('' !== $proxyUser) {
+            $opts[\CURLOPT_PROXYUSERPWD] = $proxyUser.':'.$proxyPass;
+        }
+        curl_setopt_array($handle, $opts);
         $output = curl_exec($handle);
 
         $ip = \is_string($output) ? trim($output) : '';

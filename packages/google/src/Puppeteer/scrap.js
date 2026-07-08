@@ -207,6 +207,15 @@ async function detectCaptcha(page) {
 /**  @param {string} url */
 async function get(url, maxPages) {
   const page = await connectBrowserPage();
+  // Credential-auth proxy (commercial residential): Chrome launched with the credential-free gate
+  // can't authenticate the proxy, so answer the challenge here. Only set for a commercial route —
+  // own-exit tunnels have no PROXY_USER, so this stays off and adds no request-interception overhead.
+  if (process.env.PROXY_USER) {
+    await page.authenticate({
+      username: process.env.PROXY_USER,
+      password: process.env.PROXY_PASS || '',
+    });
+  }
   // Sum real wire bytes (compressed body + headers) for every request this scrape makes across
   // all paginations — so PHP can account true SERP bandwidth, not just the final HTML size.
   // Best-effort: a CDP failure must never break the scrape.
