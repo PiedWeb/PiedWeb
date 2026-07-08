@@ -63,6 +63,16 @@ class PuppeteerConnector
 
         $captchaToken = $this->getCaptchaToken();
         $cmd = null !== $captchaToken ? 'PUPPETEER_2CAPTCHA_TOKEN='.escapeshellarg($captchaToken).' ' : '';
+        // CapSolver token + the chosen solver ('2captcha'|'capsolver'|'none'); scrap.js picks the
+        // recaptcha provider from these. Read straight from the environment, like the 2captcha token.
+        $capSolverToken = $_SERVER['PUPPETEER_CAPSOLVER_TOKEN'] ?? '';
+        if (\is_string($capSolverToken) && '' !== $capSolverToken) {
+            $cmd .= 'PUPPETEER_CAPSOLVER_TOKEN='.escapeshellarg($capSolverToken).' ';
+        }
+        $solver = $_SERVER['SOLVER'] ?? '';
+        if (\is_string($solver) && '' !== $solver) {
+            $cmd .= 'SOLVER='.escapeshellarg($solver).' ';
+        }
         // Credential-auth proxy: scrap.js feeds these to page.authenticate (Chrome launched with the
         // credential-free gate can't authenticate the proxy itself).
         if ('' !== $this->proxyUser) {

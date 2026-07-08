@@ -13,21 +13,69 @@ const { movePointerHuman } = require('./human');
 const RecaptchaPlugin = require('puppeteer-extra-plugin-recaptcha');
 const puppeteer = require('puppeteer-extra');
 
-const captchaToken = process.env.PUPPETEER_2CAPTCHA_TOKEN;
+puppeteer.use(RecaptchaPlugin(recaptchaOptions()));
 
-puppeteer.use(
-  RecaptchaPlugin(
-    captchaToken
-      ? {
-          provider: {
-            id: '2captcha',
-            token: captchaToken,
-          },
-          visualFeedback: true,
-        }
-      : {},
-  ),
-);
+/**
+ * Pick the captcha solver from env: SOLVER ('2captcha' | 'capsolver' | 'none') + the matching token.
+ * CapSolver rides the plugin's custom provider.fn (its createTask/getTaskResult API), so the plugin
+ * still handles detection + token injection and no extra dependency is needed. SOLVER unset falls
+ * back to whichever token exists (2captcha first) for backward compatibility.
+ */
+function recaptchaOptions() {
+  const solver = process.env.SOLVER || '';
+  const capsolverToken = process.env.PUPPETEER_CAPSOLVER_TOKEN;
+  const twoCaptchaToken = process.env.PUPPETEER_2CAPTCHA_TOKEN;
+  if (solver === 'none') return {};
+  if ((solver === 'capsolver' || !twoCaptchaToken) && capsolverToken) {
+    return { provider: { id: 'capsolver', token: capsolverToken, fn: capSolverGetSolutions }, visualFeedback: true };
+  }
+  if (twoCaptchaToken) {
+    return { provider: { id: '2captcha', token: twoCaptchaToken }, visualFeedback: true };
+  }
+  return {};
+}
+
+/** Custom provider for puppeteer-extra-plugin-recaptcha: solves each captcha via the CapSolver API. */
+async function capSolverGetSolutions(captchas = [], token = '') {
+  const solutions = await Promise.all(captchas.map((c) => capSolverSolve(c, token)));
+  return { solutions, error: solutions.find((s) => !!s.error) };
+}
+
+async function capSolverSolve(captcha, token) {
+  const solution = { _vendor: captcha._vendor, provider: 'capsolver' };
+  try {
+    if (!captcha || !captcha.sitekey || !captcha.url || !captcha.id) throw new Error('missing captcha data');
+    solution.id = captcha.id;
+    const requestAt = new Date();
+    const type = captcha._vendor === 'hcaptcha' ? 'HCaptchaTaskProxyLess' : 'ReCaptchaV2TaskProxyLess';
+    const task = { type, websiteURL: captcha.url, websiteKey: captcha.sitekey };
+    if (captcha.isEnterprise) task.isEnterprise = true;
+    const created = await capSolverApi('https://api.capsolver.com/createTask', { clientKey: token, task });
+    if (created.errorId) throw new Error('createTask: ' + (created.errorDescription || created.errorCode));
+    let result;
+    for (let i = 0; i < 60; i++) {
+      await sleep(2000);
+      const r = await capSolverApi('https://api.capsolver.com/getTaskResult', { clientKey: token, taskId: created.taskId });
+      if (r.errorId) throw new Error('getTaskResult: ' + (r.errorDescription || r.errorCode));
+      if (r.status === 'ready') { result = r.solution || {}; break; }
+    }
+    const text = result && (result.gRecaptchaResponse || result.token);
+    if (!text) throw new Error('no solution token');
+    solution.providerCaptchaId = created.taskId;
+    solution.text = text;
+    solution.responseAt = new Date();
+    solution.hasSolution = true;
+    solution.duration = (solution.responseAt - requestAt) / 1000;
+  } catch (error) {
+    solution.error = 'capsolver error: ' + String((error && error.message) || error);
+  }
+  return solution;
+}
+
+async function capSolverApi(url, body) {
+  const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  return res.json();
+}
 
 const url = process.argv[2];
 const maxPages = process.argv[3] ? parseInt(process.argv[3], 10) : 5;
