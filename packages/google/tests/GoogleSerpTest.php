@@ -221,6 +221,107 @@ final class GoogleSerpTest extends TestCase
         }
     }
 
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function fixtureProvider(): iterable
+    {
+        yield 'primary' => ['serp-primary'];
+        yield 'fallback' => ['serp-fallback'];
+        yield 'image-pack' => ['serp-image-pack'];
+    }
+
+    private static function extractorFromFixture(string $name): SERPExtractor
+    {
+        $html = (string) \Safe\gzdecode((string) file_get_contents(__DIR__.'/fixtures/'.$name.'.html.gz'));
+
+        return new SERPExtractor($html);
+    }
+
+    /**
+     * Regression: `//span[text()="Vidéos"]` matched Google's filter/nav bar tab (a plain
+     * `<span class="R1QWuf">Vidéos</span>` present on nearly every SERP), so the Video feature
+     * was a permanent false positive. Real video blocks carry `role="heading"`; nav tabs don't.
+     * serp-primary has the "Vidéos" nav tab but no real video block → must NOT be detected;
+     * serp-image-pack has a genuine "Vidéos" block heading → must be detected.
+     */
+    public function testVideoFeatureIgnoresNavTab(): void
+    {
+        $this->assertFalse(
+            self::extractorFromFixture('serp-primary')->containsSerpFeature('Video'),
+            'Video must not be detected from the filter/nav "Vidéos" tab'
+        );
+        $this->assertTrue(
+            self::extractorFromFixture('serp-image-pack')->containsSerpFeature('Video'),
+            'Video must be detected from a real "Vidéos" block heading'
+        );
+    }
+
+    /**
+     * "Sites de lieux" (semscraper's `location_sites`) is a distinct block from the map Local Pack.
+     * serp-primary carries a real "Sites de lieux" heading.
+     */
+    public function testLocationSitesFeatureDetected(): void
+    {
+        $extractor = self::extractorFromFixture('serp-primary');
+
+        $this->assertTrue($extractor->containsSerpFeature('LocationSites'));
+        $this->assertArrayHasKey('LocationSites', $extractor->getSerpFeatures());
+    }
+
+    /**
+     * Offline feature-detection matrix across the three captured mobile SERPs. Locks in the
+     * hardened, nav-tab-immune selectors so a Google DOM tweak that reintroduces false positives
+     * (or drops a real block) is caught without a live request.
+     *
+     * @param array<string, bool> $expected
+     */
+    #[DataProvider('featureMatrixProvider')]
+    public function testFeatureDetectionMatrix(string $fixture, array $expected): void
+    {
+        $extractor = self::extractorFromFixture($fixture);
+        $features = $extractor->getSerpFeatures();
+
+        foreach ($expected as $feature => $present) {
+            $this->assertSame(
+                $present,
+                array_key_exists($feature, $features),
+                sprintf('%s: %s expected %s', $fixture, $feature, $present ? 'present' : 'absent')
+            );
+        }
+    }
+
+    /**
+     * @return iterable<string, array{string, array<string, bool>}>
+     */
+    public static function featureMatrixProvider(): iterable
+    {
+        // "randonnée valgaudemar": image pack + local pack (Adresses) + location sites, no video/PAA.
+        yield 'primary' => ['serp-primary', [
+            'ImagePack' => true,
+            'Local Pack' => true,
+            'LocationSites' => true,
+            'Video' => false,
+            'PeopleAlsoAsked' => false,
+        ]];
+        // "plombier ...": maps/business SERP with People-also-ask, no image/video block.
+        yield 'fallback' => ['serp-fallback', [
+            'Local Pack' => true,
+            'PeopleAlsoAsked' => true,
+            'ImagePack' => false,
+            'Video' => false,
+            'LocationSites' => false,
+        ]];
+        // "paysage allemand": image pack + real video block + People-also-ask, no local/location.
+        yield 'image-pack' => ['serp-image-pack', [
+            'ImagePack' => true,
+            'Video' => true,
+            'PeopleAlsoAsked' => true,
+            'Local Pack' => false,
+            'LocationSites' => false,
+        ]];
+    }
+
     public function testPixelPosDegradesToZeroWhenBrowserUnreachable(): void
     {
         // Regression (2026-06-03 10h SERP-extraction outage): a dead/unreachable

@@ -9,27 +9,52 @@ use Symfony\Component\DomCrawler\Crawler;
 
 class SERPExtractor
 {
-    /** @var array<string, list<string>> */
+    /**
+     * SERP-feature detectors, aligned with the semscraper lane's block taxonomy
+     * (SemscraperMapper::BLOCK_TO_FEATURE) so a keyword scraped via either lane yields the same labels.
+     *
+     * Text-based blocks are matched on their `role="heading"` element rather than a bare `<span>`.
+     * This is the key robustness win: Google's filter/nav bar ("Tous | Images | Vidéos | Actualités |
+     * Lieux | Sites de lieux …") uses plain `<span class="R1QWuf">` labels with the SAME words as the
+     * real block headings, so a `//span[text()="Vidéos"]` matched the nav tab on virtually every SERP
+     * (a permanent false-positive). Real feature blocks carry `role="heading"`; nav tabs don't. Matching
+     * is element-agnostic (`//*`) + `normalize-space()` so it survives span/div swaps and whitespace, and
+     * lists both FR and EN labels (the only deployed locales: Super = fr, SuperEN = us/en).
+     *
+     * @var array<string, list<string>>
+     */
     final public const array SERP_FEATURE_SELECTORS = [
         'Ads' => ['.//*[@id="tads"]|.//*[@id="bottomads"]'],
-        'ImagePack' => ["//span[text()='Images']", "//h3[starts-with(text(), 'Images correspondant')]"],
+        'ImagePack' => [
+            '//*[@role="heading"][normalize-space()="Images" or normalize-space()="Image results"]',
+            "//h3[starts-with(text(), 'Images correspondant')]",
+            "//h3[starts-with(text(), 'Images for')]",
+        ],
         'Local Pack' => [
             '//*[@data-viewer-entrypoint]',
             '//*[@data-prvwid]',
             "//a[contains(@href,'/maps/dir/')]",
             "//div[contains(@class,'rllt__details')]",
             "//div[contains(@class,'VkpGBb')]",
-            "//*[@role='heading'][text()='Adresses' or text()='Entreprises' or text()='Lieux' or text()='Places']",
+            '//*[@role="heading"][normalize-space()="Adresses" or normalize-space()="Entreprises" or normalize-space()="Lieux" or normalize-space()="Places" or normalize-space()="Businesses"]',
+        ],
+        // "Sites de lieux" (FR) / "Places sites" (EN): location-oriented website results, a distinct
+        // block from the map-based Local Pack (semscraper surfaces it as `location_sites`).
+        'LocationSites' => [
+            '//*[@role="heading"][normalize-space()="Sites de lieux" or normalize-space()="Places sites" or normalize-space()="Sites"]',
         ],
         'PositionZero' => ['//div[@data-md="471"]'],
         'KnowledgePanel' => ['//div[@data-md="61"]', '//div[contains(concat(" ",normalize-space(@class)," ")," kp-wholepage ")]'],
-        'News' => ['//span[text()="À la une"]', '//span[text()="Top stories"]'],
-        'PeopleAlsoAsked' => [
-            '//span[text()="Autres questions posées"]',
-            '//span[text()="Autres questions"]',
-            '//span[text()="People also ask"]',
+        'News' => [
+            '//*[@role="heading"][normalize-space()="À la une" or normalize-space()="Top stories" or normalize-space()="Actualités" or normalize-space()="News"]',
         ],
-        'Video' => ['//span[text()="Vidéos"]', '//span[text()="Videos"]', '//div[contains(@aria-label,"second")]'],
+        'PeopleAlsoAsked' => [
+            '//*[@data-q]',
+            '//*[@role="heading"][normalize-space()="Autres questions posées" or normalize-space()="Autres questions" or normalize-space()="People also ask"]',
+        ],
+        'Video' => [
+            '//*[@role="heading"][normalize-space()="Vidéos" or normalize-space()="Vidéos courtes" or normalize-space()="Videos" or normalize-space()="Short videos"]',
+        ],
         'Reviews' => ['//span[contains(@aria-label,"Note")]', '//span[contains(@aria-label,"Rating")]', '//span[contains(@aria-label,"Rated")]'],
     ];
 
