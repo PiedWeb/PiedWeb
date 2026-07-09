@@ -90,6 +90,13 @@ class PuppeteerConnector
         if (\is_string($solver) && '' !== $solver) {
             $cmd .= 'SOLVER='.escapeshellarg($solver).' ';
         }
+        // Bandwidth-saver A/B: PHP draws block-resources on/off per process and scrap.js reads it from
+        // env (opt-out via 'false'/'0'). Forward it so the PHP-side draw is authoritative, matching what
+        // the cost stats record; unset → scrap.js keeps its own default (block on).
+        $blockResources = $_SERVER['SCRAP_BLOCK_RESOURCES'] ?? '';
+        if (\is_string($blockResources) && '' !== $blockResources) {
+            $cmd .= 'SCRAP_BLOCK_RESOURCES='.escapeshellarg($blockResources).' ';
+        }
         // Credential-auth proxy: scrap.js feeds these to page.authenticate (Chrome launched with the
         // credential-free gate can't authenticate the proxy itself).
         if ('' !== $this->proxyUser) {
