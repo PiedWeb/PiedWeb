@@ -97,6 +97,13 @@ class PuppeteerConnector
         if (\is_string($blockResources) && '' !== $blockResources) {
             $cmd .= 'SCRAP_BLOCK_RESOURCES='.escapeshellarg($blockResources).' ';
         }
+        // Fingerprint-hardening A/B: PHP draws the extra mobile overrides (maxTouchPoints/plugins) on/off
+        // per process and connectBrowserPage.js reads it from env (opt-out via '0'/'false'). Forward it so
+        // the PHP-side draw is authoritative, matching what the cost stats record; unset → JS default (on).
+        $fpExtra = $_SERVER['FP_EXTRA'] ?? '';
+        if (\is_string($fpExtra) && '' !== $fpExtra) {
+            $cmd .= 'FP_EXTRA='.escapeshellarg($fpExtra).' ';
+        }
         // Credential-auth proxy: scrap.js feeds these to page.authenticate (Chrome launched with the
         // credential-free gate can't authenticate the proxy itself).
         if ('' !== $this->proxyUser) {

@@ -74,7 +74,9 @@ async function emulate(page) {
   // Android phone the UA claims (deviceMemory is even spec-capped at 8, so the host's 32 is a
   // dead giveaway). Align them to a plausible mobile profile, masking each getter's toString so
   // it still reads as native code.
-  await page.evaluateOnNewDocument(() => {
+  // extraFp gates the two newest overrides (maxTouchPoints/plugins) so they can be A/B'd via FP_EXTRA.
+  const extraFp = !['0', 'false'].includes(process.env.FP_EXTRA || '');
+  await page.evaluateOnNewDocument((extraFp) => {
     // mask a getter's toString chain so it reads as native code (defeats Proxy/defineProperty checks)
     const mask = (name, fn) => {
       Object.defineProperty(fn, 'toString', {
@@ -90,6 +92,23 @@ async function emulate(page) {
     Object.defineProperty(navigator, 'platform', { get: nativeGetter('platform', 'Linux armv8l'), configurable: true });
     Object.defineProperty(navigator, 'hardwareConcurrency', { get: nativeGetter('hardwareConcurrency', 8), configurable: true });
     Object.defineProperty(navigator, 'deviceMemory', { get: nativeGetter('deviceMemory', 8), configurable: true });
+
+    if (extraFp) {
+      // Real Android Chrome: 5 touch points, 0 plugins. The host leaks 1 touch point, and the stealth
+      // plugin injects a desktop-shaped navigator.plugins — both impossible on the phone the UA claims.
+      Object.defineProperty(navigator, 'maxTouchPoints', { get: nativeGetter('maxTouchPoints', 5), configurable: true });
+      try {
+        // keep the real PluginArray type (returning [] would itself be a tell), just make it empty
+        const empty = Object.create(typeof PluginArray !== 'undefined' ? PluginArray.prototype : Object.prototype);
+        Object.defineProperty(empty, 'length', { get: () => 0 });
+        empty.item = () => null;
+        empty.namedItem = () => null;
+        empty.refresh = () => {};
+        Object.defineProperty(navigator, 'plugins', { get: nativeGetter('plugins', empty), configurable: true });
+      } catch (e) {
+        /* PluginArray unavailable → leave as-is */
+      }
+    }
 
     // Headless reports innerHeight > outerHeight (impossible on a real window). Mobile Chrome runs
     // effectively fullscreen, so mirror outer onto inner to keep the relationship coherent.
@@ -109,7 +128,7 @@ async function emulate(page) {
       Object.defineProperty(patched.toString, 'toString', { value: () => 'function toString() { [native code] }' });
       proto.prototype.getParameter = patched;
     }
-  });
+  }, extraFp);
 }
 
 /**
