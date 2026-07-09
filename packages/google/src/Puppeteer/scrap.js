@@ -47,9 +47,7 @@ async function capSolverSolve(captcha, token) {
     if (!captcha || !captcha.sitekey || !captcha.url || !captcha.id) throw new Error('missing captcha data');
     solution.id = captcha.id;
     const requestAt = new Date();
-    const type = captcha._vendor === 'hcaptcha' ? 'HCaptchaTaskProxyLess' : 'ReCaptchaV2TaskProxyLess';
-    const task = { type, websiteURL: captcha.url, websiteKey: captcha.sitekey };
-    if (captcha.isEnterprise) task.isEnterprise = true;
+    const task = capSolverTask(captcha);
     const created = await capSolverApi('https://api.capsolver.com/createTask', { clientKey: token, task });
     if (created.errorId) throw new Error('createTask: ' + (created.errorDescription || created.errorCode));
     let result;
@@ -70,6 +68,43 @@ async function capSolverSolve(captcha, token) {
     solution.error = 'capsolver error: ' + String((error && error.message) || error);
   }
   return solution;
+}
+
+/**
+ * Build the CapSolver task for a detected captcha. On the commercial lane (PROXY_GATE + PROXY_USER
+ * set) the reCAPTCHA is solved THROUGH the same sticky proxy IP Chrome egresses on, so the token is
+ * minted from our egress IP and accepted by Google's IP-bound /sorry enterprise reCAPTCHA — a
+ * ProxyLess token (solved from CapSolver's own IP) is always rejected. Direct/own-exits (no shared
+ * gateway) and hCaptcha keep the ProxyLess task, i.e. the previous behaviour unchanged.
+ */
+function capSolverTask(captcha) {
+  const proxy = captcha._vendor === 'hcaptcha' ? '' : capSolverProxy();
+  if (proxy === '') {
+    const type = captcha._vendor === 'hcaptcha' ? 'HCaptchaTaskProxyLess' : 'ReCaptchaV2TaskProxyLess';
+    const task = { type, websiteURL: captcha.url, websiteKey: captcha.sitekey };
+    if (captcha.isEnterprise) task.isEnterprise = true;
+    return task;
+  }
+  const task = { type: 'ReCaptchaV2Task', websiteURL: captcha.url, websiteKey: captcha.sitekey, proxy };
+  if (captcha.isEnterprise) task.isEnterprise = true;
+  return task;
+}
+
+/**
+ * CapSolver proxy string ("scheme:host:port:user:pass") pointing at the SAME commercial gateway and
+ * sticky-session username Chrome uses, or '' on direct/own-exits (no shared gateway to bind to).
+ * Chrome and CapSolver sharing the session username land on the same sticky residential IP, so the
+ * solved token matches our egress IP. Chrome's socks5h is mapped to socks5 (CapSolver has no
+ * remote-DNS scheme). PROXY_GATE/USER/PASS are forwarded by PuppeteerConnector on the commercial lane.
+ */
+function capSolverProxy() {
+  const gate = process.env.PROXY_GATE || '';
+  const user = process.env.PROXY_USER || '';
+  if (gate === '' || user === '') return '';
+  const m = gate.match(/^(?:(https?|socks5h?):\/\/)?([^:/]+):(\d+)/i);
+  if (m === null) return '';
+  const scheme = (m[1] || 'http').toLowerCase().replace('socks5h', 'socks5');
+  return [scheme, m[2], m[3], user, process.env.PROXY_PASS || ''].join(':');
 }
 
 async function capSolverApi(url, body) {

@@ -105,9 +105,12 @@ class PuppeteerConnector
             $cmd .= 'FP_EXTRA='.escapeshellarg($fpExtra).' ';
         }
         // Credential-auth proxy: scrap.js feeds these to page.authenticate (Chrome launched with the
-        // credential-free gate can't authenticate the proxy itself).
+        // credential-free gate can't authenticate the proxy itself). The gate is forwarded too so
+        // scrap.js can route CapSolver through the SAME sticky IP as Chrome (IP-consistent enterprise
+        // reCAPTCHA solving; a ProxyLess token is rejected by Google's IP-bound /sorry page).
         if ('' !== $this->proxyUser) {
             $cmd .= 'PROXY_USER='.escapeshellarg($this->proxyUser).' PROXY_PASS='.escapeshellarg($this->proxyPass).' ';
+            $cmd .= 'PROXY_GATE='.escapeshellarg($this->proxy).' ';
         }
         $cmd .= 'SCRAP_WAIT='.$scrapWait.' ';
         $cmd .= 'PUPPETEER_WS_ENDPOINT='.escapeshellarg($wsEndpoint).' ';
