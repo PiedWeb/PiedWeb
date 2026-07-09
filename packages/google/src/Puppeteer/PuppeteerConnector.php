@@ -42,6 +42,23 @@ class PuppeteerConnector
     }
 
     /**
+     * Abandon the current egress IP: close its browser and drop the cached exit IP so the next scrape
+     * re-probes. Paired with a caller that has just changed the commercial session (new sticky IP on
+     * the same gateway), the re-probe returns the fresh IP, which keys a new browser id AND a new
+     * per-IP profile dir — so a hopelessly captcha-flagged IP's cookies are never replayed. No-op on
+     * direct egress (no proxy to rotate) — there the IP is fixed and rotation is meaningless.
+     */
+    public function rotateExit(): void
+    {
+        if ('' === $this->proxy) {
+            return;
+        }
+
+        $this->close();
+        unset(self::$exitIpCache[$this->proxy]);
+    }
+
+    /**
      * @param array<string|int> $args
      */
     public function execute(string $script, array $args = [], int $scrapWait = 1000): string

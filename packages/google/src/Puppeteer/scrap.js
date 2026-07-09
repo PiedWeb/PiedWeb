@@ -248,6 +248,11 @@ async function manageLoadMoreResultsViaBtn(page, maxPages, retriesLeft = 3) {
 }
 
 async function detectCaptcha(page) {
+  // The "unusual traffic" interstitial redirects to google.com/sorry/… in every UI language, so the
+  // URL is a language-independent signal that catches blocks the localized body-text match misses
+  // (e.g. a locale we don't string-match). The text check stays as a fallback for in-page captchas
+  // served without the /sorry redirect.
+  if (page.url().includes('/sorry/')) return true;
   const content = await page.content();
   return content.includes('À propos de cette page') || content.includes('About this page');
 }
@@ -298,6 +303,10 @@ async function get(url, maxPages) {
           '*.woff2',
           '*.ttf',
           '*.otf',
+          // Result thumbnails are served extension-less (encrypted-tbn0.gstatic.com/images?q=tbn:…),
+          // so they slip past the extension rules above; ~6KB each, ~7/SERP on image-rich results.
+          // They never affect result parsing or pagination, and a data-saver client skips them too.
+          '*encrypted-tbn*',
           '*/gen_204*',
           '*/client_204*',
           '*play.google.com/log*',
@@ -320,6 +329,8 @@ async function get(url, maxPages) {
   await sleep(scrapWait);
   const hasCaptcha = await detectCaptcha(page);
   let captchaSolved = false;
+  // Whether a solver is configured at all — gates spending on solving vs. bailing out early.
+  const captchaToken = process.env.PUPPETEER_CAPSOLVER_TOKEN || process.env.PUPPETEER_2CAPTCHA_TOKEN;
   if (hasCaptcha && (captchaToken || process.env.APP_ENV === 'test' || !isHeadless())) {
     // Diagnostics go to stderr only: stdout must stay clean so PuppeteerConnector finds the
     // NETBYTES/CAPTCHA_SOLVED markers (and the bare 'captcha' signal) at the very start.
