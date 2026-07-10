@@ -35,6 +35,25 @@ function getAcceptLanguage(language) {
 }
 
 /**
+ * ICU/Intl default locale. Chrome inherits it from the process locale, NOT from --lang, so on a
+ * French box the EN lane formats dates/numbers/currency in French — an en-US phone that prints
+ * "1,00 $US" is a locale↔language contradiction (CreepJS flags it as a lie). Pin the launch env to
+ * the lane so Intl matches navigator.language.
+ * @param {string} language
+ */
+function getLocaleEnv(language) {
+  if (language === 'en' || language === 'en-US') {
+    return 'en_US.UTF-8';
+  }
+
+  if (language === 'fr-CA') {
+    return 'fr_CA.UTF-8';
+  }
+
+  return 'fr_FR.UTF-8';
+}
+
+/**
  * Lance un navigateur Puppeteer avec les options spécifiées
  * @param {boolean|null} headless - Mode sans interface graphique (null = auto-détection)
  * @param {string|null} windowSize - Taille de la fenêtre au format "largeur,hauteur"
@@ -77,8 +96,11 @@ async function launchBrowser(
     await killExistingBrowserProcesses(userDataDir + (profile ? '/' + profile : ''));
   }
 
+  const localeEnv = getLocaleEnv(lang);
   const options = {
     // pipe: true, // disable endpoint
+    // Pin the process locale to the lane so ICU/Intl formats in the target language, not the box's.
+    env: { ...process.env, LANG: localeEnv, LC_ALL: localeEnv, LANGUAGE: localeEnv.split('.')[0] },
     defaultViewport: null,
     // Startup timeout for the WS endpoint. Default 30s (unchanged); opt-in to a
     // longer value via PUPPETEER_LAUNCH_TIMEOUT to absorb slow snap cold starts.

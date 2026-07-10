@@ -112,17 +112,23 @@ async function capSolverApi(url, body) {
   return res.json();
 }
 
-const url = process.argv[2];
-const maxPages = process.argv[3] ? parseInt(process.argv[3], 10) : 5;
-get(url, maxPages)
-  .then((source) => {
-    console.log(source);
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error('Error in launchBrowser.js:', error);
-    process.exit(1);
-  });
+// Run the scrape only when invoked as the entry point; `require`-ing this module (e.g. from the
+// fingerprint self-check to unit-test timezoneForUrl) must not launch a scrape.
+if (require.main === module) {
+  const url = process.argv[2];
+  const maxPages = process.argv[3] ? parseInt(process.argv[3], 10) : 5;
+  get(url, maxPages)
+    .then((source) => {
+      console.log(source);
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error('Error in launchBrowser.js:', error);
+      process.exit(1);
+    });
+}
+
+module.exports = { timezoneForUrl };
 
 /** @param {int} ms */
 function sleep(ms) {
@@ -292,9 +298,26 @@ async function detectCaptcha(page) {
   return content.includes('À propos de cette page') || content.includes('About this page');
 }
 
+/**
+ * Map the target Google host to the IANA timezone of its lane, so the emulated phone's clock matches
+ * the locale it's browsing (an Android device on google.com with a Paris clock is a contradiction).
+ * google.fr / .be / .ch → Europe/Paris; everything else (google.com EN lane) → America/New_York.
+ * @param {string} u
+ * @return {string|null}
+ */
+function timezoneForUrl(u) {
+  try {
+    const host = new URL(u).hostname;
+    if (/\.(fr|be|ch|lu)$/i.test(host)) return 'Europe/Paris';
+    return 'America/New_York';
+  } catch (e) {
+    return null;
+  }
+}
+
 /**  @param {string} url */
 async function get(url, maxPages) {
-  const page = await connectBrowserPage();
+  const page = await connectBrowserPage(true, {}, timezoneForUrl(url));
   // Credential-auth proxy (commercial residential): Chrome launched with the credential-free gate
   // can't authenticate the proxy, so answer the challenge here. Only set for a commercial route —
   // own-exit tunnels have no PROXY_USER, so this stays off and adds no request-interception overhead.

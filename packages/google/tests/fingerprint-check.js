@@ -23,45 +23,109 @@ const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const { launchBrowser } = require('../src/Puppeteer/launchBrowserHelper');
 const { emulate, emulateDesktop } = require('../src/Puppeteer/connectBrowserPage');
+const { timezoneForUrl } = require('../src/Puppeteer/scrap');
 
 puppeteer.use(StealthPlugin());
 
-// Row labels (substring, case-insensitive) that MUST be green on bot.sannysoft.com.
-const CRITICAL = [/webdriver/i, /chrome/i, /permission/i, /plugins/i, /languages/i, /iframe/i, /notification/i];
-
-function isCritical(label) {
-  return CRITICAL.some((re) => re.test(label));
+// Pure-function unit check (no browser): the lane→timezone mapping the scraper derives from the URL.
+// Runs first so a mapping regression fails fast without spinning up Chrome.
+function checkTimezoneForUrl() {
+  const cases = [
+    ['https://www.google.fr/search?q=x', 'Europe/Paris'],
+    ['https://www.google.be/search?q=x', 'Europe/Paris'],
+    ['https://www.google.ch/search?q=x', 'Europe/Paris'],
+    ['https://www.google.lu/search?q=x', 'Europe/Paris'],
+    ['https://www.google.com/search?q=x', 'America/New_York'],
+    ['https://www.google.de/search?q=x', 'America/New_York'], // non-FR TLD falls to the EN lane
+    ['not a url', null],
+  ];
+  const fails = cases.filter(([u, want]) => timezoneForUrl(u) !== want).map(([u, want]) => `${u} → expected ${want}, got ${timezoneForUrl(u)}`);
+  console.log('\n=== timezoneForUrl (unit) ===');
+  console.log(fails.length ? 'FAIL:\n  ' + fails.join('\n  ') : `pass (${cases.length} cases)`);
+  return fails;
 }
 
 async function main() {
+  const critical = checkTimezoneForUrl();
+
   const browser = await launchBrowser(true, null, null, '/tmp/fp_check_profile');
   const page = (await browser.pages())[0];
-  await emulate(page); // prod identity
+  // Exercise the timezone override on the EN lane — an Android phone on google.com must not carry the
+  // box's Europe/Paris clock. SCRAP_TIMEZONE stands in for the lane the scraper derives from the URL.
+  process.env.SCRAP_TIMEZONE = process.env.SCRAP_TIMEZONE || 'America/New_York';
+  await emulate(page, process.env.SCRAP_TIMEZONE); // prod identity
 
-  let critical = [];
-
-  // ---- 1. bot.sannysoft.com pass/fail table ----------------------------------------------
-  await page.goto('https://bot.sannysoft.com/', { waitUntil: 'networkidle2', timeout: 45000 });
-  await new Promise((r) => setTimeout(r, 2000));
-
-  const rows = await page.evaluate(() => {
-    const out = [];
-    document.querySelectorAll('table tr').forEach((tr) => {
-      const cells = [...tr.querySelectorAll('td')];
-      if (cells.length < 2) return;
-      const label = cells[0].innerText.trim();
-      const failed = cells.some((c) => /(^|\s)(failed|warn)(\s|$)/i.test(c.className));
-      const passed = cells.some((c) => /(^|\s)passed(\s|$)/i.test(c.className));
-      if (label && (failed || passed)) out.push({ label, status: failed ? 'FAILED' : 'passed' });
-    });
-    return out;
+  // ---- 0. network-free coherence probe (CI-authoritative) --------------------------------
+  // Runs on a local viewport-meta page (no network; navigator/screen/WebGL/Intl all resolve).
+  // A viewport meta is required to represent a real SERP: without it, mobile Chrome lays out at the
+  // legacy 980px default and innerWidth/innerHeight would not reflect the device metrics.
+  // Asserts the mobile-profile fixes: timezone override, navigator.connection, screen 400x890,
+  // inner<outer window coherence, WebGL ANGLE/Adreno string format, and the Android font (Roboto).
+  const probeHtml = '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>x</body></html>';
+  await page.goto('data:text/html,' + encodeURIComponent(probeHtml));
+  const probe = await page.evaluate(() => {
+    let gl = {};
+    try {
+      const ctx = document.createElement('canvas').getContext('webgl');
+      const ext = ctx.getExtension('WEBGL_debug_renderer_info');
+      gl = { vendor: ctx.getParameter(ext.UNMASKED_VENDOR_WEBGL), renderer: ctx.getParameter(ext.UNMASKED_RENDERER_WEBGL) };
+    } catch (e) {
+      gl = { error: String(e) };
+    }
+    const c = navigator.connection || {};
+    return {
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      language: navigator.language,
+      languages: navigator.languages,
+      intlLocale: Intl.DateTimeFormat().resolvedOptions().locale,
+      connection: { effectiveType: c.effectiveType, rtt: c.rtt, downlink: c.downlink, type: c.type },
+      screen: { width: screen.width, height: screen.height, availHeight: screen.availHeight, orientation: screen.orientation && screen.orientation.type },
+      window: { innerHeight: window.innerHeight, outerHeight: window.outerHeight },
+      gl,
+      robotoAvailable: document.fonts ? document.fonts.check('12px "Roboto"') : null,
+    };
   });
+  console.log('\n=== coherence probe (local viewport-meta page) ===');
+  console.log(JSON.stringify(probe, null, 2));
 
-  console.log('\n=== bot.sannysoft.com ===');
+  if (probe.timezone !== process.env.SCRAP_TIMEZONE) critical.push(`timezone "${probe.timezone}" != override "${process.env.SCRAP_TIMEZONE}" (host TZ leaking)`);
+  if (probe.connection.effectiveType !== '4g') critical.push(`navigator.connection.effectiveType "${probe.connection.effectiveType}" is not the mobile 4g profile`);
+  if ((probe.languages || []).some((l) => l.includes(';'))) critical.push(`navigator.languages "${JSON.stringify(probe.languages)}" leaks Accept-Language q-values`);
+  if ((probe.intlLocale || '').split('-')[0] !== (probe.language || '').split('-')[0]) critical.push(`Intl locale "${probe.intlLocale}" contradicts navigator.language "${probe.language}" (box locale leaking)`);
+  if (!/^ANGLE \(Qualcomm, Adreno/.test(probe.gl.renderer || '')) critical.push(`WebGL renderer "${probe.gl.renderer}" is not the real ANGLE/Adreno format`);
+  if (/swiftshader|llvmpipe|mesa|software/i.test(probe.gl.renderer || '')) critical.push(`WebGL renderer "${probe.gl.renderer}" still exposes a software/datacenter string`);
+  if (probe.screen.width !== 400 || probe.screen.height !== 890) critical.push(`screen ${probe.screen.width}x${probe.screen.height} != the 400x890 device profile`);
+  if (probe.window.innerHeight > probe.window.outerHeight) critical.push(`innerHeight ${probe.window.innerHeight} > outerHeight ${probe.window.outerHeight} (headless window leak)`);
+  if (probe.robotoAvailable === false) critical.push('Roboto missing on the box — canvas text renders with Linux fonts, clustering the "phone" with desktop (install fonts-roboto)');
+
+  // ---- 1. bot.sannysoft.com pass/fail table (best-effort — external site, may be down in CI) ----
+  const rows = await page
+    .goto('https://bot.sannysoft.com/', { waitUntil: 'networkidle2', timeout: 45000 })
+    .then(() => new Promise((r) => setTimeout(r, 2000)))
+    .then(() =>
+      page.evaluate(() => {
+        const out = [];
+        document.querySelectorAll('table tr').forEach((tr) => {
+          const cells = [...tr.querySelectorAll('td')];
+          if (cells.length < 2) return;
+          const label = cells[0].innerText.trim();
+          const failed = cells.some((c) => /(^|\s)(failed|warn)(\s|$)/i.test(c.className));
+          const passed = cells.some((c) => /(^|\s)passed(\s|$)/i.test(c.className));
+          if (label && (failed || passed)) out.push({ label, status: failed ? 'FAILED' : 'passed' });
+        });
+        return out;
+      }),
+    )
+    .catch((e) => {
+      console.log('\n=== bot.sannysoft.com skipped (network):', String(e.message || e), '===');
+      return [];
+    });
+
+  // Dump only: sannysoft is desktop-oriented, so mobile-correct values (0 plugins) read as "failed"
+  // there — the fatal verdict lives in the coherence + identity-coherence assertions instead.
+  console.log('\n=== bot.sannysoft.com (dump only — desktop-oriented; mobile 0-plugins reads as failed) ===');
   for (const r of rows) {
-    const flag = r.status === 'FAILED' ? (isCritical(r.label) ? '  <-- CRITICAL' : '  (non-critical)') : '';
-    console.log(`  [${r.status}] ${r.label}${flag}`);
-    if (r.status === 'FAILED' && isCritical(r.label)) critical.push(r.label);
+    console.log(`  [${r.status}] ${r.label}`);
   }
 
   // ---- 2. in-page identity coherence -----------------------------------------------------
@@ -117,6 +181,28 @@ async function main() {
     console.log(JSON.stringify({ ja3: tls.tls?.ja3, ja4: tls.tls?.ja4, http2: tls.http2?.akamai_fingerprint, ua: tls.http_version }, null, 2));
   } catch (e) {
     console.log('\n=== TLS dump skipped:', String(e.message || e), '===');
+  }
+
+  // ---- 3b. CreepJS (dump only — external scorer, async + flaky) --------------------------
+  // Surfaces the "lies" CreepJS detects (UA-says-mobile-but-X-says-desktop) and its trust score.
+  // Non-asserting on purpose: its DOM/scoring drifts and the hard verdict lives in the offline
+  // coherence probe above. Printed so a fingerprint regression is visible in the CI log.
+  try {
+    await page.goto('https://abrahamjuliot.github.io/creepjs/', { waitUntil: 'networkidle2', timeout: 60000 });
+    await new Promise((r) => setTimeout(r, 8000)); // CreepJS computes its score asynchronously
+    const creep = await page.evaluate(() => {
+      const text = document.body.innerText;
+      const lies = [...document.querySelectorAll('.lies, .bold-fail')].map((e) => e.textContent.trim()).filter(Boolean).slice(0, 25);
+      return {
+        trustScore: (text.match(/([\d.]+)\s*%/) || [])[1] || null,
+        liesCount: (text.match(/lies\s*\((\d+)\)/i) || [])[1] || null,
+        lies,
+      };
+    });
+    console.log('\n=== CreepJS (dump only — surfaces detected lies) ===');
+    console.log(JSON.stringify(creep, null, 2));
+  } catch (e) {
+    console.log('\n=== CreepJS skipped (network):', String(e.message || e), '===');
   }
 
   // ---- 4. desktop CF-fetch path (emulateDesktop) — content-safe headless hardening -------

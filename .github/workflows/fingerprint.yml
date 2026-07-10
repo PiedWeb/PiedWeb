@@ -1,0 +1,52 @@
+name: Fingerprint
+
+# Guards the stealth-browser fingerprint: launches the prod identity (launchBrowser + emulate) and
+# asserts the mobile-profile signals stay coherent — timezone, navigator.connection, screen 400x890,
+# the WebGL ANGLE/Adreno string format, and that the Android font (Roboto) is present so canvas text
+# doesn't render with Linux fonts. External scorers (sannysoft / CreepJS / tls.peet.ws) are dumped
+# best-effort; the hard verdict is the network-free coherence probe, so CI stays green when they're down.
+
+on:
+  push:
+    paths:
+      - 'packages/google/src/Puppeteer/**'
+      - 'packages/google/tests/fingerprint-check.js'
+      - '.github/workflows/fingerprint.yml'
+  pull_request:
+    paths:
+      - 'packages/google/src/Puppeteer/**'
+      - 'packages/google/tests/fingerprint-check.js'
+      - '.github/workflows/fingerprint.yml'
+
+jobs:
+  fingerprint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Chrome + Android fonts
+        run: |
+          sudo apt-get update
+          # Roboto = Android's system font; without it canvas text rasterises with Linux fonts,
+          # clustering the emulated "phone" fingerprint with desktop.
+          sudo apt-get install -y fonts-roboto fonts-noto
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+          fc-cache -f
+
+      - name: Install npm dependencies
+        run: npm install
+
+      - name: Fingerprint self-check
+        env:
+          PUPPETEER_HEADLESS: 'true'
+          CHROME_BIN: /usr/bin/google-chrome
+          FP_EXTRA: '1'
+          SCRAP_TIMEZONE: America/New_York
+        run: npm run test:fingerprint

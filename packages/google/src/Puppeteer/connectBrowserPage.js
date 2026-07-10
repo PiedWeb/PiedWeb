@@ -8,19 +8,23 @@ const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 puppeteer.use(StealthPlugin());
 
 /** @return {Promise<Page>} */
-async function connectBrowserPage(mustEmulate = true, options = {}) {
+async function connectBrowserPage(mustEmulate = true, options = {}, timezoneId = null) {
   const WsEndpoint = process.env.PUPPETEER_WS_ENDPOINT;
   /** @type {Browser} */
   const browser = await puppeteer.connect({ browserWSEndpoint: WsEndpoint, ...options });
   const pages = await browser.pages();
   if (!pages[0]) throw new Error('no page found');
   const page = pages[0];
-  if (mustEmulate) await emulate(page);
+  if (mustEmulate) await emulate(page, timezoneId);
   return page;
 }
 
-/**  @param {Page} page */
-async function emulate(page) {
+/**
+ * @param {Page} page
+ * @param {string|null} timezoneId IANA zone matching the target lane (e.g. 'Europe/Paris' for
+ *   google.fr, 'America/New_York' for google.com); the caller derives it from the target URL.
+ */
+async function emulate(page, timezoneId = null) {
   const client = await page.createCDPSession();
 
   // Derive the real Chrome version so UA, brands and fullVersionList all agree with the
@@ -60,9 +64,29 @@ async function emulate(page) {
       wow64: false,
     },
   });
+  // extraFp gates the full real-device hardening (touch/plugins/screen/timezone/connection + the
+  // 400x890 profile) so the whole bundle can be A/B'd via FP_EXTRA against the minimal-mobile
+  // baseline. The WebGL string fix below stays ungated — the old value was simply wrong.
+  const extraFp = !['0', 'false'].includes(process.env.FP_EXTRA || '');
+
+  // Timezone: an Android phone browsing google.com from the server's Europe/Paris clock is a
+  // lane/locale contradiction — Intl/Date leak the host TZ. Override to match the Accept-Language the
+  // browser was launched with. Zone comes from the caller (derived from the target URL); SCRAP_TIMEZONE
+  // overrides for tests. Baseline arm keeps the leak so the A/B isolates it.
+  const tz = process.env.SCRAP_TIMEZONE || timezoneId;
+  if (extraFp && tz) {
+    await client.send('Emulation.setTimezoneOverride', { timezoneId: tz }).catch(() => {});
+  }
+
+  // Reference profile from an amiunique capture of a genuine Adreno-750 Android phone: 400x890 @ DPR3,
+  // inner height 773 (screen minus the URL bar). The baseline arm keeps the old 360x640.
+  // NOTE: these are one real device — when rotating a per-IP profile pool, vary screen/GPU/connection
+  // together so the fleet doesn't broadcast a single shared watermark.
+  const screenW = 400;
+  const screenH = 890;
   await page.setViewport({
-    width: 360,
-    height: 640,
+    width: extraFp ? screenW : 360,
+    height: extraFp ? 773 : 640,
     deviceScaleFactor: 3,
     isMobile: true,
     hasTouch: true,
@@ -74,9 +98,8 @@ async function emulate(page) {
   // Android phone the UA claims (deviceMemory is even spec-capped at 8, so the host's 32 is a
   // dead giveaway). Align them to a plausible mobile profile, masking each getter's toString so
   // it still reads as native code.
-  // extraFp gates the two newest overrides (maxTouchPoints/plugins) so they can be A/B'd via FP_EXTRA.
-  const extraFp = !['0', 'false'].includes(process.env.FP_EXTRA || '');
-  await page.evaluateOnNewDocument((extraFp) => {
+  await page.evaluateOnNewDocument((cfg) => {
+    const { extraFp, screenW, screenH } = cfg;
     // mask a getter's toString chain so it reads as native code (defeats Proxy/defineProperty checks)
     const mask = (name, fn) => {
       Object.defineProperty(fn, 'toString', {
@@ -94,6 +117,16 @@ async function emulate(page) {
     Object.defineProperty(navigator, 'deviceMemory', { get: nativeGetter('deviceMemory', 8), configurable: true });
 
     if (extraFp) {
+      // navigator.languages leaks Accept-Language HEADER syntax: the launch flag feeds it the full
+      // "en-US,en;q=0.9" string and the q-value survives into the JS array (["en-US","en;q=0.9"]) —
+      // a value no real browser produces. Strip everything after ';' so it reads as clean lang tags.
+      try {
+        const cleanLangs = Object.freeze(navigator.languages.map((l) => l.split(';')[0]));
+        Object.defineProperty(navigator, 'languages', { get: nativeGetter('languages', cleanLangs), configurable: true });
+      } catch (e) {
+        /* navigator.languages unavailable → leave as-is */
+      }
+
       // Real Android Chrome: 5 touch points, 0 plugins. The host leaks 1 touch point, and the stealth
       // plugin injects a desktop-shaped navigator.plugins — both impossible on the phone the UA claims.
       Object.defineProperty(navigator, 'maxTouchPoints', { get: nativeGetter('maxTouchPoints', 5), configurable: true });
@@ -108,16 +141,55 @@ async function emulate(page) {
       } catch (e) {
         /* PluginArray unavailable → leave as-is */
       }
+
+      // navigator.connection: real mobile Chrome exposes a cellular 4g NetworkInformation. Headless
+      // reports desktop-shaped/absent values — a mobile UA with no cellular connection is a tell.
+      // (Fixed values; vary per-IP when rotating profiles so downlink/rtt aren't a fleet watermark.)
+      try {
+        const c = navigator.connection;
+        if (c) {
+          const defc = (k, v) => Object.defineProperty(c, k, { get: nativeGetter(k, v), configurable: true });
+          defc('effectiveType', '4g');
+          defc('rtt', 150);
+          defc('downlink', 1.6);
+          defc('downlinkMax', 100);
+          defc('saveData', false);
+          defc('type', 'cellular');
+        }
+      } catch (e) {
+        /* NetworkInformation unavailable → leave as-is */
+      }
+
+      // screen: setViewport pins screen to the visible viewport (773); a real phone's screen is the
+      // full panel (890). Pin screen + avail*/orientation to the device profile so they cohere.
+      try {
+        const dims = { width: screenW, height: screenH, availWidth: screenW, availHeight: screenH };
+        for (const k in dims) {
+          Object.defineProperty(screen, k, { get: nativeGetter(k, dims[k]), configurable: true });
+        }
+        if (screen.orientation) {
+          Object.defineProperty(screen.orientation, 'type', { get: nativeGetter('type', 'portrait-primary'), configurable: true });
+          Object.defineProperty(screen.orientation, 'angle', { get: nativeGetter('angle', 0), configurable: true });
+        }
+      } catch (e) {
+        /* screen locked down → leave as-is */
+      }
     }
 
-    // Headless reports innerHeight > outerHeight (impossible on a real window). Mobile Chrome runs
-    // effectively fullscreen, so mirror outer onto inner to keep the relationship coherent.
-    Object.defineProperty(window, 'outerWidth', { get: mask('outerWidth', () => window.innerWidth), configurable: true });
-    Object.defineProperty(window, 'outerHeight', { get: mask('outerHeight', () => window.innerHeight), configurable: true });
+    // window outer dims. Headless reports innerHeight > outerHeight (impossible on a real window).
+    // The real-profile arm reports the full panel height (outer == screen, inner < outer, like a
+    // phone with a URL bar); the baseline arm mirrors the live inner dims to kill the leak (kept as a
+    // live getter, not a document-start snapshot, so it tracks the laid-out viewport).
+    Object.defineProperty(window, 'outerWidth', { get: mask('outerWidth', () => (extraFp ? screenW : window.innerWidth)), configurable: true });
+    Object.defineProperty(window, 'outerHeight', { get: mask('outerHeight', () => (extraFp ? screenH : window.innerHeight)), configurable: true });
 
     // Headless on a server has no GPU → WebGL renders via SwiftShader/Mesa, a known datacenter
-    // signature. Report a plausible mobile GPU for the unmasked vendor/renderer params.
-    const GL = { 37445: 'Qualcomm', 37446: 'Adreno (TM) 640' }; // UNMASKED_VENDOR / UNMASKED_RENDERER
+    // signature. Report the exact real-device unmasked vendor/renderer strings. Real Chrome ALWAYS
+    // wraps these in the ANGLE grammar; the old bare "Adreno (TM) 640" was a string no real Chrome
+    // emits (format tell). CAVEAT: only these two strings are spoofed — the extension list,
+    // MAX_TEXTURE_SIZE and shader-precision formats still come from the host's SwiftShader/Mesa, so a
+    // detector reading the full param set sees an Adreno claim over a SwiftShader capability profile.
+    const GL = { 37445: 'Google Inc. (Qualcomm)', 37446: 'ANGLE (Qualcomm, Adreno (TM) 750, OpenGL ES 3.2)' };
     for (const proto of [window.WebGLRenderingContext, window.WebGL2RenderingContext]) {
       if (!proto || !proto.prototype) continue;
       const orig = proto.prototype.getParameter;
@@ -128,7 +200,7 @@ async function emulate(page) {
       Object.defineProperty(patched.toString, 'toString', { value: () => 'function toString() { [native code] }' });
       proto.prototype.getParameter = patched;
     }
-  }, extraFp);
+  }, { extraFp, screenW, screenH });
 }
 
 /**
