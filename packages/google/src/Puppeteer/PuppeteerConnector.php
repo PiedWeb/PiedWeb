@@ -104,6 +104,13 @@ class PuppeteerConnector
         if (\is_string($fpExtra) && '' !== $fpExtra) {
             $cmd .= 'FP_EXTRA='.escapeshellarg($fpExtra).' ';
         }
+        // Canvas/WebGL/audio pixel-hash poisoning A/B (independent of FP_EXTRA): PHP draws it on/off per
+        // process and connectBrowserPage.js reads it from env (default OFF, enable via '1'). Forward it so
+        // the PHP-side draw is authoritative for the cost stats; unset → JS default (off).
+        $fpCanvas = $_SERVER['FP_CANVAS'] ?? '';
+        if (\is_string($fpCanvas) && '' !== $fpCanvas) {
+            $cmd .= 'FP_CANVAS='.escapeshellarg($fpCanvas).' ';
+        }
         // Credential-auth proxy: scrap.js feeds these to page.authenticate (Chrome launched with the
         // credential-free gate can't authenticate the proxy itself). The gate is forwarded too so
         // scrap.js can route CapSolver through the SAME sticky IP as Chrome (IP-consistent enterprise
