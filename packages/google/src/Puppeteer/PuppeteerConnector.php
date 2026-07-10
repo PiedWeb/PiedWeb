@@ -119,6 +119,12 @@ class PuppeteerConnector
             $cmd .= 'PROXY_USER='.escapeshellarg($this->proxyUser).' PROXY_PASS='.escapeshellarg($this->proxyPass).' ';
             $cmd .= 'PROXY_GATE='.escapeshellarg($this->proxy).' ';
         }
+        // Own-exit lane: Chrome reaches the device via a LOCAL socks the CapSolver servers can't dial, so
+        // hand scrap.js a separate PUBLIC solver proxy that tunnels to the same device — its solve then
+        // egresses on the device IP and clears the IP-bound /sorry (a ProxyLess token would be rejected).
+        if ('' !== $this->proxySolver) {
+            $cmd .= 'PROXY_SOLVER='.escapeshellarg($this->proxySolver).' ';
+        }
         $cmd .= 'SCRAP_WAIT='.$scrapWait.' ';
         $cmd .= 'PUPPETEER_WS_ENDPOINT='.escapeshellarg($wsEndpoint).' ';
         $cmd .= 'node '.escapeshellarg($script).' '.$argsStr.' > '.escapeshellarg($outputFileLog);
@@ -203,11 +209,14 @@ class PuppeteerConnector
     }
 
     /**
-     * @param string $language  if language or proxy are changed, a new chrome will be launched
-     * @param string $proxy     credential-free gateway for --proxy-server (Chrome cannot embed creds)
-     * @param string $proxyUser proxy username (product/country/session label); scrap.js feeds it to
-     *                          page.authenticate — Chrome cannot authenticate a proxy on its own
-     * @param string $proxyPass proxy password for page.authenticate
+     * @param string $language    if language or proxy are changed, a new chrome will be launched
+     * @param string $proxy       credential-free gateway for --proxy-server (Chrome cannot embed creds)
+     * @param string $proxyUser   proxy username (product/country/session label); scrap.js feeds it to
+     *                            page.authenticate — Chrome cannot authenticate a proxy on its own
+     * @param string $proxyPass   proxy password for page.authenticate
+     * @param string $proxySolver ready-made CapSolver proxy string ("scheme:host:port:user:pass") for the
+     *                            own-exit lane — a public endpoint that egresses on the SAME device IP as
+     *                            Chrome, so the solved token clears Google's IP-bound /sorry. Empty = none
      */
     public function __construct(
         public string $language = 'fr',
@@ -217,6 +226,7 @@ class PuppeteerConnector
         // The Android font profile is for the mobile SERP lane; the Cloudflare content-fetch lane
         // presents a desktop UA, so disable it there (Android-only fonts under a Win32 UA is a mismatch).
         public bool $androidFontProfile = true,
+        public string $proxySolver = '',
     ) {
     }
 

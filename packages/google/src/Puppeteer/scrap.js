@@ -91,13 +91,22 @@ function capSolverTask(captcha) {
 }
 
 /**
- * CapSolver proxy string ("scheme:host:port:user:pass") pointing at the SAME commercial gateway and
- * sticky-session username Chrome uses, or '' on direct/own-exits (no shared gateway to bind to).
- * Chrome and CapSolver sharing the session username land on the same sticky residential IP, so the
- * solved token matches our egress IP. Chrome's socks5h is mapped to socks5 (CapSolver has no
- * remote-DNS scheme). PROXY_GATE/USER/PASS are forwarded by PuppeteerConnector on the commercial lane.
+ * CapSolver proxy string ("scheme:host:port:user:pass") so the reCAPTCHA is solved through the SAME
+ * egress IP Chrome uses — the token then matches our IP and clears Google's IP-bound /sorry.
+ *
+ * Two sources, in order:
+ *  - PROXY_SOLVER: a ready-made public proxy string (own-exit lane) — a bastion-hosted authenticated
+ *    SOCKS5 that tunnels to the exit device, so CapSolver egresses on the SAME device IP Chrome does
+ *    (Chrome reaches the device via a LOCAL socks the CapSolver servers can't, hence a separate public
+ *    endpoint). Set by PuppeteerConnector only when configured; used verbatim.
+ *  - else PROXY_GATE + PROXY_USER/PASS: the commercial gateway + sticky-session username Chrome shares.
+ * Empty on direct/own-exits-without-a-solver-proxy and hCaptcha → ProxyLess task (previous behaviour).
+ * Chrome's socks5h is mapped to socks5 (CapSolver has no remote-DNS scheme).
  */
 function capSolverProxy() {
+  const solver = process.env.PROXY_SOLVER || '';
+  if (solver !== '') return solver;
+
   const gate = process.env.PROXY_GATE || '';
   const user = process.env.PROXY_USER || '';
   if (gate === '' || user === '') return '';
