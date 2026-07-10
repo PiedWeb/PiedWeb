@@ -17,6 +17,12 @@ on:
       - 'packages/google/src/Puppeteer/**'
       - 'packages/google/tests/fingerprint-check.js'
       - '.github/workflows/fingerprint.yml'
+  # Chrome stable auto-updates; this job installs the latest each run. Without a schedule the check only
+  # fires on code changes, so an upstream Chrome update that breaks the fingerprint would go unnoticed.
+  # Weekly run (Mondays 06:00 UTC) surfaces such a regression on its own, so an agent can pick it up.
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
 
 jobs:
   fingerprint:
