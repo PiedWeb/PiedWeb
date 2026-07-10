@@ -21,7 +21,7 @@
 
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-const { launchBrowser } = require('../src/Puppeteer/launchBrowserHelper');
+const { launchBrowser, getFontConfigFile } = require('../src/Puppeteer/launchBrowserHelper');
 const { emulate, emulateDesktop } = require('../src/Puppeteer/connectBrowserPage');
 const { timezoneForUrl } = require('../src/Puppeteer/scrap');
 
@@ -63,7 +63,9 @@ async function main() {
   // inner<outer window coherence, WebGL ANGLE/Adreno string format, and the Android font (Roboto).
   const probeHtml = '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>x</body></html>';
   await page.goto('data:text/html,' + encodeURIComponent(probeHtml));
-  const probe = await page.evaluate(() => {
+  const probe = await page.evaluate(async () => {
+    const battery = navigator.getBattery ? await navigator.getBattery().catch(() => null) : null;
+    const accel = navigator.permissions ? await navigator.permissions.query({ name: 'accelerometer' }).then((p) => p.state).catch(() => null) : null;
     let gl = {};
     try {
       const ctx = document.createElement('canvas').getContext('webgl');
@@ -73,11 +75,39 @@ async function main() {
       gl = { error: String(e) };
     }
     const c = navigator.connection || {};
+    // WebGL depth: mobile Adreno reports fragment mediump float precision = 10 (SwiftShader = 23).
+    let glMediumFloat = null;
+    try {
+      const g = document.createElement('canvas').getContext('webgl');
+      const p = g.getShaderPrecisionFormat(g.FRAGMENT_SHADER, g.MEDIUM_FLOAT);
+      glMediumFloat = p && p.precision;
+    } catch (e) {
+      /* no webgl */
+    }
+    // Font-enumeration signature via width detection: Roboto (Android) must be present, and the box's
+    // Linux desktop fonts must be invisible when the Chrome-scoped Android font profile is active.
+    const fontDetect = (() => {
+      const base = ['monospace', 'sans-serif', 'serif'];
+      const ctx = document.createElement('canvas').getContext('2d');
+      const S = 'mmmmmmmmmmlli WwGg';
+      const m = (f) => {
+        ctx.font = '72px ' + f;
+        return ctx.measureText(S).width;
+      };
+      const bw = {};
+      base.forEach((b) => (bw[b] = m(b)));
+      const det = (f) => base.some((b) => m("'" + f + "'," + b) !== bw[b]);
+      return { roboto: det('Roboto'), linux: ['DejaVu Sans', 'Liberation Sans', 'Ubuntu', 'Cantarell'].filter(det) };
+    })();
     return {
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       language: navigator.language,
       languages: navigator.languages,
       intlLocale: Intl.DateTimeFormat().resolvedOptions().locale,
+      glMediumFloat,
+      fontDetect,
+      battery: battery ? { charging: battery.charging, level: battery.level } : null,
+      accel,
       connection: { effectiveType: c.effectiveType, rtt: c.rtt, downlink: c.downlink, type: c.type },
       screen: { width: screen.width, height: screen.height, availHeight: screen.availHeight, orientation: screen.orientation && screen.orientation.type },
       window: { innerHeight: window.innerHeight, outerHeight: window.outerHeight },
@@ -97,6 +127,15 @@ async function main() {
   if (probe.screen.width !== 400 || probe.screen.height !== 890) critical.push(`screen ${probe.screen.width}x${probe.screen.height} != the 400x890 device profile`);
   if (probe.window.innerHeight > probe.window.outerHeight) critical.push(`innerHeight ${probe.window.innerHeight} > outerHeight ${probe.window.outerHeight} (headless window leak)`);
   if (probe.robotoAvailable === false) critical.push('Roboto missing on the box — canvas text renders with Linux fonts, clustering the "phone" with desktop (install fonts-roboto)');
+  if (probe.glMediumFloat !== 10) critical.push(`WebGL fragment mediump float precision ${probe.glMediumFloat} != 10 (mobile GPU); SwiftShader/desktop leaking`);
+  if (!probe.fontDetect.roboto) critical.push('Roboto not detected via width probe — canvas text will not render with the Android font');
+  // Only assert "no Linux fonts" when the Android font profile is actually active (its dirs exist);
+  // on a box with a different font layout getFontConfigFile() is null and this is skipped, not failed.
+  if (getFontConfigFile() && probe.fontDetect.linux.length) {
+    critical.push(`Linux desktop fonts still visible to Chrome (${probe.fontDetect.linux.join(', ')}) — font profile not masking them`);
+  }
+  if (!probe.battery || typeof probe.battery.level !== 'number') critical.push('navigator.getBattery() absent — a phone with no BatteryManager is a headless tell');
+  if (probe.accel !== 'granted') critical.push(`accelerometer permission "${probe.accel}" != granted (headless denies motion sensors a real phone grants)`);
 
   // ---- 1. bot.sannysoft.com pass/fail table (best-effort — external site, may be down in CI) ----
   const rows = await page

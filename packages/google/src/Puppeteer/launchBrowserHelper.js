@@ -3,9 +3,34 @@ const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const { exec } = require('child_process');
 const { promisify } = require('util');
+const fs = require('fs');
+const path = require('path');
 const execAsync = promisify(exec);
 
 puppeteer.use(StealthPlugin());
+
+/**
+ * Path to the Chrome-scoped Android font profile (FONTCONFIG_FILE), or null if it should not apply.
+ * Skips when the operator already set FONTCONFIG_FILE, when opted out (SCRAP_FONT_PROFILE=0/false), or
+ * when the Android font dirs the profile references are absent (so a bare install keeps system fonts
+ * instead of ending up with no fonts at all).
+ * @return {string|null}
+ */
+function getFontConfigFile() {
+  if (process.env.FONTCONFIG_FILE) {
+    return process.env.FONTCONFIG_FILE;
+  }
+  if (['0', 'false'].includes(process.env.SCRAP_FONT_PROFILE || '')) {
+    return null;
+  }
+  const hasAndroidFonts =
+    fs.existsSync('/usr/share/fonts/truetype/roboto') && fs.existsSync('/usr/share/fonts/truetype/noto');
+  if (!hasAndroidFonts) {
+    return null;
+  }
+
+  return path.join(__dirname, 'android-fonts.conf');
+}
 
 /**
  * Tue uniquement les processus Chrome utilisant le même userDataDir
@@ -97,10 +122,19 @@ async function launchBrowser(
   }
 
   const localeEnv = getLocaleEnv(lang);
+  const fontConfigFile = getFontConfigFile();
   const options = {
     // pipe: true, // disable endpoint
-    // Pin the process locale to the lane so ICU/Intl formats in the target language, not the box's.
-    env: { ...process.env, LANG: localeEnv, LC_ALL: localeEnv, LANGUAGE: localeEnv.split('.')[0] },
+    // Pin the process locale to the lane so ICU/Intl formats in the target language, not the box's,
+    // and (when the Android fonts are present) scope Chrome's fonts to the Roboto/Noto profile so its
+    // font-enumeration fingerprint matches a real phone instead of the Linux host.
+    env: {
+      ...process.env,
+      LANG: localeEnv,
+      LC_ALL: localeEnv,
+      LANGUAGE: localeEnv.split('.')[0],
+      ...(fontConfigFile ? { FONTCONFIG_FILE: fontConfigFile } : {}),
+    },
     defaultViewport: null,
     // Startup timeout for the WS endpoint. Default 30s (unchanged); opt-in to a
     // longer value via PUPPETEER_LAUNCH_TIMEOUT to absorb slow snap cold starts.
@@ -144,4 +178,4 @@ async function launchBrowser(
   return browser;
 }
 
-module.exports = { launchBrowser };
+module.exports = { launchBrowser, getFontConfigFile };

@@ -8,14 +8,14 @@ const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 puppeteer.use(StealthPlugin());
 
 /** @return {Promise<Page>} */
-async function connectBrowserPage(mustEmulate = true, options = {}, timezoneId = null) {
+async function connectBrowserPage(mustEmulate = true, options = {}, timezoneId = null, fpSeed = '') {
   const WsEndpoint = process.env.PUPPETEER_WS_ENDPOINT;
   /** @type {Browser} */
   const browser = await puppeteer.connect({ browserWSEndpoint: WsEndpoint, ...options });
   const pages = await browser.pages();
   if (!pages[0]) throw new Error('no page found');
   const page = pages[0];
-  if (mustEmulate) await emulate(page, timezoneId);
+  if (mustEmulate) await emulate(page, timezoneId, fpSeed);
   return page;
 }
 
@@ -23,8 +23,10 @@ async function connectBrowserPage(mustEmulate = true, options = {}, timezoneId =
  * @param {Page} page
  * @param {string|null} timezoneId IANA zone matching the target lane (e.g. 'Europe/Paris' for
  *   google.fr, 'America/New_York' for google.com); the caller derives it from the target URL.
+ * @param {string} fpSeed per-egress seed (the proxy gate / 'direct') so battery + connection vary
+ *   per IP instead of being a single value shared across the whole fleet, yet stay stable per IP.
  */
-async function emulate(page, timezoneId = null) {
+async function emulate(page, timezoneId = null, fpSeed = '') {
   const client = await page.createCDPSession();
 
   // Derive the real Chrome version so UA, brands and fullVersionList all agree with the
@@ -99,7 +101,24 @@ async function emulate(page, timezoneId = null) {
   // dead giveaway). Align them to a plausible mobile profile, masking each getter's toString so
   // it still reads as native code.
   await page.evaluateOnNewDocument((cfg) => {
-    const { extraFp, screenW, screenH } = cfg;
+    const { extraFp, screenW, screenH, fpSeed } = cfg;
+    // Deterministic PRNG seeded from the egress: battery/connection stay stable for one IP but differ
+    // across IPs, so the fleet doesn't share one constant (a watermark) yet no value flickers per load.
+    const seededRandom = (() => {
+      let h = 1779033703 ^ String(fpSeed || 'seed').length;
+      for (let i = 0; i < String(fpSeed || 'seed').length; i++) {
+        h = Math.imul(h ^ String(fpSeed).charCodeAt(i), 3432918353);
+        h = (h << 13) | (h >>> 19);
+      }
+      let s = h >>> 0;
+      return () => {
+        s = (s + 0x6d2b79f5) | 0;
+        let t = Math.imul(s ^ (s >>> 15), 1 | s);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    })();
+    const pick = (arr) => arr[Math.floor(seededRandom() * arr.length)];
     // mask a getter's toString chain so it reads as native code (defeats Proxy/defineProperty checks)
     const mask = (name, fn) => {
       Object.defineProperty(fn, 'toString', {
@@ -111,6 +130,12 @@ async function emulate(page, timezoneId = null) {
       return fn;
     };
     const nativeGetter = (name, value) => mask(name, () => value);
+    // mask a plain method's toString so a patched function still reads as native code
+    const nativeFn = (fn, name) => {
+      Object.defineProperty(fn, 'toString', { value: () => `function ${name}() { [native code] }` });
+      Object.defineProperty(fn.toString, 'toString', { value: () => 'function toString() { [native code] }' });
+      return fn;
+    };
 
     Object.defineProperty(navigator, 'platform', { get: nativeGetter('platform', 'Linux armv8l'), configurable: true });
     Object.defineProperty(navigator, 'hardwareConcurrency', { get: nativeGetter('hardwareConcurrency', 8), configurable: true });
@@ -143,21 +168,89 @@ async function emulate(page, timezoneId = null) {
       }
 
       // navigator.connection: real mobile Chrome exposes a cellular 4g NetworkInformation. Headless
-      // reports desktop-shaped/absent values — a mobile UA with no cellular connection is a tell.
-      // (Fixed values; vary per-IP when rotating profiles so downlink/rtt aren't a fleet watermark.)
+      // reports desktop-shaped/absent values — a mobile UA with no cellular connection is a tell. rtt
+      // and downlink are seeded per-egress (real quantization: rtt to 25ms, downlink to 25kbps steps).
+      const rtt = pick([50, 100, 150, 200, 250, 300]);
+      const downlink = Math.round((1 + seededRandom() * 4) * 40) / 40;
       try {
         const c = navigator.connection;
         if (c) {
           const defc = (k, v) => Object.defineProperty(c, k, { get: nativeGetter(k, v), configurable: true });
           defc('effectiveType', '4g');
-          defc('rtt', 150);
-          defc('downlink', 1.6);
+          defc('rtt', rtt);
+          defc('downlink', downlink);
           defc('downlinkMax', 100);
           defc('saveData', false);
           defc('type', 'cellular');
         }
       } catch (e) {
         /* NetworkInformation unavailable → leave as-is */
+      }
+
+      // Battery: a real phone exposes navigator.getBattery(); headless does not. Seed level/charging
+      // per-egress so it is a plausible, IP-stable value rather than absent or a fleet-wide constant.
+      try {
+        const charging = seededRandom() > 0.5;
+        const level = Math.round((0.15 + seededRandom() * 0.8) * 100) / 100;
+        const battery = {
+          charging,
+          chargingTime: charging ? pick([0, 1200, 2400, 3600]) : Infinity,
+          dischargingTime: charging ? Infinity : pick([7200, 12600, 18000, 25200]),
+          level,
+          addEventListener() {},
+          removeEventListener() {},
+          dispatchEvent() {
+            return false;
+          },
+          onchargingchange: null,
+          onchargingtimechange: null,
+          ondischargingtimechange: null,
+          onlevelchange: null,
+        };
+        Object.defineProperty(navigator, 'getBattery', {
+          value: nativeFn(function getBattery() {
+            return Promise.resolve(battery);
+          }, 'getBattery'),
+          configurable: true,
+          writable: true,
+        });
+      } catch (e) {
+        /* getBattery locked down → leave as-is */
+      }
+
+      // mediaDevices.enumerateDevices: a real phone reports mic + camera + speaker (labels empty until
+      // permission granted); headless returns an empty list — a phone with no A/V hardware is a tell.
+      try {
+        if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+          const devices = [
+            { deviceId: '', kind: 'audioinput', label: '', groupId: '' },
+            { deviceId: '', kind: 'videoinput', label: '', groupId: '' },
+            { deviceId: '', kind: 'audiooutput', label: '', groupId: '' },
+          ];
+          navigator.mediaDevices.enumerateDevices = nativeFn(function enumerateDevices() {
+            return Promise.resolve(devices.map((d) => ({ ...d, toJSON: () => d })));
+          }, 'enumerateDevices');
+        }
+      } catch (e) {
+        /* mediaDevices unavailable → leave as-is */
+      }
+
+      // Sensors: a real phone grants accelerometer/gyroscope (the Generic Sensor API); headless denies
+      // them. Report 'granted' for the motion sensors so the permission surface matches a phone. Other
+      // permission names fall through to the original (which the stealth plugin already normalises).
+      try {
+        if (navigator.permissions && navigator.permissions.query) {
+          const granted = ['accelerometer', 'gyroscope', 'magnetometer', 'ambient-light-sensor'];
+          const origQuery = navigator.permissions.query.bind(navigator.permissions);
+          navigator.permissions.query = nativeFn(function query(desc) {
+            if (desc && granted.includes(desc.name)) {
+              return Promise.resolve({ state: 'granted', onchange: null, addEventListener() {}, removeEventListener() {}, dispatchEvent: () => false });
+            }
+            return origQuery(desc);
+          }, 'query');
+        }
+      } catch (e) {
+        /* permissions unavailable → leave as-is */
       }
 
       // screen: setViewport pins screen to the visible viewport (773); a real phone's screen is the
@@ -183,24 +276,82 @@ async function emulate(page, timezoneId = null) {
     Object.defineProperty(window, 'outerWidth', { get: mask('outerWidth', () => (extraFp ? screenW : window.innerWidth)), configurable: true });
     Object.defineProperty(window, 'outerHeight', { get: mask('outerHeight', () => (extraFp ? screenH : window.innerHeight)), configurable: true });
 
-    // Headless on a server has no GPU → WebGL renders via SwiftShader/Mesa, a known datacenter
-    // signature. Report the exact real-device unmasked vendor/renderer strings. Real Chrome ALWAYS
-    // wraps these in the ANGLE grammar; the old bare "Adreno (TM) 640" was a string no real Chrome
-    // emits (format tell). CAVEAT: only these two strings are spoofed — the extension list,
-    // MAX_TEXTURE_SIZE and shader-precision formats still come from the host's SwiftShader/Mesa, so a
-    // detector reading the full param set sees an Adreno claim over a SwiftShader capability profile.
-    const GL = { 37445: 'Google Inc. (Qualcomm)', 37446: 'ANGLE (Qualcomm, Adreno (TM) 750, OpenGL ES 3.2)' };
+    // WebGL: report the real Adreno-750 profile across the WHOLE enumerable param set, not just the
+    // unmasked vendor/renderer strings. Headless renders via SwiftShader, which leaks a desktop
+    // capability profile (highp mediump, extra extensions, different MAX_* limits) — a detector reading
+    // the full set sees "claims Adreno, measures SwiftShader". Values captured from a genuine Adreno-750.
+    // RESIDUAL: the actual rendered pixels (webglData image hash) still come from SwiftShader; only pixel
+    // poisoning would change that, which is a separate tradeoff (per-session uniqueness).
+    const GL_STR = { 37445: 'Google Inc. (Qualcomm)', 37446: 'ANGLE (Qualcomm, Adreno (TM) 750, OpenGL ES 3.2)' };
+    const GL_NUM = {
+      3379: 8192, // MAX_TEXTURE_SIZE
+      34076: 8192, // MAX_CUBE_MAP_TEXTURE_SIZE
+      34024: 16384, // MAX_RENDERBUFFER_SIZE
+      36347: 256, // MAX_VERTEX_UNIFORM_VECTORS
+      36349: 256, // MAX_FRAGMENT_UNIFORM_VECTORS
+      36348: 31, // MAX_VARYING_VECTORS
+      35661: 48, // MAX_COMBINED_TEXTURE_IMAGE_UNITS
+      34930: 16, // MAX_TEXTURE_IMAGE_UNITS
+      35660: 16, // MAX_VERTEX_TEXTURE_IMAGE_UNITS
+      34921: 16, // MAX_VERTEX_ATTRIBS
+      34047: 16, // MAX_TEXTURE_MAX_ANISOTROPY_EXT
+    };
+    const GL_I32 = { 3386: [16384, 16384] }; // MAX_VIEWPORT_DIMS → Int32Array
+    const GL_F32 = { 33902: [1, 8], 33901: [1, 1023] }; // ALIASED_LINE_WIDTH_RANGE / ALIASED_POINT_SIZE_RANGE → Float32Array
+    // SwiftShader lists 4 extensions Adreno lacks and misses 1 it has — reconcile to the real 32.
+    const EXT_DROP = ['EXT_frag_depth', 'EXT_shader_texture_lod', 'WEBGL_draw_buffers', 'WEBGL_polygon_mode'];
+    const EXT_ADD = 'WEBGL_blend_func_extended';
+    // Adreno fragment mediump/lowp float = 10-bit (mobile); SwiftShader reports 23 (highp everywhere),
+    // a desktop tell. Keyed "shaderType:precisionType" → [precision, rangeMin, rangeMax].
+    const PREC = {
+      '35632:36337': [10, 15, 15], // FRAGMENT_SHADER MEDIUM_FLOAT
+      '35632:36336': [10, 15, 15], // FRAGMENT_SHADER LOW_FLOAT
+      '35632:36340': [0, 15, 15], // FRAGMENT_SHADER MEDIUM_INT
+      '35632:36339': [0, 15, 15], // FRAGMENT_SHADER LOW_INT
+    };
     for (const proto of [window.WebGLRenderingContext, window.WebGL2RenderingContext]) {
       if (!proto || !proto.prototype) continue;
-      const orig = proto.prototype.getParameter;
-      const patched = function getParameter(p) {
-        return p in GL ? GL[p] : orig.apply(this, arguments);
-      };
-      Object.defineProperty(patched, 'toString', { value: () => 'function getParameter() { [native code] }' });
-      Object.defineProperty(patched.toString, 'toString', { value: () => 'function toString() { [native code] }' });
-      proto.prototype.getParameter = patched;
+
+      const origGetParam = proto.prototype.getParameter;
+      proto.prototype.getParameter = nativeFn(function getParameter(p) {
+        if (p in GL_STR) return GL_STR[p];
+        if (p in GL_NUM) return GL_NUM[p];
+        if (p in GL_I32) return new Int32Array(GL_I32[p]);
+        if (p in GL_F32) return new Float32Array(GL_F32[p]);
+        return origGetParam.apply(this, arguments);
+      }, 'getParameter');
+
+      const origGetExts = proto.prototype.getSupportedExtensions;
+      proto.prototype.getSupportedExtensions = nativeFn(function getSupportedExtensions() {
+        const out = (origGetExts.apply(this, arguments) || []).filter((e) => !EXT_DROP.includes(e));
+        if (!out.includes(EXT_ADD)) out.push(EXT_ADD);
+        return out;
+      }, 'getSupportedExtensions');
+
+      const origGetExt = proto.prototype.getExtension;
+      proto.prototype.getExtension = nativeFn(function getExtension(name) {
+        if (EXT_DROP.includes(name)) return null; // hidden → must not resolve
+        if (name === EXT_ADD) return {}; // claimed → return an object, not null
+        return origGetExt.apply(this, arguments);
+      }, 'getExtension');
+
+      const origPrec = proto.prototype.getShaderPrecisionFormat;
+      proto.prototype.getShaderPrecisionFormat = nativeFn(function getShaderPrecisionFormat(shaderType, precisionType) {
+        const r = origPrec.apply(this, arguments);
+        const spec = PREC[shaderType + ':' + precisionType];
+        if (r && spec) {
+          try {
+            Object.defineProperty(r, 'precision', { value: spec[0] });
+            Object.defineProperty(r, 'rangeMin', { value: spec[1] });
+            Object.defineProperty(r, 'rangeMax', { value: spec[2] });
+          } catch (e) {
+            /* read-only on this engine → leave the real value */
+          }
+        }
+        return r;
+      }, 'getShaderPrecisionFormat');
     }
-  }, { extraFp, screenW, screenH });
+  }, { extraFp, screenW, screenH, fpSeed });
 }
 
 /**

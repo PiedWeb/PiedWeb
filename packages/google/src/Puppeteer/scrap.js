@@ -317,7 +317,10 @@ function timezoneForUrl(u) {
 
 /**  @param {string} url */
 async function get(url, maxPages) {
-  const page = await connectBrowserPage(true, {}, timezoneForUrl(url));
+  // Seed the per-egress fingerprint (battery/connection) from the proxy gate so each IP gets a
+  // stable-but-distinct value; direct lanes (no proxy) all share the box's single real device.
+  const fpSeed = process.env.PROXY_GATE || 'direct';
+  const page = await connectBrowserPage(true, {}, timezoneForUrl(url), fpSeed);
   // Credential-auth proxy (commercial residential): Chrome launched with the credential-free gate
   // can't authenticate the proxy, so answer the challenge here. Only set for a commercial route —
   // own-exit tunnels have no PROXY_USER, so this stays off and adds no request-interception overhead.
