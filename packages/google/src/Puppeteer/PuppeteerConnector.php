@@ -207,6 +207,9 @@ class PuppeteerConnector
         public string $proxy = '',
         public string $proxyUser = '',
         public string $proxyPass = '',
+        // The Android font profile is for the mobile SERP lane; the Cloudflare content-fetch lane
+        // presents a desktop UA, so disable it there (Android-only fonts under a Win32 UA is a mismatch).
+        public bool $androidFontProfile = true,
     ) {
     }
 
@@ -322,6 +325,11 @@ class PuppeteerConnector
 
         if (! $this->isHeadless()) {
             $cmd .= 'PUPPETEER_HEADLESS=0 ';
+        }
+
+        // Desktop (CF-fetch) lane opts out of the mobile Android font profile.
+        if (! $this->androidFontProfile) {
+            $cmd .= 'SCRAP_FONT_PROFILE=0 ';
         }
 
         $safeId = (string) preg_replace('/[^A-Za-z0-9_.-]/', '_', $id);
