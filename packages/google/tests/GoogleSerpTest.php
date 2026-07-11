@@ -270,6 +270,19 @@ final class GoogleSerpTest extends TestCase
     }
 
     /**
+     * AI Overview (SGE): the direct/Chrome lane must detect it under the same `ai_overview` key the
+     * semscraper lane emits, so a keyword scraped via either lane yields the same feature. Captured in
+     * its async "search_in_progress" placeholder state (the widget streams in after page load).
+     */
+    public function testAiOverviewFeatureDetected(): void
+    {
+        $extractor = self::extractorFromFixture('serp-ai-overview');
+
+        $this->assertTrue($extractor->containsSerpFeature('ai_overview'), 'AI Overview block not detected');
+        $this->assertArrayHasKey('ai_overview', $extractor->getSerpFeatures());
+    }
+
+    /**
      * Offline feature-detection matrix across the three captured mobile SERPs. Locks in the
      * hardened, nav-tab-immune selectors so a Google DOM tweak that reintroduces false positives
      * (or drops a real block) is caught without a live request.
@@ -303,6 +316,7 @@ final class GoogleSerpTest extends TestCase
             'LocationSites' => true,
             'Video' => false,
             'PeopleAlsoAsked' => false,
+            'ai_overview' => false,
         ]];
         // "plombier ...": maps/business SERP with People-also-ask, no image/video block.
         yield 'fallback' => ['serp-fallback', [
@@ -311,6 +325,7 @@ final class GoogleSerpTest extends TestCase
             'ImagePack' => false,
             'Video' => false,
             'LocationSites' => false,
+            'ai_overview' => false,
         ]];
         // "paysage allemand": image pack + real video block + People-also-ask, no local/location.
         yield 'image-pack' => ['serp-image-pack', [
@@ -319,6 +334,7 @@ final class GoogleSerpTest extends TestCase
             'PeopleAlsoAsked' => true,
             'Local Pack' => false,
             'LocationSites' => false,
+            'ai_overview' => false,
         ]];
     }
 

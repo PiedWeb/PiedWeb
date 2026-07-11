@@ -25,6 +25,13 @@ class SERPExtractor
      */
     final public const array SERP_FEATURE_SELECTORS = [
         'Ads' => ['.//*[@id="tads"]|.//*[@id="bottomads"]'],
+        // AI Overview (SGE). Snake_case key on purpose: it stays aligned with the semscraper lane,
+        // which passes Google's raw `ai_overview` block type straight through (SemscraperMapper), and
+        // with the display map (Cadrank\Helper\SerpFeature). The widget streams in asynchronously, so
+        // both lanes see it in its "search_in_progress" placeholder state — matched here on its
+        // container's data-aim / jscontroller (structural, so locale-independent across .fr and .com;
+        // exactly one per AIO SERP, absent on non-AIO SERPs).
+        'ai_overview' => ['//*[@data-aim="1"]', '//*[@jscontroller="EYwa3d"]'],
         'ImagePack' => [
             '//*[@role="heading"][normalize-space()="Images" or normalize-space()="Image results"]',
             "//h3[starts-with(text(), 'Images correspondant')]",
