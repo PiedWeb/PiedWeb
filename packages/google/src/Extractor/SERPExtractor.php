@@ -618,20 +618,33 @@ class SERPExtractor
 
     public function getPositionsZero(): SearchResult
     {
-        $linkNodePositionZero = $this->domCrawler
-            ->filterXpath(
+        try {
+            // The snippet's own citation (inside the data-md="471" box) is the real source,
+            // even when Google renders it as a "#:~:text=" jump-to-highlight link — take it
+            // in priority. Only fall through to the next result link when the box carries none
+            // (e.g. citation hidden behind a following "mnr-c"/carousel card outside the box).
+            $linkNodePositionZero = $this->getNode([
+                '//div[@data-md="471"]//a[starts-with(@href,\'http\')][not(starts-with(@href,\'https://www.google\'))][not(starts-with(@href,\'https://support.google\'))]',
                 '//h2[text()=\'Extrait optimisé sur le Web\' or text()=\'Featured snippet from the web\']'
-                .'/following::a[starts-with(@href,\'http\')][not(starts-with(@href,\'https://www.google\'))][not(starts-with(@href,\'https://support.google\'))][not(ancestor::div[@data-md=\'78\'])][not(contains(@href,\'#:~:text=\'))][1]'
-            )
-            ->getNode(0);
+                    .'/following::a[starts-with(@href,\'http\')][not(starts-with(@href,\'https://www.google\'))][not(starts-with(@href,\'https://support.google\'))][not(ancestor::div[@data-md=\'78\'])][not(contains(@href,\'#:~:text=\'))][not(ancestor::div[contains(concat(" ",normalize-space(@class)," ")," LQCGqc ")])]',
+            ]);
+        } catch (\LogicException) {
+            $linkNodePositionZero = null;
+        }
 
-        if (! $linkNodePositionZero instanceof \DOMNode || ! $linkNodePositionZero instanceof \DOMElement) {
+        if (! $linkNodePositionZero instanceof \DOMElement) {
             file_put_contents('./debug/debug-position-zero.html', $this->html);
 
             throw new \LogicException('Google has changed its selector (position Zero)');
         }
 
-        $toReturn = new SearchResult(1, 1, $linkNodePositionZero->getAttribute('href'), $linkNodePositionZero->textContent, pixelPos: $this->getPixelPosFor($linkNodePositionZero->getNodePath() ?? ''));
+        $href = $linkNodePositionZero->getAttribute('href');
+        $fragmentPos = strpos($href, '#:~:text=');
+        if (false !== $fragmentPos) {
+            $href = substr($href, 0, $fragmentPos);
+        }
+
+        $toReturn = new SearchResult(1, 1, $href, $linkNodePositionZero->textContent, pixelPos: $this->getPixelPosFor($linkNodePositionZero->getNodePath() ?? ''));
 
         return $toReturn;
     }
