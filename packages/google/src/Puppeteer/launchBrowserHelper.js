@@ -1,11 +1,12 @@
 const { Browser } = require('puppeteer');
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-const { exec } = require('child_process');
+const { exec, execFile, spawn } = require('child_process');
 const { promisify } = require('util');
 const fs = require('fs');
 const path = require('path');
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 puppeteer.use(StealthPlugin());
 
@@ -30,6 +31,60 @@ function getFontConfigFile() {
   }
 
   return path.join(__dirname, 'android-fonts.conf');
+}
+
+/**
+ * Chrome's headless GPU process now initialises WebGL through ANGLE's Vulkan-backed SwiftShader,
+ * which enumerates WSI surface extensions via XCB even for off-screen rendering — with no X server
+ * at all that init fails (ui/gl/angle_platform_impl.cc DisplayVkXcb "xcb_connect() failed") and every
+ * WebGL context comes back null, silently defeating the getParameter/getExtension overrides in
+ * emulate() (they only patch an existing context's prototype). Xvfb supplies that X server headlessly.
+ * Skips when opted out (SCRAP_XVFB=0/false), when the operator's existing DISPLAY already answers
+ * (verified via xdpyinfo, not just presence — a stale/leftover DISPLAY pointing at a dead X server is
+ * indistinguishable from a working one by env var alone), or when Xvfb isn't installed (bare install
+ * keeps the prior no-WebGL behavior instead of failing hard).
+ * @return {Promise<{display: string, proc: import('child_process').ChildProcess}|null>}
+ */
+async function launchVirtualDisplay() {
+  if (['0', 'false'].includes(process.env.SCRAP_XVFB || '')) return null;
+  if (process.env.DISPLAY) {
+    try {
+      await execFileAsync('xdpyinfo', ['-display', process.env.DISPLAY]);
+      return null; // existing DISPLAY answers — nothing to do
+    } catch (e) {
+      /* DISPLAY set but unreachable/stale, or xdpyinfo missing — fall through and provide our own */
+    }
+  }
+  try {
+    await execFileAsync('which', ['Xvfb']);
+  } catch (e) {
+    return null;
+  }
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const n = 90 + Math.floor(Math.random() * 900);
+    if (fs.existsSync(`/tmp/.X11-unix/X${n}`)) continue;
+    const display = ':' + n;
+    const proc = spawn('Xvfb', [display, '-screen', '0', '1x1x24', '-nolisten', 'tcp'], {
+      stdio: 'ignore',
+    });
+    const ready = await new Promise((resolve) => {
+      proc.once('error', () => resolve(false));
+      proc.once('exit', () => resolve(false));
+      const check = setInterval(() => {
+        if (fs.existsSync(`/tmp/.X11-unix/X${n}`)) {
+          clearInterval(check);
+          resolve(true);
+        }
+      }, 50);
+      setTimeout(() => {
+        clearInterval(check);
+        resolve(fs.existsSync(`/tmp/.X11-unix/X${n}`));
+      }, 2000);
+    });
+    if (ready) return { display, proc };
+    proc.kill();
+  }
+  return null;
 }
 
 /**
@@ -123,6 +178,9 @@ async function launchBrowser(
 
   const localeEnv = getLocaleEnv(lang);
   const fontConfigFile = getFontConfigFile();
+  // Only the headless path needs a stand-in X server; a headed run (PUPPETEER_HEADLESS=0) is already
+  // driven from a real display.
+  const virtualDisplay = headless ? await launchVirtualDisplay() : null;
   const options = {
     // pipe: true, // disable endpoint
     // Pin the process locale to the lane so ICU/Intl formats in the target language, not the box's,
@@ -134,6 +192,7 @@ async function launchBrowser(
       LC_ALL: localeEnv,
       LANGUAGE: localeEnv.split('.')[0],
       ...(fontConfigFile ? { FONTCONFIG_FILE: fontConfigFile } : {}),
+      ...(virtualDisplay ? { DISPLAY: virtualDisplay.display } : {}),
     },
     defaultViewport: null,
     // Startup timeout for the WS endpoint. Default 30s (unchanged); opt-in to a
@@ -172,6 +231,18 @@ async function launchBrowser(
 
   /** @type {Browser} */
   const browser = await puppeteer.launch(options);
+
+  if (virtualDisplay) {
+    const stopVirtualDisplay = () => {
+      try {
+        virtualDisplay.proc.kill();
+      } catch (e) {
+        /* already gone */
+      }
+    };
+    browser.once('disconnected', stopVirtualDisplay);
+    process.once('exit', stopVirtualDisplay);
+  }
 
   console.log(await browser.wsEndpoint());
 
