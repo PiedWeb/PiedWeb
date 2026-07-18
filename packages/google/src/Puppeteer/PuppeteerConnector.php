@@ -30,6 +30,14 @@ class PuppeteerConnector
      */
     public int $lastTransferBytes = 0;
 
+    /**
+     * True when the previous get() stopped early: the page never grew and no pagination block ever
+     * appeared, so the HTML holds only the first batch of results. Callers cannot infer this from the
+     * markup — a truncated capture is well-formed, merely missing its tail — so scrap.js reports it
+     * via the SHORT_SERP marker.
+     */
+    public bool $lastShortSerp = false;
+
     public function close(): void
     {
         $id = (string) \Safe\getmypid();
@@ -148,6 +156,7 @@ class PuppeteerConnector
     {
         $this->lastCaptchaSolved = false;
         $this->lastTransferBytes = 0;
+        $this->lastShortSerp = false;
 
         $rawOutput = $this->execute(__DIR__.'/scrap.js', [$url, $maxPages]);
 
@@ -165,8 +174,9 @@ class PuppeteerConnector
             $_SERVER['PUPPETEER_HEADLESS'] = true;
         }
 
-        // NETBYTES is the outermost marker (prepended last by scrap.js), so strip it before captcha.
-        return $this->stripCaptchaSolvedMarker($this->stripNetBytesMarker($rawOutput));
+        // Strip outermost-first, matching the order scrap.js prepends them (last prepended = outermost):
+        // NETBYTES, then CAPTCHA_SOLVED, then SHORT_SERP.
+        return $this->stripShortSerpMarker($this->stripCaptchaSolvedMarker($this->stripNetBytesMarker($rawOutput)));
     }
 
     private function stripNetBytesMarker(string $rawOutput): string
@@ -191,6 +201,20 @@ class PuppeteerConnector
         $pos = strpos($rawOutput, $marker);
         if (false !== $pos) {
             $this->lastCaptchaSolved = true;
+
+            return substr($rawOutput, $pos + \strlen($marker));
+        }
+
+        return $rawOutput;
+    }
+
+    private function stripShortSerpMarker(string $rawOutput): string
+    {
+        // Same leading-noise tolerance as the other two markers.
+        $marker = "<!--SHORT_SERP-->\n";
+        $pos = strpos($rawOutput, $marker);
+        if (false !== $pos) {
+            $this->lastShortSerp = true;
 
             return substr($rawOutput, $pos + \strlen($marker));
         }

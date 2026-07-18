@@ -16,6 +16,7 @@
 const {
   findNavigationBlock,
   manageLoadMoreResultsViaInfiniteScroll,
+  manageLoadMoreResultsViaBtn,
 } = require('../src/Puppeteer/scrap');
 
 let failures = 0;
@@ -100,6 +101,27 @@ async function main() {
   // Same sequence but the page did grow: the caller must see that scrolling did the job.
   const grew = await manageLoadMoreResultsViaInfiniteScroll(pageReturning([1000, true, true]), 1);
   check('reports true when the page extended', grew === true, 'got ' + grew);
+
+  console.log('manageLoadMoreResultsViaBtn — the SHORT_SERP verdict sent to PHP');
+
+  // The truncation signature: scroll never extended (so the caller passes a wait budget) and the
+  // block never showed up. This is the only case that may reach PHP as truncated.
+  const truncated = await manageLoadMoreResultsViaBtn(pageWithBlockFromLookup(Infinity), 3, 600);
+  check('reports truncated when the page never grew and no block appeared', truncated === true, 'got ' + truncated);
+
+  // Same missing block, but scroll HAD extended the page, so the caller passes a zero budget. The
+  // block is legitimately gone from a complete page — reporting this would flag healthy SERPs.
+  const scrolled = await manageLoadMoreResultsViaBtn(pageWithBlockFromLookup(Infinity), 3, 0);
+  check('stays false when scrolling already extended the page', scrolled === false, 'got ' + scrolled);
+
+  // Block present but no next-page button: a SERP whose results genuinely end here. The block stub
+  // needs scrollIntoView because the real code scrolls to it before hunting for the button.
+  const blockOnlyPage = {
+    $: async (selector) =>
+      String(selector).includes('Page Navigation') ? { scrollIntoView: async () => {} } : null,
+  };
+  const noNextPage = await manageLoadMoreResultsViaBtn(blockOnlyPage, 3, 600);
+  check('stays false when the block exists but there is no next page', noNextPage === false, 'got ' + noNextPage);
 }
 
 main()

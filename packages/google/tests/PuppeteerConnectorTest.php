@@ -92,6 +92,68 @@ final class PuppeteerConnectorTest extends TestCase
         $this->assertTrue($connector->lastCaptchaSolved);
     }
 
+    public function testShortSerpMarkerStripsAndFlags(): void
+    {
+        $connector = new PuppeteerConnector('fr');
+        $strip = new ReflectionMethod(PuppeteerConnector::class, 'stripShortSerpMarker');
+
+        $body = (string) $strip->invoke($connector, "<!--SHORT_SERP-->\n<html>serp</html>");
+
+        $this->assertSame('<html>serp</html>', $body);
+        $this->assertTrue($connector->lastShortSerp);
+    }
+
+    public function testShortSerpFlagStaysFalseWithoutTheMarker(): void
+    {
+        // The common case by far: absence of the marker must never read as truncated.
+        $connector = new PuppeteerConnector('fr');
+        $strip = new ReflectionMethod(PuppeteerConnector::class, 'stripShortSerpMarker');
+
+        $this->assertSame('<html>serp</html>', $strip->invoke($connector, '<html>serp</html>'));
+        $this->assertFalse($connector->lastShortSerp);
+    }
+
+    public function testAllThreeMarkersStripInOrder(): void
+    {
+        // scrap.js prepends SHORT_SERP innermost, then CAPTCHA_SOLVED, then NETBYTES outermost.
+        // get() unwraps in the mirror order and must leave the document untouched.
+        $connector = new PuppeteerConnector('fr');
+        $stripNet = new ReflectionMethod(PuppeteerConnector::class, 'stripNetBytesMarker');
+        $stripCaptcha = new ReflectionMethod(PuppeteerConnector::class, 'stripCaptchaSolvedMarker');
+        $stripShort = new ReflectionMethod(PuppeteerConnector::class, 'stripShortSerpMarker');
+
+        $raw = "<!--NETBYTES:900-->\n<!--CAPTCHA_SOLVED-->\n<!--SHORT_SERP-->\n<html>serp</html>";
+        $body = (string) $stripShort->invoke(
+            $connector,
+            (string) $stripCaptcha->invoke($connector, (string) $stripNet->invoke($connector, $raw))
+        );
+
+        $this->assertSame('<html>serp</html>', $body);
+        $this->assertSame(900, $connector->lastTransferBytes);
+        $this->assertTrue($connector->lastCaptchaSolved);
+        $this->assertTrue($connector->lastShortSerp);
+    }
+
+    /** A truncated capture without a captcha is the ordinary case: only SHORT_SERP is present. */
+    public function testShortSerpMarkerStripsWithoutACaptchaMarker(): void
+    {
+        $connector = new PuppeteerConnector('fr');
+        $stripNet = new ReflectionMethod(PuppeteerConnector::class, 'stripNetBytesMarker');
+        $stripCaptcha = new ReflectionMethod(PuppeteerConnector::class, 'stripCaptchaSolvedMarker');
+        $stripShort = new ReflectionMethod(PuppeteerConnector::class, 'stripShortSerpMarker');
+
+        $raw = "<!--NETBYTES:120-->\n<!--SHORT_SERP-->\n<html>serp</html>";
+        $body = (string) $stripShort->invoke(
+            $connector,
+            (string) $stripCaptcha->invoke($connector, (string) $stripNet->invoke($connector, $raw))
+        );
+
+        $this->assertSame('<html>serp</html>', $body);
+        $this->assertSame(120, $connector->lastTransferBytes);
+        $this->assertFalse($connector->lastCaptchaSolved);
+        $this->assertTrue($connector->lastShortSerp);
+    }
+
     public function testIsValidWsEndpointAcceptsWsUrls(): void
     {
         $method = new ReflectionMethod(PuppeteerConnector::class, 'isValidWsEndpoint');

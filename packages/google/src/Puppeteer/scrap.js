@@ -137,7 +137,12 @@ if (require.main === module) {
     });
 }
 
-module.exports = { timezoneForUrl, findNavigationBlock, manageLoadMoreResultsViaInfiniteScroll };
+module.exports = {
+  timezoneForUrl,
+  findNavigationBlock,
+  manageLoadMoreResultsViaInfiniteScroll,
+  manageLoadMoreResultsViaBtn,
+};
 
 /** @param {int} ms */
 function sleep(ms) {
@@ -265,19 +270,28 @@ async function findNavigationBlock(page, waitMs) {
  * @param {Page} page
  * @param {int} maxPages
  * @param {int} navWaitMs how long to poll for the pagination block before accepting it is absent
+ * @return {Promise<boolean>} true only for the truncation signature: the page never grew AND no
+ *   pagination block ever appeared. Every other outcome (block found, button missing, detach) is
+ *   false — a SERP that legitimately has no next page must not be reported as truncated.
  */
 async function manageLoadMoreResultsViaBtn(page, maxPages, navWaitMs = 0, retriesLeft = 3) {
   try {
     let navigationBlock = await findNavigationBlock(page, navWaitMs);
     if (navigationBlock === null) {
-      // Loud on purpose. A missing pagination block is exactly how a truncated capture used to pass
-      // for a complete SERP, with nothing anywhere saying so. stderr only: stdout must stay clean for
-      // the NETBYTES/CAPTCHA_SOLVED markers, so this lands in the lane's .out log (2>&1), not in PHP.
+      // navWaitMs is 0 when continuous scroll already pulled extra batches: the block is legitimately
+      // gone on a page we know is complete, so that is not a truncation and must stay silent — a
+      // warning on every healthy SERP would bury the real ones.
+      if (navWaitMs === 0) return false;
+
+      // Loud on purpose. A missing pagination block on a page that never grew is exactly how a
+      // truncated capture used to pass for a complete SERP, with nothing anywhere saying so. stderr
+      // for the human reading lane logs; the return value carries the same verdict to PHP via the
+      // SHORT_SERP marker in get().
       console.error(
         'SHORT_SERP: no pagination block after ' + navWaitMs + 'ms — results may be a partial page',
       );
 
-      return;
+      return true;
     }
     await navigationBlock.scrollIntoView();
     await sleep(250);
@@ -293,11 +307,17 @@ async function manageLoadMoreResultsViaBtn(page, maxPages, navWaitMs = 0, retrie
       'a#pnnext',
     ].join(',');
     let moreBtn = await page.$(moreBtnSelector);
-    if (null === moreBtn) return console.error('Pas de boutons `Autres résultats`');
+    if (null === moreBtn) {
+      console.error('Pas de boutons `Autres résultats`');
+
+      // The block IS there, so the page rendered its footer: this is a SERP with no next page, not a
+      // capture that stopped early.
+      return false;
+    }
 
     await moreBtn.evaluate((el) => el.scrollIntoView({ block: 'center' }));
     await sleep(750);
-    if (!(await moreBtn.isVisible())) return;
+    if (!(await moreBtn.isVisible())) return false;
 
     // Tapping this button flips the SERP into continuous-results mode (URL gains #ip=1); Google then
     // appends the next result batches as you scroll. tap() is the honest touch event, but Google
@@ -314,8 +334,11 @@ async function manageLoadMoreResultsViaBtn(page, maxPages, navWaitMs = 0, retrie
 
     // #ip=1 is active now → the remaining pages load on scroll, exactly like native continuous
     // scroll. Reuse that loader (it caps itself at maxPages) instead of re-clicking a button that
-    // Google has already removed from the continuous-results DOM.
-    return await manageLoadMoreResultsViaInfiniteScroll(page, maxPages);
+    // Google has already removed from the continuous-results DOM. Discard its return value: it
+    // reports whether the page grew, which is NOT this function's "looks truncated" verdict.
+    await manageLoadMoreResultsViaInfiniteScroll(page, maxPages);
+
+    return false;
   } catch (e) {
     // Google's continuous scroll can detach/replace the main frame mid-pagination (navigation
     // to #ip=1) — the raw page.$ / scrollIntoView / tap calls above then throw "detached Frame".
@@ -324,7 +347,9 @@ async function manageLoadMoreResultsViaBtn(page, maxPages, navWaitMs = 0, retrie
     // is exhausted, instead of bubbling to get()'s catch and exit(1) on the whole scrape.
     const msg = String((e && e.message) || e);
     if (/detached frame|Execution context|context was destroyed|Target closed/i.test(msg)) {
-      if (retriesLeft <= 0) return; // persistent detach → keep results already loaded
+      // Persistent detach → keep the results already loaded. Not reported as truncated: the detach
+      // means continuous scroll navigated, i.e. the page WAS being extended.
+      if (retriesLeft <= 0) return false;
       await sleep(800); // let the new continuous-scroll frame attach & settle
       return await manageLoadMoreResultsViaBtn(page, maxPages, navWaitMs, retriesLeft - 1);
     }
@@ -458,11 +483,14 @@ async function get(url, maxPages) {
   // When continuous scroll already pulled extra batches the button path is moot and the block is
   // legitimately gone, so don't spend anything looking for it. Only a page that never grew is a
   // truncation suspect worth polling for — that keeps the cost off the ~99% of healthy SERPs.
-  await manageLoadMoreResultsViaBtn(page, maxPages, extendedByScroll ? 0 : 2000);
+  const looksTruncated = await manageLoadMoreResultsViaBtn(page, maxPages, extendedByScroll ? 0 : 2000);
   const content = await page.content();
   // Prepended markers (stripped by PuppeteerConnector, outermost first): NETBYTES carries the
-  // real wire bytes for this scrape; CAPTCHA_SOLVED lets PHP count solved (not just failed) captchas.
-  const withCaptcha = captchaSolved ? '<!--CAPTCHA_SOLVED-->\n' + content : content;
+  // real wire bytes for this scrape; CAPTCHA_SOLVED lets PHP count solved (not just failed) captchas;
+  // SHORT_SERP carries the scraper's own "this page stopped early" verdict, which PHP cannot infer
+  // from the HTML alone — a truncated capture is well-formed, just missing its tail.
+  const withShort = looksTruncated ? '<!--SHORT_SERP-->\n' + content : content;
+  const withCaptcha = captchaSolved ? '<!--CAPTCHA_SOLVED-->\n' + withShort : withShort;
   return '<!--NETBYTES:' + Math.round(netBytes) + '-->\n' + withCaptcha;
 }
 
