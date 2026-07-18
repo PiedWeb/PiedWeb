@@ -137,7 +137,7 @@ if (require.main === module) {
     });
 }
 
-module.exports = { timezoneForUrl };
+module.exports = { timezoneForUrl, findNavigationBlock, manageLoadMoreResultsViaInfiniteScroll };
 
 /** @param {int} ms */
 function sleep(ms) {
@@ -193,9 +193,13 @@ async function manageCookie(page) {
 /**
  * @param {Page} page
  * @param {int} maxPages
+ * @return {Promise<boolean>} whether the scroll actually grew the page at least once — the caller
+ *   uses it to tell "continuous scroll did the job" from "the page never extended", and only pays
+ *   for polling the pagination block in the second case.
  */
 async function manageLoadMoreResultsViaInfiniteScroll(page, maxPages) {
   let i = 1;
+  let extended = false;
   let retriesLeft = 3;
   // On a persistent detach (safeEvaluate returns null after its own retries), the main frame was
   // replaced by the continuous-scroll navigation. Wait for the new frame to attach and retry the
@@ -230,20 +234,51 @@ async function manageLoadMoreResultsViaInfiniteScroll(page, maxPages) {
       break;
     }
     retriesLeft = 3; // progress made → restore the full retry budget for the next iteration
+    if (isHeighten) extended = true;
     // limiter à maxPages pages
     if (!isHeighten || i >= maxPages) break;
     i++;
+  }
+
+  return extended;
+}
+
+/**
+ * Google renders the pagination block lazily, so a single lookup can miss it on a page that simply
+ * has not finished settling — under load, a slow exit, or right after the cookie tap. That miss used
+ * to end pagination on the spot and bank a first-batch-only SERP as if it were complete. Poll for a
+ * bounded window instead of giving up on the first look.
+ * @param {Page} page
+ * @param {int} waitMs how long to keep looking before declaring the block genuinely absent
+ */
+async function findNavigationBlock(page, waitMs) {
+  const deadline = Date.now() + waitMs;
+  while (true) {
+    const block = await page.$('h1 ::-p-text(Page Navigation)');
+    if (block !== null) return block;
+    if (Date.now() >= deadline) return null;
+    await sleep(300);
   }
 }
 
 /**
  * @param {Page} page
  * @param {int} maxPages
+ * @param {int} navWaitMs how long to poll for the pagination block before accepting it is absent
  */
-async function manageLoadMoreResultsViaBtn(page, maxPages, retriesLeft = 3) {
+async function manageLoadMoreResultsViaBtn(page, maxPages, navWaitMs = 0, retriesLeft = 3) {
   try {
-    let navigationBlock = await page.$('h1 ::-p-text(Page Navigation)');
-    if (navigationBlock === null) return;
+    let navigationBlock = await findNavigationBlock(page, navWaitMs);
+    if (navigationBlock === null) {
+      // Loud on purpose. A missing pagination block is exactly how a truncated capture used to pass
+      // for a complete SERP, with nothing anywhere saying so. stderr only: stdout must stay clean for
+      // the NETBYTES/CAPTCHA_SOLVED markers, so this lands in the lane's .out log (2>&1), not in PHP.
+      console.error(
+        'SHORT_SERP: no pagination block after ' + navWaitMs + 'ms — results may be a partial page',
+      );
+
+      return;
+    }
     await navigationBlock.scrollIntoView();
     await sleep(250);
 
@@ -291,7 +326,7 @@ async function manageLoadMoreResultsViaBtn(page, maxPages, retriesLeft = 3) {
     if (/detached frame|Execution context|context was destroyed|Target closed/i.test(msg)) {
       if (retriesLeft <= 0) return; // persistent detach → keep results already loaded
       await sleep(800); // let the new continuous-scroll frame attach & settle
-      return await manageLoadMoreResultsViaBtn(page, maxPages, retriesLeft - 1);
+      return await manageLoadMoreResultsViaBtn(page, maxPages, navWaitMs, retriesLeft - 1);
     }
     throw e;
   }
@@ -419,8 +454,11 @@ async function get(url, maxPages) {
     return 'captcha';
   }
   await manageCookie(page);
-  await manageLoadMoreResultsViaInfiniteScroll(page, maxPages);
-  await manageLoadMoreResultsViaBtn(page, maxPages);
+  const extendedByScroll = await manageLoadMoreResultsViaInfiniteScroll(page, maxPages);
+  // When continuous scroll already pulled extra batches the button path is moot and the block is
+  // legitimately gone, so don't spend anything looking for it. Only a page that never grew is a
+  // truncation suspect worth polling for — that keeps the cost off the ~99% of healthy SERPs.
+  await manageLoadMoreResultsViaBtn(page, maxPages, extendedByScroll ? 0 : 2000);
   const content = await page.content();
   // Prepended markers (stripped by PuppeteerConnector, outermost first): NETBYTES carries the
   // real wire bytes for this scrape; CAPTCHA_SOLVED lets PHP count solved (not just failed) captchas.
