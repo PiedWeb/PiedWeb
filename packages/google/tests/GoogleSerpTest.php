@@ -98,9 +98,8 @@ final class GoogleSerpTest extends TestCase
             $extractor = $this->getExtractor($kw);
             file_put_contents('./debug/debugExtractMaps - '.$kw.'.html', $extractor->html);
             if ([] === $extractor->getResults()) {
+                // markTestIncomplete() throws, so it ends the test on its own.
                 $this->markTestIncomplete('May google kick you, check /tmp/debug.html');
-
-                return;
             }
 
             $mapsResults = $extractor->extractBusinessResults();

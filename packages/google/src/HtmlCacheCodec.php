@@ -28,7 +28,7 @@ final class HtmlCacheCodec
         }
 
         if (\function_exists('brotli_compress')) {
-            $brotli = brotli_compress($stripped, 11); // @phpstan-ignore-line ext-brotli is optional
+            $brotli = brotli_compress($stripped, 11);
             if (\is_string($brotli) && '' !== $brotli) {
                 return $brotli;
             }
@@ -45,7 +45,7 @@ final class HtmlCacheCodec
         }
 
         if (\function_exists('brotli_uncompress')) {
-            $brotli = @brotli_uncompress($raw); // @phpstan-ignore-line ext-brotli is optional
+            $brotli = @brotli_uncompress($raw);
             if (\is_string($brotli)) {
                 return $brotli;
             }
