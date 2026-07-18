@@ -1,0 +1,19 @@
+<?php
+
+namespace Safe;
+
+/**
+ * thecodingmachine/safe documents scandir() as a bare `@return list`, which PHPStan reads as
+ * list<mixed>. Every caller then trips argument checks that expect strings — array_diff(), implode()
+ * and friends — even though scandir() only ever returns filename strings.
+ *
+ * This states the real type at the source of the imprecision, so the call sites need no casts or
+ * per-line @var band-aids. Remove it if upstream ever narrows the annotation itself.
+ *
+ * @param null|resource $context
+ *
+ * @return list<string>
+ */
+function scandir(string $directory, int $sorting_order = \SCANDIR_SORT_ASCENDING, $context = null): array
+{
+}

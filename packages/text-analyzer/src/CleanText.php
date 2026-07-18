@@ -72,7 +72,10 @@ class CleanText
         $text = Encoding::toUTF8($text);
         $text = html_entity_decode(htmlentities($text), 0, 'UTF-8');
         $text = preg_replace('#[\x00-\x1F\x7F\xA0]#u', '', $text) ?? throw new \Exception();
-        $text = html_entity_decode($text, \ENT_QUOTES | \ENT_XML1 | \ENT_HTML5, 'UTF-8');
+        // ENT_XML1 (16) and ENT_HTML5 (48) are mutually exclusive doctypes, not combinable flags, and
+        // 16 is already a subset of 48 — so the old ENT_QUOTES|ENT_XML1|ENT_HTML5 evaluated to exactly
+        // this value (51). Dropping ENT_XML1 changes nothing at runtime and states the real doctype.
+        $text = html_entity_decode($text, \ENT_QUOTES | \ENT_HTML5, 'UTF-8');
         $text = str_replace(['™', '©', '®'], ' ', $text);
         $text = str_replace(['„', '”', '“', '»', '«'], '"', $text);
         $text = str_replace(['’'], "'", $text);

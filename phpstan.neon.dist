@@ -1,5 +1,8 @@
 parameters:
     level: max
+    stubFiles:
+        # Narrows third-party annotations that are too loose to check call sites against.
+        - stubs/safe.stub
     paths:
         - packages/text-analyzer/src
         - packages/rison/src
