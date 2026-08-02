@@ -82,6 +82,16 @@ After changes: `composer test && composer stan && composer format`
 
 Each package lives in `packages/{name}/` with its own `src/` and `tests/` directories. On push to `main`, GitHub Actions splits each package to its own repo under the `piedweb/` org.
 
+Two ways the split silently publishes stale content while the job still reports success:
+
+- **Quotes in the commit message.** The split action interpolates the HEAD message into a shell
+  command; a `'` or `"` gives `sh: syntax error: unterminated quoted string`, the push never happens,
+  and the job goes green. Keep release commit messages quote-free.
+- **Tagging in the same push as the code.** The tag run clones the split repo before the `main` run
+  has finished pushing to it, so it tags the previous tip. Push to `main` first, wait for the split
+  to land, then push the tag — and since composer treats a tag reference as immutable, a tag that
+  went out stale can only be repaired by cutting the next patch version.
+
 ### Packages and Dependencies
 
 - **curl** — OOP curl wrapper (uses curl-impersonate-php). Foundation for network packages.
