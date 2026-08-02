@@ -89,8 +89,14 @@ Two ways the split silently publishes stale content while the job still reports 
   and the job goes green. Keep release commit messages quote-free.
 - **Tagging in the same push as the code.** The tag run clones the split repo before the `main` run
   has finished pushing to it, so it tags the previous tip. Push to `main` first, wait for the split
-  to land, then push the tag — and since composer treats a tag reference as immutable, a tag that
-  went out stale can only be repaired by cutting the next patch version.
+  to land, then push the tag.
+
+**Never repair a bad tag by deleting and re-pushing it** — always cut the next patch version. Stable
+versions on Packagist are immutable: a re-tag changes the split repo's reference, Packagist blocks
+the update and mails the maintainer, and composer keeps serving the originally published commit
+anyway (it pins the reference, so consumers would not pick up the new content even without the
+block). Repairing v0.1.941 that way in 2026-08 took a v0.1.942 to actually ship, and the re-tagged
+ref then had to be restored by hand to the reference Packagist still served.
 
 ### Packages and Dependencies
 
