@@ -221,6 +221,35 @@ final class GoogleSerpTest extends TestCase
     }
 
     /**
+     * Regression: the Local Pack ("Entreprises"/"Adresses"/"Lieux") renders one plain external
+     * "Site Web" link per business card. Fixture is the prod SERP for "taxi névache", where those
+     * map links took organic positions 1 and 2 (facebook.com/NAVIGHALP, taximev.fr) and pushed the
+     * real first organic result, hautesvallees.com, down to 3.
+     */
+    public function testFixtureLocalPackIsFiltered(): void
+    {
+        $extractor = self::extractorFromFixture('serp-local-pack');
+        $results = $extractor->getResults();
+
+        $this->assertTrue($extractor->containsSerpFeature('Local Pack'), 'Fixture must carry a Local Pack');
+        $this->assertNotEmpty($results);
+        $this->assertStringContainsString(
+            'hautesvallees.com',
+            $results[0]->url,
+            'Local Pack business links must not appear before real organic results'
+        );
+
+        foreach ($results as $result) {
+            $this->assertStringNotContainsString('facebook.com/NAVIGHALP', $result->url);
+            $this->assertStringNotContainsString('taximev.fr', $result->url);
+        }
+
+        // The businesses themselves stay available through the dedicated map extraction.
+        $businesses = array_map(static fn ($b) => $b->name, $extractor->extractBusinessResults());
+        $this->assertContains('VTC NAVIGHALP', $businesses);
+    }
+
+    /**
      * @return iterable<string, array{string}>
      */
     public static function fixtureProvider(): iterable

@@ -92,6 +92,21 @@ class SERPExtractor
         './/span[text()="Vidéos" or text()="Videos" or text()="À la une" or text()="Top stories"]',
     ];
 
+    /**
+     * Markers of a Local Pack block ("Entreprises" / "Adresses" / "Lieux", the map results).
+     * Each business card carries a plain external "Site Web" link — indistinguishable from an
+     * organic link on its own — so both extraction paths banked them as organic results and pushed
+     * the real #1 down (e.g. "taxi névache": two map links took positions 1-2). Matched on the
+     * enclosing result block, not on the link's ancestors: `rllt__details` is a *sibling* subtree
+     * of the "Site Web" button inside the card, never one of its ancestors.
+     */
+    private const array LOCAL_PACK_BLOCK_XPATHS = [
+        './/*[@data-viewer-entrypoint]',
+        './/*[contains(@class, "rllt__")]',
+        './/*[contains(@class, "VkpGBb")]',
+        './/*[@role="heading"][normalize-space()="Entreprises" or normalize-space()="Adresses" or normalize-space()="Lieux" or normalize-space()="Places" or normalize-space()="Businesses"]',
+    ];
+
     private readonly Crawler $domCrawler;
 
     /**
@@ -470,6 +485,17 @@ class SERPExtractor
         return \count($domains) > 2;
     }
 
+    private function isLocalPackBlock(Crawler $blockCrawler): bool
+    {
+        foreach (self::LOCAL_PACK_BLOCK_XPATHS as $xpath) {
+            if ($blockCrawler->filterXpath($xpath)->count() > 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Closest ancestor matching a top-level result block, mirroring RESULT_BLOCK_XPATHS:
      * - direct child of #rso, OR
@@ -529,11 +555,15 @@ class SERPExtractor
             throw new \Exception('Google changes his selector.');
         }
 
-        // Drop candidates inside aggregator blocks (image-pack, news, shopping).
-        // Identified structurally by their enclosing #rso/arc-srp block linking to >2 distinct domains.
+        // Drop candidates inside aggregator blocks (image-pack, news, shopping) and inside the
+        // Local Pack. Identified structurally by their enclosing #rso/arc-srp block: linking to
+        // >2 distinct domains for the former, carrying map-result markers for the latter.
         $block = $this->getEnclosingResultBlock($linkNode);
-        if ($block instanceof \DOMElement && $this->isAggregatorBlock(new Crawler($block))) {
-            return null;
+        if ($block instanceof \DOMElement) {
+            $blockCrawler = new Crawler($block);
+            if ($this->isAggregatorBlock($blockCrawler) || $this->isLocalPackBlock($blockCrawler)) {
+                return null;
+            }
         }
 
         $href = $linkNode->getAttribute('href');
