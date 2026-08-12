@@ -590,6 +590,10 @@ class SERPExtractor
             $href = substr($href, \strlen('/interstitial?url='));
         }
 
+        if (str_starts_with($href, '/goto?url=')) {
+            $href = $this->resolveGotoUrl($href);
+        }
+
         $toReturn = new SearchResult(
             organicPos: $organicPos,
             position: $position,
@@ -600,6 +604,58 @@ class SERPExtractor
         );
 
         return $toReturn;
+    }
+
+    /**
+     * Google now wraps organic result links behind an opaque `/goto?url=<token>` redirect instead
+     * of exposing the destination directly. The same token is duplicated, verbatim, right next to
+     * the real destination URL inside an inline JS data blob (used to hydrate result preview/hover
+     * cards) — either HTML-comment-escaped (`&quot;...&quot;`) or as plain JSON (`"..."`), and on
+     * either side of the token depending on which blob rendered it. Take the nearest quoted
+     * `https?://` string around any occurrence of the token in the raw HTML, skipping known
+     * non-destination hosts (favicon cache, XML namespaces). Falls back to the opaque href when no
+     * such blob is found.
+     */
+    private function resolveGotoUrl(string $href): string
+    {
+        $token = rtrim(substr($href, \strlen('/goto?url=')), '=');
+        if ('' === $token) {
+            return $href;
+        }
+
+        $best = null;
+        $bestDistance = null;
+        $searchFrom = 0;
+        while (false !== ($tokenPos = strpos($this->html, $token, $searchFrom))) {
+            $searchFrom = $tokenPos + 1;
+            $windowStart = max(0, $tokenPos - 700);
+            $window = substr($this->html, $windowStart, 700 + \strlen($token) + 700);
+            $tokenOffset = $tokenPos - $windowStart;
+
+            if (0 === preg_match_all('/(?:"|&quot;)(https?:\/\/[^"&]+)(?:"|&quot;)/', $window, $matches, \PREG_OFFSET_CAPTURE)) {
+                continue;
+            }
+
+            foreach ($matches[1] as [$candidate, $offset]) {
+                if (str_contains($candidate, 'gstatic.com') || str_contains($candidate, 'w3.org') || str_contains($candidate, 'schema.org')) {
+                    continue;
+                }
+
+                $distance = min(abs($offset - $tokenOffset), abs($offset + \strlen($candidate) - $tokenOffset));
+                if (null === $bestDistance || $distance < $bestDistance) {
+                    $bestDistance = $distance;
+                    $best = $candidate;
+                }
+            }
+        }
+
+        if (null === $best) {
+            return $href;
+        }
+
+        $decoded = json_decode('"'.$best.'"');
+
+        return \is_string($decoded) && '' !== $decoded ? $decoded : $best;
     }
 
     protected function getPixelPosFor(?string $xpath): int
