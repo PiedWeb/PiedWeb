@@ -311,6 +311,54 @@ final class GoogleSerpTest extends TestCase
     }
 
     /**
+     * The citations of a *rendered* AI Overview — serp-ai-overview was captured while the widget was
+     * still saying "An AI Overview is not available for this search", which is a real state but not
+     * the interesting one. serp-ai-overview-cited ("arolla rando zermatt", mobile FR) carries the
+     * finished widget: 22 links inside the container for 7 distinct cited pages, each appearing in
+     * the sources panel and again in its hover card, one of them also quoted in the text.
+     */
+    public function testAiOverviewCitationsAreExtractedAndDeduplicated(): void
+    {
+        $citations = self::extractorFromFixture('serp-ai-overview-cited')->getAiOverviewCitations();
+
+        $this->assertCount(6, $citations, 'the same page listed in the panel and its hover card is one citation');
+        $this->assertSame(
+            [
+                'https://www.alta-via.fr/fr/rando-glaciaire-haute-route-arolla-zermatt',
+                'https://www.odyssee-montagne.fr/arolla-zermatt.html',
+                'https://www.chamonix-zermatt.fr/fr/arolla-zermatt-ski',
+                'https://www.kazaden.com/sp-ski-de-randonnee/ac-traversee-arolla-zermatt-2108',
+                'https://www.alltrails.com/fr/randonnee/switzerland/valais/walkers-haute-route-osten-arolla-zermatt',
+                'https://www.decathlon.fr/p/mp/randonnee-en-liberte-d-arolla-a-zermatt/f8ff23af-8ce8-41c3-9dcf-c02f06ae1b53/novar',
+            ],
+            array_column($citations, 'url'),
+            'reading order: the in-text citation comes before the sources panel'
+        );
+
+        // Ranks are dense and 1-based, and Google's chrome (support/policies links, share buttons)
+        // must not have taken a slot.
+        $this->assertSame([1, 2, 3, 4, 5, 6], array_column($citations, 'pos'));
+
+        // alta-via is quoted inside the generated answer (an <a> inside a <mark>); the others are
+        // only listed as sources.
+        $this->assertTrue($citations[0]['citedInText']);
+        $this->assertSame([false, false, false, false, false], array_column(array_slice($citations, 1), 'citedInText'));
+
+        // The brand is the panel card's own label, even for the page first seen as an in-text
+        // citation — there, the link text is the quoted phrase, not a site name.
+        $this->assertSame('www.alta-via.fr', $citations[0]['brand']);
+        $this->assertSame('Odyssée Montagne', $citations[1]['brand']);
+        $this->assertSame('Decathlon', $citations[5]['brand']);
+    }
+
+    /** A SERP whose AI Overview never rendered has no citations, and says so without throwing. */
+    public function testAiOverviewWithoutCitationsYieldsAnEmptyList(): void
+    {
+        $this->assertSame([], self::extractorFromFixture('serp-ai-overview')->getAiOverviewCitations());
+        $this->assertSame([], self::extractorFromFixture('serp-primary')->getAiOverviewCitations());
+    }
+
+    /**
      * Offline feature-detection matrix across the three captured mobile SERPs. Locks in the
      * hardened, nav-tab-immune selectors so a Google DOM tweak that reintroduces false positives
      * (or drops a real block) is caught without a live request.

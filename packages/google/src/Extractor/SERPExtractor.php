@@ -658,6 +658,15 @@ class SERPExtractor
         return \is_string($decoded) && '' !== $decoded ? $decoded : $best;
     }
 
+    /**
+     * Measured pixel positions, keyed by xpath. A measurement spawns a node process against the live
+     * browser, and the AI Overview container is now asked for twice (getSerpFeatures, then
+     * getAiOverviewCitations) — the page cannot move between them, so measure it once.
+     *
+     * @var array<string, int>
+     */
+    private array $pixelPosCache = [];
+
     protected function getPixelPosFor(?string $xpath): int
     {
         if ('' === $this->wsEndpoint) {
@@ -666,6 +675,10 @@ class SERPExtractor
 
         if (\in_array($xpath, ['', null], true)) {
             return 0;
+        }
+
+        if (isset($this->pixelPosCache[$xpath])) {
+            return $this->pixelPosCache[$xpath];
         }
 
         $cmd = 'PUPPETEER_WS_ENDPOINT='.escapeshellarg($this->wsEndpoint).' '
@@ -678,7 +691,149 @@ class SERPExtractor
         /** @var string */
         $pixelPos = $output[0] ?? '0';
 
-        return (int) $pixelPos;
+        return $this->pixelPosCache[$xpath] = (int) $pixelPos;
+    }
+
+    /**
+     * The sites the AI Overview cites, deduplicated by URL, in reading order — the direct lane's
+     * counterpart to semscraper's ai_overview_panel / _citation / _citation_source blocks, emitted
+     * under the same `aiOverview` JSON key.
+     *
+     * The widget renders three link families inside its container, and they overlap: the in-text
+     * citations (an `<a>` inside a `<mark>`), the sources panel (one `<a>` per `role="listitem"`
+     * card) and the hover cards behind each in-text citation (the same URLs again). Deduplication
+     * is therefore the point, not an optimisation. Classification is structural — `mark` and
+     * `role="listitem"` are semantic HTML, unlike the obfuscated class names Google churns weekly.
+     *
+     * `citedInText` says the site is quoted inside the generated answer rather than merely listed as
+     * a source. The brand is Google's own label for the site ("Odyssée Montagne"), taken from the
+     * panel card; an in-text citation carries only the quoted phrase, so a later panel occurrence
+     * upgrades it.
+     *
+     * Every citation shares the widget's own pixel position: measuring each link costs one node
+     * process each (see getPixelPosFor) for a secondary datum, and the citation's rank already
+     * carries the ordering.
+     *
+     * @return list<array{url: string, brand: string, pos: int, pixelPos: int, citedInText: bool}>
+     */
+    public function getAiOverviewCitations(): array
+    {
+        $container = null;
+        if (! $this->exists(self::SERP_FEATURE_SELECTORS['ai_overview'], $container) || ! $container instanceof \DOMElement) {
+            return [];
+        }
+
+        $pixelPos = $this->getPixelPosFor($container->getNodePath() ?? '');
+
+        /** @var array<string, array{url: string, brand: string, pos: int, pixelPos: int, citedInText: bool, fromPanel: bool}> $citations */
+        $citations = [];
+        foreach ((new Crawler($container))->filterXPath('descendant-or-self::a[@href]') as $link) {
+            if (! $link instanceof \DOMElement) {
+                continue;
+            }
+
+            $url = $link->getAttribute('href');
+            // Only real destinations: Google's own chrome (share, privacy, "how AI Overviews work"),
+            // `#` toggles and relative /search links are not citations.
+            if (! str_starts_with($url, 'http') || str_contains(parse_url($url, \PHP_URL_HOST) ?: '', 'google.')) {
+                continue;
+            }
+
+            ['brand' => $brand, 'fromPanel' => $fromPanel, 'citedInText' => $citedInText] = $this->describeAiOverviewLink($link, $container);
+
+            if (isset($citations[$url])) {
+                $citations[$url]['citedInText'] = $citations[$url]['citedInText'] || $citedInText;
+                if ($fromPanel && ! $citations[$url]['fromPanel'] && '' !== $brand) {
+                    $citations[$url]['brand'] = $brand;
+                    $citations[$url]['fromPanel'] = true;
+                }
+
+                continue;
+            }
+
+            $citations[$url] = [
+                'url' => $url,
+                'brand' => $brand,
+                'pos' => \count($citations) + 1,
+                'pixelPos' => $pixelPos,
+                'citedInText' => $citedInText,
+                'fromPanel' => $fromPanel,
+            ];
+        }
+
+        return array_values(array_map(
+            static fn (array $citation): array => [
+                'url' => $citation['url'],
+                'brand' => $citation['brand'],
+                'pos' => $citation['pos'],
+                'pixelPos' => $citation['pixelPos'],
+                'citedInText' => $citation['citedInText'],
+            ],
+            $citations
+        ));
+    }
+
+    /**
+     * Where a citation link sits inside the AI Overview, from its ancestors up to the container.
+     *
+     * A `mark` anywhere above it means the link is quoted in the generated answer; its only label is
+     * then the quoted phrase itself, which is why a panel occurrence of the same URL overrides it.
+     * Otherwise the link belongs to a source card, and the nearest ancestor carrying any text is that
+     * card — its first text is the site's label ("Odyssée Montagne", "YouTube"). Deliberately not
+     * keyed on `role="listitem"`: only the cards Google renders in the visible carousel carry it, the
+     * rest sit in a bare div under the same `role="list"`, and that was 23% of the citations.
+     *
+     * @return array{brand: string, fromPanel: bool, citedInText: bool}
+     */
+    private function describeAiOverviewLink(\DOMElement $link, \DOMElement $container): array
+    {
+        foreach ($this->ancestorsUpTo($link, $container) as $node) {
+            if ('mark' === $node->nodeName) {
+                return ['brand' => trim(Helper::htmlToPlainText($link->textContent)), 'fromPanel' => false, 'citedInText' => true];
+            }
+        }
+
+        foreach ($this->ancestorsUpTo($link, $container) as $node) {
+            $brand = $this->firstText($node);
+            if ('' !== $brand) {
+                return ['brand' => $brand, 'fromPanel' => true, 'citedInText' => false];
+            }
+        }
+
+        return ['brand' => '', 'fromPanel' => false, 'citedInText' => false];
+    }
+
+    /**
+     * @return \Generator<int, \DOMElement> the node's ancestors, nearest first, excluding $stopAt
+     */
+    private function ancestorsUpTo(\DOMElement $node, \DOMElement $stopAt): \Generator
+    {
+        $parent = $node->parentNode;
+        while ($parent instanceof \DOMElement && $parent !== $stopAt) {
+            yield $parent;
+            $parent = $parent->parentNode;
+        }
+    }
+
+    /**
+     * A source card renders the site's label first, then the page title, then a snippet — so the
+     * first non-blank text node is the brand, without depending on the card's class names.
+     */
+    private function firstText(\DOMElement $node): string
+    {
+        $texts = (new \DOMXPath($node->ownerDocument ?? throw new \LogicException('detached node')))->query('.//text()', $node);
+        foreach ($texts instanceof \DOMNodeList ? $texts : [] as $text) {
+            if (! $text instanceof \DOMText) {
+                continue;
+            }
+
+            $value = trim(Helper::htmlToPlainText($text->textContent));
+            if ('' !== $value) {
+                return $value;
+            }
+        }
+
+        return '';
     }
 
     public function containsSerpFeature(string $serpFeatureName, int &$pos = 0): bool
@@ -810,6 +965,7 @@ class SERPExtractor
             'relatedSearches' => $this->getRelatedSearches(),
             'results' => $this->getResults(false),
             'alsoAsked' => $this->getAlsoAsked(),
+            'aiOverview' => $this->getAiOverviewCitations(),
             'businessResults' => $this->extractBusinessResults(),
         ]);
     }
