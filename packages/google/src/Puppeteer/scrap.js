@@ -78,15 +78,23 @@ async function capSolverSolve(captcha, token) {
  * gateway) and hCaptcha keep the ProxyLess task, i.e. the previous behaviour unchanged.
  */
 function capSolverTask(captcha) {
-  const proxy = captcha._vendor === 'hcaptcha' ? '' : capSolverProxy();
-  if (proxy === '') {
-    const type = captcha._vendor === 'hcaptcha' ? 'HCaptchaTaskProxyLess' : 'ReCaptchaV2TaskProxyLess';
-    const task = { type, websiteURL: captcha.url, websiteKey: captcha.sitekey };
-    if (captcha.isEnterprise) task.isEnterprise = true;
-    return task;
+  if (captcha._vendor === 'hcaptcha') {
+    return { type: 'HCaptchaTaskProxyLess', websiteURL: captcha.url, websiteKey: captcha.sitekey };
   }
-  const task = { type: 'ReCaptchaV2Task', websiteURL: captcha.url, websiteKey: captcha.sitekey, proxy };
-  if (captcha.isEnterprise) task.isEnterprise = true;
+  const proxy = capSolverProxy();
+  // Google's /sorry reCAPTCHA is Enterprise (enterprise.js, /recaptcha/enterprise/anchor): it needs the
+  // dedicated Enterprise task type AND the site-specific `s` payload, or the minted token is rejected.
+  // `isEnterprise` is anti-captcha/2captcha vocabulary CapSolver silently ignores, so the old
+  // ReCaptchaV2Task+isEnterprise solved it as a plain v2 and the token never cleared the interstitial
+  // (the plugin's own 2captcha provider forwards `s` as data-s for the same reason).
+  const kind = captcha.isEnterprise ? 'ReCaptchaV2Enterprise' : 'ReCaptchaV2';
+  const task = {
+    type: kind + ('' === proxy ? 'TaskProxyLess' : 'Task'),
+    websiteURL: captcha.url,
+    websiteKey: captcha.sitekey,
+  };
+  if ('' !== proxy) task.proxy = proxy;
+  if (captcha.isEnterprise && captcha.s) task.enterprisePayload = { s: captcha.s };
   return task;
 }
 
@@ -142,6 +150,8 @@ module.exports = {
   findNavigationBlock,
   manageLoadMoreResultsViaInfiniteScroll,
   manageLoadMoreResultsViaBtn,
+  capSolverTask,
+  detectCaptcha,
 };
 
 /** @param {int} ms */
@@ -357,13 +367,27 @@ async function manageLoadMoreResultsViaBtn(page, maxPages, navWaitMs = 0, retrie
   }
 }
 
-async function detectCaptcha(page) {
+async function detectCaptcha(page, retriesLeft = 1) {
   // The "unusual traffic" interstitial redirects to google.com/sorry/… in every UI language, so the
   // URL is a language-independent signal that catches blocks the localized body-text match misses
   // (e.g. a locale we don't string-match). The text check stays as a fallback for in-page captchas
   // served without the /sorry redirect.
   if (page.url().includes('/sorry/')) return true;
-  const content = await page.content();
+  let content;
+  try {
+    content = await page.content();
+  } catch (e) {
+    // page.content() throws "detached Frame" while Google is mid-navigation — the /sorry→SERP redirect
+    // after a solve, or continuous scroll to #ip=1. The detach is transient (a fresh page.content()
+    // targets the new main frame), so retry once before letting it bubble to get()'s catch → exit(1) →
+    // an empty output PHP re-scrapes from scratch. This was ~119 aborted scrapes/day on one lane.
+    const msg = String((e && e.message) || e);
+    if (retriesLeft > 0 && /detached frame|Execution context|context was destroyed|Target closed/i.test(msg)) {
+      await sleep(500);
+      return detectCaptcha(page, retriesLeft - 1);
+    }
+    throw e;
+  }
   return content.includes('À propos de cette page') || content.includes('About this page');
 }
 
@@ -472,8 +496,16 @@ async function get(url, maxPages) {
       console.error(error);
       return 'captcha';
     }
-    await sleep(8000);
-    captchaSolved = true;
+    // Injecting the token does NOT clear the page synchronously: Google POSTs the /sorry form and
+    // redirects to the SERP asynchronously, ~10-15s later on a residential exit. The old fixed 8s wait
+    // then set captchaSolved unconditionally while /sorry was usually still up, so the guard below
+    // re-detected it and returned 'captcha' — banking every solve as a failure (430 solves, 0 counted).
+    // Poll instead: captchaSolved becomes the real outcome (interstitial gone), bounded to ~30s.
+    for (let i = 0; i < 30 && !captchaSolved; i++) {
+      await sleep(1000);
+      if (!(await detectCaptcha(page))) captchaSolved = true;
+    }
+    if (!captchaSolved) return 'captcha';
   }
   if (await detectCaptcha(page)) {
     return 'captcha';

@@ -139,7 +139,11 @@ class PuppeteerConnector
 
         // Guard: kill scrap.js if it hangs (e.g. stuck puppeteer.connect on a dead WS endpoint).
         // Wrap in sh -c so env-var prefixes (SCRAP_WAIT=… PUPPETEER_WS_ENDPOINT=…) are parsed by the shell.
-        \Safe\exec('timeout 60 sh -c '.escapeshellarg($cmd));
+        // A captcha solve adds ~20s at the solver + ~10-15s for Google to POST /sorry and redirect, on
+        // top of the ~35s scrape — well past 60s, so the hang-guard would kill the *solved* scrape and
+        // force a full re-fetch. Give the solver-armed path room; keep the tight 60s guard otherwise.
+        $solverArmed = \is_string($solver) && '' !== $solver && 'none' !== $solver;
+        \Safe\exec('timeout '.($solverArmed ? 150 : 60).' sh -c '.escapeshellarg($cmd));
         $rawOutput = \Safe\file_get_contents($outputFileLog); // going with file io to avoid truncated output
 
         return $rawOutput;
