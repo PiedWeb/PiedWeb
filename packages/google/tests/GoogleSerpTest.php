@@ -359,6 +359,31 @@ final class GoogleSerpTest extends TestCase
     }
 
     /**
+     * The other source-card shape, and the reason `brand` is not simply the card's first text:
+     * serp-ai-overview-plain-cards ("rando champsaur valgo index") renders cards that lead with the
+     * page title instead of the site label. It is the first SERP the feature met in production, and it
+     * banked ten page titles as brands ("Balades et randonnées | Champsaur Valgaudemar – Parc National
+     * des Ecrins"). A card whose first text is the link's own aria-label carries no brand, and an empty
+     * brand is the honest answer — the host is stored either way.
+     */
+    public function testAiOverviewPlainSourceCardsCarryNoBrandRatherThanThePageTitle(): void
+    {
+        $citations = self::extractorFromFixture('serp-ai-overview-plain-cards')->getAiOverviewCitations();
+
+        $this->assertCount(10, $citations);
+
+        // The two in-text citations keep the quoted phrase; every plain card comes back brandless.
+        $this->assertSame('Champsaur Valgaudemar', $citations[0]['brand']);
+        $this->assertTrue($citations[0]['citedInText']);
+        $this->assertSame('Les Randonneurs du Champsaur Valgaudemar', $citations[1]['brand']);
+        $this->assertSame(
+            ['', '', '', '', '', '', '', ''],
+            array_column(array_slice($citations, 2), 'brand'),
+            'a page title must never be stored as a brand'
+        );
+    }
+
+    /**
      * toJson() is the contract the app imports through (SearchResultsImportJson reads `aiOverview`),
      * and semscraper's mapper reproduces this exact shape — so the key must be there, spelled this way,
      * with the fields the importer reads.

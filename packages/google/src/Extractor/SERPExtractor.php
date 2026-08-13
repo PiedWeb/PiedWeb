@@ -774,9 +774,9 @@ class SERPExtractor
      * A `mark` anywhere above it means the link is quoted in the generated answer; its only label is
      * then the quoted phrase itself, which is why a panel occurrence of the same URL overrides it.
      * Otherwise the link belongs to a source card, and the nearest ancestor carrying any text is that
-     * card — its first text is the site's label ("Odyssée Montagne", "YouTube"). Deliberately not
-     * keyed on `role="listitem"`: only the cards Google renders in the visible carousel carry it, the
-     * rest sit in a bare div under the same `role="list"`, and that was 23% of the citations.
+     * card. Deliberately not keyed on `role="listitem"`: only the cards Google renders in the visible
+     * carousel carry it, the rest sit in a bare div under the same `role="list"`, and that was 23% of
+     * the citations.
      *
      * @return array{brand: string, fromPanel: bool, citedInText: bool}
      */
@@ -791,11 +791,29 @@ class SERPExtractor
         foreach ($this->ancestorsUpTo($link, $container) as $node) {
             $brand = $this->firstText($node);
             if ('' !== $brand) {
-                return ['brand' => $brand, 'fromPanel' => true, 'citedInText' => false];
+                return ['brand' => $this->isPageTitle($brand, $link) ? '' : $brand, 'fromPanel' => true, 'citedInText' => false];
             }
         }
 
         return ['brand' => '', 'fromPanel' => false, 'citedInText' => false];
+    }
+
+    /**
+     * Google renders source cards in two shapes, and only one of them carries a site label. The rich
+     * card leads with the site ("Odyssée Montagne", "YouTube") above the page title; the plain card
+     * leads with the title itself — and taking its first text banked page titles as brands on the very
+     * first SERP that reached prod ("Balades et randonnées | Champsaur Valgaudemar – Parc National des
+     * Ecrins").
+     *
+     * The card's link carries the page title in its `aria-label` (plus a localised "Opens in new tab"),
+     * so a first text the aria-label starts with is the title, not a brand. An empty brand is the right
+     * answer there — the host is already known, and a title stored as a brand is a lie.
+     */
+    private function isPageTitle(string $brand, \DOMElement $link): bool
+    {
+        $title = trim(Helper::htmlToPlainText($link->getAttribute('aria-label')));
+
+        return '' !== $title && str_starts_with($title, $brand);
     }
 
     /**
