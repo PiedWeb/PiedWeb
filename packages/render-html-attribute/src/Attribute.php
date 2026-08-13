@@ -15,8 +15,6 @@ final class Attribute
      * Attributes holding a space separated token list : merging them concatenates
      * the tokens (duplicates removed). Every other attribute is replaced by the
      * last merged value.
-     *
-     * @var list<string>
      */
     private const array TOKEN_LIST_ATTRIBUTES = ['class', 'rel', 'aria-describedby', 'aria-labelledby'];
 
@@ -69,12 +67,9 @@ final class Attribute
 
     private static function mergeTokens(string $existing, string $new): string
     {
-        $tokens = array_unique(array_merge(
-            preg_split('/\s+/', $existing, -1, \PREG_SPLIT_NO_EMPTY) ?: [],
-            preg_split('/\s+/', $new, -1, \PREG_SPLIT_NO_EMPTY) ?: [],
-        ));
+        $tokens = preg_split('/\s+/', $existing.' '.$new, -1, \PREG_SPLIT_NO_EMPTY) ?: [];
 
-        return implode(' ', $tokens);
+        return implode(' ', array_unique($tokens));
     }
 
     public static function render(string $name, string $value = ''): string
