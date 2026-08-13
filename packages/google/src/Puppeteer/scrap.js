@@ -89,11 +89,11 @@ function capSolverTask(captcha) {
   // (the plugin's own 2captcha provider forwards `s` as data-s for the same reason).
   const kind = captcha.isEnterprise ? 'ReCaptchaV2Enterprise' : 'ReCaptchaV2';
   const task = {
-    type: kind + ('' === proxy ? 'TaskProxyLess' : 'Task'),
+    type: kind + (proxy === '' ? 'TaskProxyLess' : 'Task'),
     websiteURL: captcha.url,
     websiteKey: captcha.sitekey,
   };
-  if ('' !== proxy) task.proxy = proxy;
+  if (proxy !== '') task.proxy = proxy;
   if (captcha.isEnterprise && captcha.s) task.enterprisePayload = { s: captcha.s };
   return task;
 }

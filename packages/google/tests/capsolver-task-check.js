@@ -86,7 +86,31 @@ process.env.PROXY_SOLVER = PROXY;
   check('hcaptcha omits enterprisePayload', !('enterprisePayload' in t));
 }
 
+// 6. Plain (non-enterprise) reCAPTCHA with no proxy → the fourth type variant, ReCaptchaV2TaskProxyLess.
 delete process.env.PROXY_SOLVER;
+{
+  const t = capSolverTask({ ...base, _vendor: 'recaptcha', isEnterprise: false });
+  check('plain v2+proxyless → ReCaptchaV2TaskProxyLess', t.type === 'ReCaptchaV2TaskProxyLess');
+  check('plain v2+proxyless omits proxy', !('proxy' in t));
+  check('plain v2+proxyless sends no enterprisePayload', !('enterprisePayload' in t));
+}
+
+// 7. Commercial gateway lane (PROXY_GATE + PROXY_USER, no PROXY_SOLVER): capSolverTask must derive the
+//    egress proxy from the gate so the token is minted from Chrome's IP — enterprise task, socks5h→socks5.
+process.env.PROXY_GATE = 'socks5h://10.0.0.1:9000';
+process.env.PROXY_USER = 'cust';
+process.env.PROXY_PASS = 'pw';
+{
+  const t = capSolverTask({ ...base, _vendor: 'recaptcha', isEnterprise: true, s: 'SDATA' });
+  check('commercial gate → ReCaptchaV2EnterpriseTask', t.type === 'ReCaptchaV2EnterpriseTask');
+  check('commercial gate derives proxy (socks5h→socks5)', t.proxy === 'socks5:10.0.0.1:9000:cust:pw');
+  check('commercial gate forwards s', t.enterprisePayload && t.enterprisePayload.s === 'SDATA');
+}
+
+delete process.env.PROXY_SOLVER;
+delete process.env.PROXY_GATE;
+delete process.env.PROXY_USER;
+delete process.env.PROXY_PASS;
 
 if (failures > 0) {
   console.error('\ncapsolver-task-check: ' + failures + ' failure(s)');
