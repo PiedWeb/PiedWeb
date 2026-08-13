@@ -725,8 +725,10 @@ class SERPExtractor
 
         $pixelPos = $this->getPixelPosFor($container->getNodePath() ?? '');
 
-        /** @var array<string, array{url: string, brand: string, pos: int, pixelPos: int, citedInText: bool, fromPanel: bool}> $citations */
+        /** @var array<string, array{url: string, brand: string, pos: int, pixelPos: int, citedInText: bool}> $citations keyed by url */
         $citations = [];
+        /** @var array<string, true> $labelled urls whose brand already comes from a source card, not from a quoted phrase */
+        $labelled = [];
         foreach ((new Crawler($container))->filterXPath('descendant-or-self::a[@href]') as $link) {
             if (! $link instanceof \DOMElement) {
                 continue;
@@ -743,9 +745,9 @@ class SERPExtractor
 
             if (isset($citations[$url])) {
                 $citations[$url]['citedInText'] = $citations[$url]['citedInText'] || $citedInText;
-                if ($fromPanel && ! $citations[$url]['fromPanel'] && '' !== $brand) {
+                if ($fromPanel && '' !== $brand && ! isset($labelled[$url])) {
                     $citations[$url]['brand'] = $brand;
-                    $citations[$url]['fromPanel'] = true;
+                    $labelled[$url] = true;
                 }
 
                 continue;
@@ -757,20 +759,13 @@ class SERPExtractor
                 'pos' => \count($citations) + 1,
                 'pixelPos' => $pixelPos,
                 'citedInText' => $citedInText,
-                'fromPanel' => $fromPanel,
             ];
+            if ($fromPanel) {
+                $labelled[$url] = true;
+            }
         }
 
-        return array_values(array_map(
-            static fn (array $citation): array => [
-                'url' => $citation['url'],
-                'brand' => $citation['brand'],
-                'pos' => $citation['pos'],
-                'pixelPos' => $citation['pixelPos'],
-                'citedInText' => $citation['citedInText'],
-            ],
-            $citations
-        ));
+        return array_values($citations);
     }
 
     /**

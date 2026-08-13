@@ -359,6 +359,24 @@ final class GoogleSerpTest extends TestCase
     }
 
     /**
+     * toJson() is the contract the app imports through (SearchResultsImportJson reads `aiOverview`),
+     * and semscraper's mapper reproduces this exact shape — so the key must be there, spelled this way,
+     * with the fields the importer reads.
+     */
+    public function testToJsonCarriesTheAiOverviewCitations(): void
+    {
+        /** @var array<string, mixed> $json */
+        $json = json_decode(self::extractorFromFixture('serp-ai-overview-cited')->toJson(), true, 512, \JSON_THROW_ON_ERROR);
+
+        $this->assertArrayHasKey('aiOverview', $json);
+        $citations = $json['aiOverview'];
+        $this->assertIsArray($citations);
+        $this->assertCount(6, $citations);
+        $this->assertIsArray($citations[0]);
+        $this->assertSame(['url', 'brand', 'pos', 'pixelPos', 'citedInText'], array_keys($citations[0]));
+    }
+
+    /**
      * Offline feature-detection matrix across the three captured mobile SERPs. Locks in the
      * hardened, nav-tab-immune selectors so a Google DOM tweak that reintroduces false positives
      * (or drops a real block) is caught without a live request.
