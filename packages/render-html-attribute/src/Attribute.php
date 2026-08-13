@@ -97,7 +97,12 @@ final class Attribute
     /**
      * Previously mapAttributes.
      *
-     * @param array<int|string, string|null> $attributes
+     * merge() recurses into nested arrays, but an array has no html attribute
+     * form, so rendering one is rejected instead of emitting name="Array".
+     *
+     * @param array<int|string, mixed> $attributes
+     *
+     * @throws \InvalidArgumentException when a value cannot be rendered
      */
     public static function renderAll(array $attributes): string
     {
@@ -108,7 +113,11 @@ final class Attribute
                 continue;
             }
 
-            $result .= \is_int($name) ? self::render($value) : self::render($name, (string) $value);
+            if (! \is_scalar($value) && ! $value instanceof \Stringable) {
+                throw new \InvalidArgumentException(\sprintf('Attribute %s cannot be rendered : expected a scalar or a Stringable, got %s.', \is_int($name) ? '#'.$name : $name, get_debug_type($value)));
+            }
+
+            $result .= \is_int($name) ? self::render((string) $value) : self::render($name, (string) $value);
         }
 
         return $result;
