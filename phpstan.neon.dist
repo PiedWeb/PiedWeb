@@ -12,6 +12,7 @@ parameters:
         - packages/google/tests
         - packages/extractor/src
         - packages/composer-symlink/src
+        - packages/composer-symlink/tests
         - packages/crawler/src
         - packages/crawler/tests
         - rector.php

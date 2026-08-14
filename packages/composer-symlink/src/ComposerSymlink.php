@@ -3,18 +3,37 @@
 namespace PiedWeb\ComposerSymlink;
 
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Filesystem\Path;
 
 final class ComposerSymlink
 {
+    public readonly string $globalVendorDir;
+
     private readonly Filesystem $filesystem;
 
+    /** @var array<string, bool> global package path => still referenced by one of the projects */
+    private array $globalPackageList = [];
+
+    /** @var array<string, string> package name => version, reset for each project */
+    private array $packageVersionList = [];
+
     /**
-     * @param list<string> $projectPathList
+     * @param list<string> $projectPathList every project sharing $globalVendorDir. A project left out
+     *                                      of the list is invisible to the prune, which then deletes
+     *                                      the packages it still symlinks: pass them all, or disable
+     *                                      $pruneUnused.
+     * @param string       $globalVendorDir absolute path of the shared vendor directory
      */
     public function __construct(
         public readonly array $projectPathList,
-        public readonly string $globalVendorDir
+        string $globalVendorDir,
+        public readonly bool $pruneUnused = true,
     ) {
+        if (! Path::isAbsolute($globalVendorDir)) {
+            throw new \InvalidArgumentException(\sprintf('Global vendor dir must be an absolute path, got %s', $globalVendorDir));
+        }
+
+        $this->globalVendorDir = Path::canonicalize($globalVendorDir).'/';
         $this->filesystem = new Filesystem();
     }
 
@@ -26,11 +45,10 @@ final class ComposerSymlink
             $this->execForProject($projectPath);
         }
 
-        $this->deleteUnusedPackage();
+        if ($this->pruneUnused) {
+            $this->deleteUnusedPackage();
+        }
     }
-
-    /** @var list<array{name: string, version: string}> */
-    private array $packageListFromProject = [];
 
     private function execForProject(string $projectPath): void
     {
@@ -39,18 +57,33 @@ final class ComposerSymlink
             throw new \Exception(\sprintf('Project %s not found', $projectPath));
         }
 
+        $composerLockPath = $projectPath.'/composer.lock';
+        if (! file_exists($composerLockPath)) {
+            throw new \Exception(\sprintf('Project %s has no composer.lock', $projectPath));
+        }
+
+        $this->packageVersionList = $this->extractPackageVersionList($composerLockPath);
+
         /** @var list<string> */
         $vendorDirList = array_diff(\Safe\scandir($vendorBaseDir), ['.', '..', 'bin']);
-        /** @var array{packages: ?list<array{name: string, version: string}>, packages-dev: ?list<array{name: string, version: string}>} */
-        $composerLockData = json_decode(\Safe\file_get_contents($projectPath.'/composer.lock'), true);
-        $this->packageListFromProject = array_merge($composerLockData['packages'] ?? [], $composerLockData['packages-dev'] ?? []);
         foreach ($vendorDirList as $vendorName) {
             $this->symlinkVendorPackages($vendorBaseDir, $vendorName);
         }
     }
 
-    /** @var array<string, bool> */
-    private array $globalPackageList = [];
+    /** @return array<string, string> */
+    private function extractPackageVersionList(string $composerLockPath): array
+    {
+        /** @var array{packages?: list<array{name: string, version: string}>, packages-dev?: list<array{name: string, version: string}>} */
+        $composerLockData = json_decode(\Safe\file_get_contents($composerLockPath), true);
+
+        $packageVersionList = [];
+        foreach ([...$composerLockData['packages'] ?? [], ...$composerLockData['packages-dev'] ?? []] as $package) {
+            $packageVersionList[$package['name']] = $package['version'];
+        }
+
+        return $packageVersionList;
+    }
 
     private function listPackageSymlinked(): void
     {
@@ -81,11 +114,10 @@ final class ComposerSymlink
     private function deleteUnusedPackage(): void
     {
         foreach ($this->globalPackageList as $packagePath => $used) {
-            if (true === $used) {
+            if ($used) {
                 continue;
             }
 
-            // exec('rm -rf '.escapeshellarg($packagePath));
             $this->filesystem->remove($packagePath);
         }
     }
@@ -98,8 +130,6 @@ final class ComposerSymlink
 
         /** @var list<string> https://github.com/thecodingmachine/safe/issues/272 */
         $packageDirList = array_diff(\Safe\scandir($vendorBaseDir.$vendorName), ['.', '..']);
-        // @mkdir($this->globalVendorDir.$vendorName, 0755, true);
-        $this->filesystem->mkdir($this->globalVendorDir.$vendorName, 0755);
         foreach ($packageDirList as $packageName) {
             $this->symlinkPackage($packageName, $vendorName, $vendorBaseDir);
         }
@@ -108,23 +138,40 @@ final class ComposerSymlink
     private function symlinkPackage(string $packageName, string $vendorName, string $vendorBaseDir): void
     {
         $packagePath = $vendorBaseDir.$vendorName.'/'.$packageName;
-        $globalPackagePath = $this->globalVendorDir.$vendorName.'/'.$packageName;
-        $packageVersion = array_values(array_filter($this->packageListFromProject, static fn (array $pkg): bool => $pkg['name'] === $vendorName.'/'.$packageName))[0]['version'] ?? 'unknown';
-        $globalPackagePath .= '-'.$packageVersion;
-        $this->globalPackageList[$globalPackagePath] = true;
 
+        // Already symlinked: what the link points at is the only reliable version, composer.lock may
+        // have moved on without vendor/ being reinstalled.
         if (is_link($packagePath)) {
+            $this->keepSymlinkTarget($packagePath);
+
             return;
         }
 
+        // Absent from composer.lock (path repository, hand-vendored code): no version to key the
+        // shared copy on, and every such package would collide under a single fallback name.
+        $packageVersion = $this->packageVersionList[$vendorName.'/'.$packageName] ?? null;
+        if (null === $packageVersion) {
+            return;
+        }
+
+        $globalPackagePath = $this->globalVendorDir.$vendorName.'/'.$packageName.'-'.$packageVersion;
+        $this->globalPackageList[$globalPackagePath] = true;
+
         if (! file_exists($globalPackagePath)) {
-            // exec('cp -r '.escapeshellarg($packagePath).' '.escapeshellarg($globalPackagePath));
             $this->filesystem->mirror($packagePath, $globalPackagePath);
         }
 
-        // exec('rm -rf '.escapeshellarg($packagePath));
         $this->filesystem->remove($packagePath);
+        $this->filesystem->symlink($globalPackagePath, $packagePath);
+    }
 
-        symlink($globalPackagePath, $packagePath);
+    private function keepSymlinkTarget(string $packagePath): void
+    {
+        $target = Path::canonicalize(\Safe\readlink($packagePath));
+        if (! str_starts_with($target, $this->globalVendorDir)) {
+            return;
+        }
+
+        $this->globalPackageList[$target] = true;
     }
 }
