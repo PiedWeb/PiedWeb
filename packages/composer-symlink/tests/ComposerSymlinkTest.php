@@ -142,7 +142,7 @@ class ComposerSymlinkTest extends TestCase
     {
         $project = $this->workDir.'/project';
         $this->filesystem->dumpFile($project.'/vendor/acme/lib/File.php', 'content');
-        $this->filesystem->dumpFile($project.'/composer.lock', json_encode([
+        $this->filesystem->dumpFile($project.'/composer.lock', \Safe\json_encode([
             'packages' => [],
             'packages-dev' => [['name' => 'acme/lib', 'version' => '1.0.0']],
         ]));
@@ -219,7 +219,7 @@ class ComposerSymlinkTest extends TestCase
             }
         }
 
-        $this->filesystem->dumpFile($projectPath.'/composer.lock', json_encode(['packages' => $packages]));
+        $this->filesystem->dumpFile($projectPath.'/composer.lock', \Safe\json_encode(['packages' => $packages]));
     }
 
     private function readPackageFile(string $projectPath, string $packageName): string
