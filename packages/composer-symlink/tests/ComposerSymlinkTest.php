@@ -94,6 +94,60 @@ class ComposerSymlinkTest extends TestCase
         $this->assertSame([], $this->globalPackageList('acme'));
     }
 
+    public function testLeavesSymlinkPointingOutsideTheGlobalVendorDirAlone(): void
+    {
+        $project = $this->createProject('project', ['acme/lib' => '1.0.0']);
+        $localPackage = $this->workDir.'/local-package';
+        $this->filesystem->dumpFile($localPackage.'/File.php', 'local');
+
+        // a composer path repository already symlinks vendor/ outside the shared directory
+        $this->filesystem->remove($project.'/vendor/acme/lib');
+        $this->filesystem->symlink($localPackage, $project.'/vendor/acme/lib');
+
+        (new ComposerSymlink([$project], $this->globalVendorDir()))->exec();
+
+        $this->assertSame($localPackage, readlink($project.'/vendor/acme/lib'));
+        $this->assertSame('local', $this->readPackageFile($project, 'acme/lib'));
+        $this->assertSame([], $this->globalPackageList('acme'));
+    }
+
+    public function testSurvivesADanglingSymlink(): void
+    {
+        $project = $this->createProject('project', ['acme/lib' => '1.0.0']);
+        (new ComposerSymlink([$project], $this->globalVendorDir()))->exec();
+
+        // the state an interrupted run, or a version prior to the prune fix, leaves behind
+        $this->filesystem->remove($this->globalVendorDir().'/acme/lib-1.0.0');
+
+        (new ComposerSymlink([$project], $this->globalVendorDir()))->exec();
+
+        $this->assertTrue(is_link($project.'/vendor/acme/lib'));
+        $this->assertSame([], $this->globalPackageList('acme'));
+    }
+
+    public function testSymlinksEveryPackageOfAVendor(): void
+    {
+        $project = $this->createProject('project', ['acme/lib' => '1.0.0', 'acme/other' => '2.0.0']);
+
+        (new ComposerSymlink([$project], $this->globalVendorDir()))->exec();
+
+        $this->assertSame(['lib-1.0.0', 'other-2.0.0'], $this->globalPackageList('acme'));
+        $this->assertTrue(is_link($project.'/vendor/acme/lib'));
+        $this->assertTrue(is_link($project.'/vendor/acme/other'));
+    }
+
+    public function testAcceptsAComposerLockWithoutPackageSection(): void
+    {
+        $project = $this->workDir.'/project';
+        $this->filesystem->dumpFile($project.'/vendor/acme/lib/File.php', 'content');
+        $this->filesystem->dumpFile($project.'/composer.lock', '{}');
+
+        (new ComposerSymlink([$project], $this->globalVendorDir()))->exec();
+
+        $this->assertFalse(is_link($project.'/vendor/acme/lib'));
+        $this->assertSame([], $this->globalPackageList('acme'));
+    }
+
     public function testPrunesPackageNoLongerUsed(): void
     {
         $project = $this->createProject('project', ['acme/lib' => '1.0.0']);
