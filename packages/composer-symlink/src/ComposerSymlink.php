@@ -54,19 +54,17 @@ final class ComposerSymlink
     {
         $vendorBaseDir = $projectPath.'/vendor/';
         if (! file_exists($vendorBaseDir)) {
-            throw new \Exception(\sprintf('Project %s not found', $projectPath));
+            throw new \RuntimeException(\sprintf('Project %s not found', $projectPath));
         }
 
         $composerLockPath = $projectPath.'/composer.lock';
         if (! file_exists($composerLockPath)) {
-            throw new \Exception(\sprintf('Project %s has no composer.lock', $projectPath));
+            throw new \RuntimeException(\sprintf('Project %s has no composer.lock', $projectPath));
         }
 
         $this->packageVersionList = $this->extractPackageVersionList($composerLockPath);
 
-        /** @var list<string> */
-        $vendorDirList = array_diff(\Safe\scandir($vendorBaseDir), ['.', '..', 'bin']);
-        foreach ($vendorDirList as $vendorName) {
+        foreach ($this->scanDir($vendorBaseDir, ['bin']) as $vendorName) {
             $this->symlinkVendorPackages($vendorBaseDir, $vendorName);
         }
     }
@@ -91,16 +89,12 @@ final class ComposerSymlink
             return;
         }
 
-        /** @var list<string> */
-        $vendorList = array_diff(\Safe\scandir($this->globalVendorDir), ['.', '..']);
-        foreach ($vendorList as $vendor) {
+        foreach ($this->scanDir($this->globalVendorDir) as $vendor) {
             if (! is_dir($this->globalVendorDir.$vendor)) {
                 continue;
             }
 
-            /** @var list<string> */
-            $packageNameAndVersionList = array_diff(\Safe\scandir($this->globalVendorDir.$vendor), ['.', '..']);
-            foreach ($packageNameAndVersionList as $packageNameAndVersion) {
+            foreach ($this->scanDir($this->globalVendorDir.$vendor) as $packageNameAndVersion) {
                 $packagePath = $this->globalVendorDir.$vendor.'/'.$packageNameAndVersion;
                 if (! is_dir($packagePath)) {
                     continue;
@@ -128,11 +122,19 @@ final class ComposerSymlink
             return;
         }
 
-        /** @var list<string> https://github.com/thecodingmachine/safe/issues/272 */
-        $packageDirList = array_diff(\Safe\scandir($vendorBaseDir.$vendorName), ['.', '..']);
-        foreach ($packageDirList as $packageName) {
+        foreach ($this->scanDir($vendorBaseDir.$vendorName) as $packageName) {
             $this->symlinkPackage($packageName, $vendorName, $vendorBaseDir);
         }
+    }
+
+    /**
+     * @param list<string> $exclude
+     *
+     * @return list<string>
+     */
+    private function scanDir(string $path, array $exclude = []): array
+    {
+        return array_values(array_diff(\Safe\scandir($path), ['.', '..', ...$exclude]));
     }
 
     private function symlinkPackage(string $packageName, string $vendorName, string $vendorBaseDir): void
