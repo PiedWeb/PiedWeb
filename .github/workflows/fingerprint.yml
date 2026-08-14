@@ -40,7 +40,9 @@ jobs:
           # Roboto = Android's system font; without it canvas text rasterises with Linux fonts,
           # clustering the emulated "phone" fingerprint with desktop.
           sudo apt-get install -y fonts-roboto fonts-noto
-          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg
+          # --batch --yes: the runner image ships Chrome, so the keyring already exists and gpg would
+          # otherwise prompt "overwrite?" on /dev/tty — absent in CI, so the step dies with exit 2.
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/google-chrome.gpg
           echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
           sudo apt-get update
           sudo apt-get install -y google-chrome-stable
