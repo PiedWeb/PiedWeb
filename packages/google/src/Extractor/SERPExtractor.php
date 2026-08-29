@@ -590,8 +590,12 @@ class SERPExtractor
             $href = substr($href, \strlen('/interstitial?url='));
         }
 
-        if (str_starts_with($href, '/goto?url=')) {
-            $href = $this->resolveGotoUrl($href);
+        $gotoWrapped = str_starts_with($href, '/goto?url=');
+        $gotoResolvedInline = false;
+        if ($gotoWrapped) {
+            $resolvedHref = $this->resolveGotoUrl($href);
+            $gotoResolvedInline = $resolvedHref !== $href;
+            $href = $resolvedHref;
         }
 
         $toReturn = new SearchResult(
@@ -600,7 +604,9 @@ class SERPExtractor
             url: $href,
             title: (new Crawler($linkNode))->text('') ?: $linkNode->getAttribute('aria-label'),
             pixelPos: $this->getPixelPosFor($linkNode->getNodePath() ?? ''),
-            ads : $ads
+            ads: $ads,
+            gotoWrapped: $gotoWrapped,
+            gotoResolvedInline: $gotoResolvedInline,
         );
 
         return $toReturn;
@@ -654,8 +660,14 @@ class SERPExtractor
         }
 
         $decoded = json_decode('"'.$best.'"');
+        $destination = \is_string($decoded) && '' !== $decoded ? $decoded : $best;
+        $path = parse_url($destination, \PHP_URL_PATH);
+        $query = parse_url($destination, \PHP_URL_QUERY);
+        if ((null === $path || '' === $path || '/' === $path) && (null === $query || '' === $query)) {
+            return $href;
+        }
 
-        return \is_string($decoded) && '' !== $decoded ? $decoded : $best;
+        return $destination;
     }
 
     /**

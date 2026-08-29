@@ -82,6 +82,9 @@ final class GoogleSerpTest extends TestCase
 
         if (! $extractor->containsSerpFeature('PositionZero')) {
             $url = $results[0]->url;
+            if (str_starts_with($url, '/goto?url=')) {
+                $this->markTestIncomplete('Google returned an opaque redirect that the consuming app resolves over HTTP');
+            }
             $this->assertMatchesRegularExpression('(wikipedia.org|ligue-enseignement.be)',  $url);
             dump('Position Zero was not checked');
 
@@ -192,6 +195,39 @@ final class GoogleSerpTest extends TestCase
         $this->assertSame('blocks', $extractor->getLastExtractionMethod());
         $this->assertGreaterThanOrEqual(8, count($results));
         $this->assertStringContainsString('pagesjaunes.fr', $results[0]->url);
+    }
+
+    public function testGotoWithSpecificInlineDestinationIsResolvedAndMarked(): void
+    {
+        $html = '<html><body><script>[&quot;https://example.com/specific-page&quot;,&quot;opaque-token&quot;]</script>'
+            .'<div><div><div><a role="presentation" href="/goto?url=opaque-token"><h3>Title</h3></a></div></div></div>'
+            .'</body></html>';
+        $extractor = new SERPExtractor($html);
+        $result = $extractor->getResults(false)[0];
+
+        $this->assertSame('https://example.com/specific-page', $result->url);
+        $this->assertTrue($result->wasGotoWrapped());
+        $this->assertTrue($result->wasGotoResolvedInline());
+
+        /** @var array{results:list<array<string, mixed>>} $json */
+        $json = json_decode($extractor->toJson(), true, 512, \JSON_THROW_ON_ERROR);
+        $this->assertSame(
+            ['organicPos', 'position', 'url', 'title', 'description', 'pixelPos', 'ads'],
+            array_keys($json['results'][0]),
+            'goto provenance is internal metadata, not part of the import contract',
+        );
+    }
+
+    public function testGotoWithOnlyAnInlineDomainKeepsTheWrapperForHttpResolution(): void
+    {
+        $html = '<html><body><script>[&quot;https://example.com/&quot;,&quot;opaque-token&quot;]</script>'
+            .'<div><div><div><a role="presentation" href="/goto?url=opaque-token"><h3>Title</h3></a></div></div></div>'
+            .'</body></html>';
+        $result = (new SERPExtractor($html))->getResults(false)[0];
+
+        $this->assertSame('/goto?url=opaque-token', $result->url);
+        $this->assertTrue($result->wasGotoWrapped());
+        $this->assertFalse($result->wasGotoResolvedInline());
     }
 
     /**

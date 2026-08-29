@@ -12,6 +12,18 @@ final class SearchResult
         public string $description = '',
         public int $pixelPos = 0,
         public bool $ads = false,
+        private bool $gotoWrapped = false,
+        private bool $gotoResolvedInline = false,
     ) {
+    }
+
+    public function wasGotoWrapped(): bool
+    {
+        return $this->gotoWrapped;
+    }
+
+    public function wasGotoResolvedInline(): bool
+    {
+        return $this->gotoResolvedInline;
     }
 }
