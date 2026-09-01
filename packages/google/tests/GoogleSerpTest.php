@@ -336,9 +336,14 @@ final class GoogleSerpTest extends TestCase
         $this->assertSame('https://example.com/page', $organicResult[0]->url);
 
         $withQuestion = new SERPExtractor($feedbackOnly->html
-            .'<div class="wQiwMc related-question-pair" data-q="Quelle distance ?">Question</div>');
+            .'<div class="related-question-pair" data-q="   ">Blank</div>'
+            .'<div class="related-question-pair" data-q="Qui ?">Too short</div>'
+            .'<div class="related-question-pair" data-q="Pourquoi ?">Ten characters</div>'
+            .'<div class="related-question-pair" data-q="Où aller ?">Ten multibyte characters</div>'
+            .'<div class="related-question-pair" data-q="12345678901">Numeric</div>'
+            .'<div class="wQiwMc related-question-pair" data-q="Quel prix ?">Question</div>');
 
-        $this->assertSame(['Quelle distance ?'], $withQuestion->getAlsoAsked());
+        $this->assertSame(['Quel prix ?'], $withQuestion->getAlsoAsked());
         $this->assertTrue($withQuestion->containsSerpFeature('PeopleAlsoAsked'));
     }
 

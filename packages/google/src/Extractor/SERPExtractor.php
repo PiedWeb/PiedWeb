@@ -137,8 +137,14 @@ class SERPExtractor
         $alsoAsked = [];
         $nodes = $this->domCrawler->filterXpath('//div[contains(concat(" ", normalize-space(@class), " "), " related-question-pair ")][@data-q]');
         foreach ($nodes as $node) {
-            $alsoAsked[] = $node instanceof \DOMElement ? $node->getAttribute('data-q')
+            $question = $node instanceof \DOMElement ? $node->getAttribute('data-q')
                 : throw new \Exception();
+            $trimmedQuestion = trim($question);
+            if (mb_strlen($trimmedQuestion) < 11 || ctype_digit($trimmedQuestion)) {
+                continue;
+            }
+
+            $alsoAsked[] = $question;
         }
 
         return $alsoAsked;
