@@ -321,6 +321,27 @@ final class GoogleSerpTest extends TestCase
         );
     }
 
+    public function testAlsoAskedIgnoresUnrelatedDataQAttributes(): void
+    {
+        $feedbackOnly = new SERPExtractor('<div class="SvjEff" data-q="tour du mont blanc">Feedback</div>'
+            .'<div class="vqSUyf ECOb7c" data-q="0">Survey</div>');
+
+        $this->assertSame([], $feedbackOnly->getAlsoAsked());
+        $this->assertFalse($feedbackOnly->containsSerpFeature('PeopleAlsoAsked'));
+
+        $organicResult = (new SERPExtractor('<div id="rso"><div>'.$feedbackOnly->html
+            .'<a ping="" href="https://example.com/page"><h3>Organic result</h3></a>'
+            .'</div></div>'))->getResults();
+
+        $this->assertSame('https://example.com/page', $organicResult[0]->url);
+
+        $withQuestion = new SERPExtractor($feedbackOnly->html
+            .'<div class="wQiwMc related-question-pair" data-q="Quelle distance ?">Question</div>');
+
+        $this->assertSame(['Quelle distance ?'], $withQuestion->getAlsoAsked());
+        $this->assertTrue($withQuestion->containsSerpFeature('PeopleAlsoAsked'));
+    }
+
     /**
      * "Sites de lieux" (semscraper's `location_sites`) is a distinct block from the map Local Pack.
      * serp-primary carries a real "Sites de lieux" heading.

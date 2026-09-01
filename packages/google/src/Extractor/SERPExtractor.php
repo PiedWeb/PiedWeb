@@ -56,7 +56,7 @@ class SERPExtractor
             '//*[@role="heading"][normalize-space()="À la une" or normalize-space()="Top stories" or normalize-space()="Actualités" or normalize-space()="News"]',
         ],
         'PeopleAlsoAsked' => [
-            '//*[@data-q]',
+            '//*[contains(concat(" ", normalize-space(@class), " "), " related-question-pair ")][@data-q]',
             '//*[@role="heading"][normalize-space()="Autres questions posées" or normalize-space()="Autres questions" or normalize-space()="People also ask"]',
         ],
         'Video' => [
@@ -87,7 +87,7 @@ class SERPExtractor
     /** XPaths for SERP features to skip when extracting organic result blocks. */
     private const array SKIP_BLOCK_XPATHS = [
         './/g-scrolling-carousel',
-        './/*[@data-q]',
+        './/*[contains(concat(" ", normalize-space(@class), " "), " related-question-pair ")][@data-q]',
         './/*[contains(@class, "kp-wholepage")]',
         './/span[text()="Vidéos" or text()="Videos" or text()="À la une" or text()="Top stories"]',
     ];
@@ -135,7 +135,7 @@ class SERPExtractor
     public function getAlsoAsked(): array
     {
         $alsoAsked = [];
-        $nodes = $this->domCrawler->filterXpath('//div[@data-q]');
+        $nodes = $this->domCrawler->filterXpath('//div[contains(concat(" ", normalize-space(@class), " "), " related-question-pair ")][@data-q]');
         foreach ($nodes as $node) {
             $alsoAsked[] = $node instanceof \DOMElement ? $node->getAttribute('data-q')
                 : throw new \Exception();
