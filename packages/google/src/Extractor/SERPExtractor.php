@@ -653,6 +653,11 @@ class SERPExtractor
                     continue;
                 }
 
+                $host = parse_url($candidate, \PHP_URL_HOST);
+                if (\is_string($host) && str_starts_with($host, 'adssettings.google.')) {
+                    continue;
+                }
+
                 $distance = min(abs($offset - $tokenOffset), abs($offset + \strlen($candidate) - $tokenOffset));
                 if (null === $bestDistance || $distance < $bestDistance) {
                     $bestDistance = $distance;

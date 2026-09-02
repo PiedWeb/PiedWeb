@@ -218,6 +218,19 @@ final class GoogleSerpTest extends TestCase
         );
     }
 
+    public function testGotoIgnoresGoogleAdsSettingsAsAnInlineDestination(): void
+    {
+        $html = '<html><body><script>[&quot;https://example.com/specific-page&quot;,'
+            .'&quot;padding-padding-padding&quot;,&quot;https://adssettings.google.fr/authenticated?gsas=2&quot;,'
+            .'&quot;opaque-token&quot;]</script>'
+            .'<div><div><div><a role="presentation" href="/goto?url=opaque-token"><h3>Title</h3></a></div></div></div>'
+            .'</body></html>';
+        $result = (new SERPExtractor($html))->getResults(false)[0];
+
+        $this->assertSame('https://example.com/specific-page', $result->url);
+        $this->assertTrue($result->wasGotoResolvedInline());
+    }
+
     public function testGotoWithOnlyAnInlineDomainKeepsTheWrapperForHttpResolution(): void
     {
         $html = '<html><body><script>[&quot;https://example.com/&quot;,&quot;opaque-token&quot;]</script>'
