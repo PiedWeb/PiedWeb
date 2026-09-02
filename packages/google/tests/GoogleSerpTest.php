@@ -231,6 +231,19 @@ final class GoogleSerpTest extends TestCase
         $this->assertTrue($result->wasGotoResolvedInline());
     }
 
+    public function testGotoIgnoresAnInlineThumbnailAsTheDestination(): void
+    {
+        $html = '<html><body><script>[&quot;https://example.com/article&quot;,'
+            .'&quot;padding-padding-padding&quot;,&quot;https://cdn.example.com/thumbnail.jpg?width=1200&quot;,'
+            .'&quot;opaque-token&quot;]</script>'
+            .'<div><div><div><a role="presentation" href="/goto?url=opaque-token"><h3>Title</h3></a></div></div></div>'
+            .'</body></html>';
+        $result = (new SERPExtractor($html))->getResults(false)[0];
+
+        $this->assertSame('https://example.com/article', $result->url);
+        $this->assertTrue($result->wasGotoResolvedInline());
+    }
+
     public function testGotoWithOnlyAnInlineDomainKeepsTheWrapperForHttpResolution(): void
     {
         $html = '<html><body><script>[&quot;https://example.com/&quot;,&quot;opaque-token&quot;]</script>'

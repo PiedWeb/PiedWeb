@@ -658,6 +658,11 @@ class SERPExtractor
                     continue;
                 }
 
+                $path = parse_url($candidate, \PHP_URL_PATH);
+                if (\is_string($path) && 1 === preg_match('/\.(?:avif|gif|jpe?g|png|svg|webp)$/i', $path)) {
+                    continue;
+                }
+
                 $distance = min(abs($offset - $tokenOffset), abs($offset + \strlen($candidate) - $tokenOffset));
                 if (null === $bestDistance || $distance < $bestDistance) {
                     $bestDistance = $distance;
