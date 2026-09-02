@@ -256,6 +256,39 @@ final class GoogleSerpTest extends TestCase
         }
     }
 
+    public function testPrimaryXpathFiltersAiOverviewSources(): void
+    {
+        $html = '<div id="rso">'
+            .'<div><div data-aim="1"><a role="presentation" href="https://www.instagram.com/reel/example">'
+            .'<h3>AI Overview source</h3></a></div></div>'
+            .'<div><a role="presentation" href="https://www.ecrins-parcnational.fr/page"><h3>Organic result</h3></a></div>'
+            .'</div>';
+        $extractor = new SERPExtractor($html);
+        $results = $extractor->getResults();
+
+        $this->assertSame('xpath', $extractor->getLastExtractionMethod());
+        $this->assertCount(1, $results);
+        $this->assertSame('https://www.ecrins-parcnational.fr/page', $results[0]->url);
+        $this->assertSame(1, $results[0]->organicPos);
+    }
+
+    public function testPrimaryXpathFiltersImagePackLinks(): void
+    {
+        $html = '<div id="rso">'
+            .'<div><div role="heading">Images</div>'
+            .'<a role="presentation" href="https://contents.mediadecathlon.com/picture.jpg"><h3>Image one</h3></a>'
+            .'<a role="presentation" href="https://www.grimper.com/poutre.jpg"><h3>Image two</h3></a></div>'
+            .'<div><a role="presentation" href="https://www.approche-escalade.fr/entrainement"><h3>Organic result</h3></a></div>'
+            .'</div>';
+        $extractor = new SERPExtractor($html);
+        $results = $extractor->getResults();
+
+        $this->assertSame('xpath', $extractor->getLastExtractionMethod());
+        $this->assertCount(1, $results);
+        $this->assertSame('https://www.approche-escalade.fr/entrainement', $results[0]->url);
+        $this->assertSame(1, $results[0]->organicPos);
+    }
+
     /**
      * Regression: the Local Pack ("Entreprises"/"Adresses"/"Lieux") renders one plain external
      * "Site Web" link per business card. Fixture is the prod SERP for "taxi névache", where those

@@ -86,6 +86,8 @@ class SERPExtractor
 
     /** XPaths for SERP features to skip when extracting organic result blocks. */
     private const array SKIP_BLOCK_XPATHS = [
+        'descendant-or-self::*[@data-aim="1" or @jscontroller="EYwa3d"]',
+        'descendant-or-self::*[@role="heading"][normalize-space()="Images" or normalize-space()="Image results"]',
         './/g-scrolling-carousel',
         './/*[contains(concat(" ", normalize-space(@class), " "), " related-question-pair ")][@data-q]',
         './/*[contains(@class, "kp-wholepage")]',
@@ -461,7 +463,7 @@ class SERPExtractor
             }
         }
 
-        return $this->isAggregatorBlock($blockCrawler);
+        return $this->isAggregatorBlock($blockCrawler) || $this->isLocalPackBlock($blockCrawler);
     }
 
     /**
@@ -561,13 +563,11 @@ class SERPExtractor
             throw new \Exception('Google changes his selector.');
         }
 
-        // Drop candidates inside aggregator blocks (image-pack, news, shopping) and inside the
-        // Local Pack. Identified structurally by their enclosing #rso/arc-srp block: linking to
-        // >2 distinct domains for the former, carrying map-result markers for the latter.
+        // Drop candidates inside special SERP blocks identified from their enclosing #rso/arc-srp block.
         $block = $this->getEnclosingResultBlock($linkNode);
         if ($block instanceof \DOMElement) {
             $blockCrawler = new Crawler($block);
-            if ($this->isAggregatorBlock($blockCrawler) || $this->isLocalPackBlock($blockCrawler)) {
+            if ($this->isSkippableBlock($blockCrawler)) {
                 return null;
             }
         }
