@@ -175,6 +175,21 @@ final class PuppeteerConnectorTest extends TestCase
         $this->assertFalse($method->invoke(null, ''));
     }
 
+    public function testWsEndpointReachabilityRejectsADeadCachedBrowser(): void
+    {
+        $server = stream_socket_server('tcp://127.0.0.1:0', $errorCode, $errorMessage);
+        $this->assertIsResource($server, $errorMessage);
+        $address = stream_socket_get_name($server, false);
+        $this->assertIsString($address);
+        $endpoint = 'ws://'.$address.'/devtools/browser/test';
+        $connector = new PuppeteerConnector();
+        $method = new ReflectionMethod(PuppeteerConnector::class, 'isReachableWsEndpoint');
+
+        $this->assertTrue($method->invoke($connector, $endpoint));
+        fclose($server);
+        $this->assertFalse($method->invoke($connector, $endpoint));
+    }
+
     public function testExitProfileBaseDefaultAndOverride(): void
     {
         $method = (new ReflectionMethod(PuppeteerConnector::class, 'exitProfileBase'));

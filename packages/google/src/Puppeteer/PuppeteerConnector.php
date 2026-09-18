@@ -345,11 +345,14 @@ class PuppeteerConnector
         $proxy = $this->effectiveProxy(); // '' when no proxy or a dead one → direct-egress fallback
         $id = \Safe\getmypid().'-'.$this->language.'-'.$proxy.('' !== $exitIp ? '-'.$exitIp : '');
 
-        if (isset(static::$wsEndpointList[$id])) {
+        if (isset(static::$wsEndpointList[$id])
+            && (! $create || $this->isReachableWsEndpoint(static::$wsEndpointList[$id]))) {
             self::$lastWsEndpointUsed = static::$wsEndpointList[$id];
 
             return static::$wsEndpointList[$id];
         }
+
+        unset(static::$wsEndpointList[$id]);
 
         if (! $create) {
             return '';
@@ -426,6 +429,26 @@ class PuppeteerConnector
     private static function isValidWsEndpoint(string $output): bool
     {
         return str_starts_with($output, 'ws://') || str_starts_with($output, 'wss://');
+    }
+
+    /** A cached endpoint can outlive a Chrome process; reject it before paying for a failed scrape. */
+    private function isReachableWsEndpoint(string $endpoint): bool
+    {
+        $parts = parse_url($endpoint);
+        $host = \is_array($parts) ? ($parts['host'] ?? null) : null;
+        $port = \is_array($parts) ? ($parts['port'] ?? null) : null;
+        if (! \is_string($host) || ! \is_int($port)) {
+            return false;
+        }
+
+        $socket = @fsockopen(hostname: $host, port: $port, timeout: 0.2);
+        if (false === $socket) {
+            return false;
+        }
+
+        fclose($socket);
+
+        return true;
     }
 
     /**
