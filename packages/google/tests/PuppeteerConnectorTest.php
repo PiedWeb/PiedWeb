@@ -178,7 +178,7 @@ final class PuppeteerConnectorTest extends TestCase
     public function testWsEndpointReachabilityRejectsADeadCachedBrowser(): void
     {
         $server = stream_socket_server('tcp://127.0.0.1:0', $errorCode, $errorMessage);
-        $this->assertIsResource($server, $errorMessage);
+        $this->assertIsResource($server, $errorMessage ?? '');
         $address = stream_socket_get_name($server, false);
         $this->assertIsString($address);
         $endpoint = 'ws://'.$address.'/devtools/browser/test';
