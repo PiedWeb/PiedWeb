@@ -2,7 +2,6 @@
 
 [![Latest Version](https://img.shields.io/github/tag/PiedWeb/PiedWeb.svg?style=flat&label=release)](https://github.com/PiedWeb/PiedWeb/tags)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](LICENSE)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/PiedWeb/PiedWeb/run-tests.yml?branch=main)](https://github.com/PiedWeb/PiedWeb/actions)
 [![Quality Score](https://img.shields.io/scrutinizer/g/PiedWeb/PiedWeb.svg?style=flat)](https://scrutinizer-ci.com/g/PiedWeb/PiedWeb)
 [![Code Coverage](https://codecov.io/gh/PiedWeb/PiedWeb/branch/main/graph/badge.svg)](https://codecov.io/gh/PiedWeb/PiedWeb/branch/main)
 [![Type Coverage](https://shepherd.dev/github/PiedWeb/PiedWeb/coverage.svg)](https://shepherd.dev/github/PiedWeb/PiedWeb)
@@ -13,8 +12,12 @@
 - [Rison](packages/rison/README.md)
 - [ComposerSymlink](packages/composer-symlink/README.md)
 - [Curl](packages/curl/README.md)
+- [Extractor](packages/extractor/README.md)
+- [Crawler](packages/crawler/README.md)
 - [Google](packages/google/README.md)
-- [RenderHtmlAttributes](packages/render-html-attributes/README.md)
+- [TextAnalyzer](packages/text-analyzer/README.md)
+- [MethodDocBlockGenerator](packages/method-doc-block-generator/README.md)
+- [RenderHtmlAttribute](packages/render-html-attribute/README.md)
 
 ## ⚠️ Pending verification
 

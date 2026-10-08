@@ -72,9 +72,15 @@ composer stan                  # PHPStan static analysis (level: max)
 composer format                # php-cs-fixer
 composer rector                # Rector + auto-format
 composer validate-monorepo     # Validate monorepo structure
+composer test:fingerprint      # Node checks of the google package (need npm install, some launch Chrome);
+                               # also test:pagination, test:pixelpos, test:capsolver, test:captcha-detect
 ```
 
 After changes: `composer test && composer stan && composer format`
+
+Commits: Conventional Commits, `type(package): subject` in lowercase, no quotes (see the split below).
+The pre-commit hook (`.git-hooks/pre-commit`) runs `composer format` then `git add .`: it stages every
+unignored change in the tree, so commit only from a tree holding nothing else.
 
 ## Architecture
 
@@ -114,6 +120,7 @@ ref then had to be restored by hand to the reference Packagist still served.
 
 - Source: `PiedWeb\{PackageName}\` → `packages/{name}/src/`
 - Tests: `PiedWeb\{PackageName}\Test\` → `packages/{name}/tests/`
+- Exception: `render-html-attribute` uses `PiedWeb\RenderAttributes\`
 
 ## Code Standards
 
@@ -125,7 +132,7 @@ ref then had to be restored by hand to the reference Packagist still served.
 
 ## Testing
 
-- PHPUnit 12 with testdox output
+- PHPUnit 13 with testdox output
 - Default suite runs all packages except google (google tests hit real APIs and can timeout)
 - Some tests are integration tests calling real URLs
 - Test naming: `{Feature}Test` class, `test{Feature}()` methods

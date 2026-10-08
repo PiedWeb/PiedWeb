@@ -2,7 +2,6 @@
 
 [![Latest Version](https://img.shields.io/github/tag/PiedWeb/PiedWeb.svg?style=flat&label=release)](https://github.com/PiedWeb/PiedWeb/tags)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](LICENSE)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/PiedWeb/PiedWeb/run-tests.yml?branch=main)](https://github.com/PiedWeb/PiedWeb/actions)
 [![Quality Score](https://img.shields.io/scrutinizer/g/PiedWeb/PiedWeb.svg?style=flat)](https://scrutinizer-ci.com/g/PiedWeb/PiedWeb)
 [![Code Coverage](https://codecov.io/gh/PiedWeb/PiedWeb/branch/main/graph/badge.svg)](https://codecov.io/gh/PiedWeb/PiedWeb/branch/main)
 [![Type Coverage](https://shepherd.dev/github/PiedWeb/PiedWeb/coverage.svg)](https://shepherd.dev/github/PiedWeb/PiedWeb)
@@ -17,8 +16,9 @@ Via Puppeteer. This lib offers for now :
 ## Requirements
 
 - node (tested with v20)
-- [puppeteer](package.json) (tested with v23) `npm install puppeteer puppeteer-extra puppeteer-extra-plugin-stealth puppeteer-extra-plugin-recaptcha`
-- php ^8.3
+- Google Chrome installed on the system (`/usr/bin/google-chrome` by default, `CHROME_BIN` to change the path)
+- [puppeteer](package.json) ^24: `npm install`
+- php >=8.4
 - `composer require piedweb/google`
 
 ## Google
@@ -39,7 +39,7 @@ Since Ubuntu 23 (same with Ubuntu 24), it's not possible to directly use the chr
 Workaround are details here :
 https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md
 
-It's also possible to use an ever installed Chrome on your OS by defining _env_ variable **CHROME_BIN**.
+This lib launches the system Chrome (see Requirements), which avoids this error.
 
 ### Contributors
 
