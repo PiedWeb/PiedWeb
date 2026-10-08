@@ -18,13 +18,12 @@ tmp.html
 
 # composer
 /vendor
-composer.lock
 
 # node
 /node_modules
 node_modules/
 /packages/core/node_modules
-**/package-lock.json
+# npm only: a yarn.lock would compete with package-lock.json
 **/yarn.lock
 **/yarn-error.log
 
