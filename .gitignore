@@ -48,3 +48,6 @@ ws*.log
 Draft.md
 scripts/
 logs/
+
+# Editor backups
+*~
