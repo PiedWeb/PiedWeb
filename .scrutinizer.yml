@@ -1,19 +1,19 @@
 build:
   tests:
     override:
-      - true
+      - composer test
 
   nodes:
     tests:
       environment:
         php:
-          version: 8.2
+          version: '8.5'
           pecl_extensions:
             - zip
     analysis:
       environment:
         php:
-          version: 8.2
+          version: '8.5'
           pecl_extensions:
             - zip
       tests:
@@ -38,7 +38,3 @@ checks:
     fix_identation_4spaces: true
     fix_doc_comments: true
 
-tools:
-  external_code_coverage:
-    timeout: 600
-    runs: 3

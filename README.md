@@ -3,8 +3,6 @@
 [![Latest Version](https://img.shields.io/github/tag/PiedWeb/PiedWeb.svg?style=flat&label=release)](https://github.com/PiedWeb/PiedWeb/tags)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](LICENSE)
 [![Quality Score](https://img.shields.io/scrutinizer/g/PiedWeb/PiedWeb.svg?style=flat)](https://scrutinizer-ci.com/g/PiedWeb/PiedWeb)
-[![Code Coverage](https://codecov.io/gh/PiedWeb/PiedWeb/branch/main/graph/badge.svg)](https://codecov.io/gh/PiedWeb/PiedWeb/branch/main)
-[![Type Coverage](https://shepherd.dev/github/PiedWeb/PiedWeb/coverage.svg)](https://shepherd.dev/github/PiedWeb/PiedWeb)
 [![Total Downloads](https://img.shields.io/packagist/dt/piedweb/curl.svg?style=flat)](https://packagist.org/packages/piedweb/curl)
 
 ## Documentation
@@ -19,17 +17,23 @@
 - [MethodDocBlockGenerator](packages/method-doc-block-generator/README.md)
 - [RenderHtmlAttribute](packages/render-html-attribute/README.md)
 
-## ⚠️ Pending verification
-
-- **2026-06-05 — check SERP captcha rate after the bandwidth-saver change.** On 2026-06-02 `packages/google/src/Puppeteer/scrap.js` started blocking images/media/fonts + Google beacons (`Save-Data: on`, opt-out via `SCRAP_BLOCK_RESOURCES=false`) to cut SERP egress. Confirm it did **not** blow up the captcha count: compare `app_stats` SERP bytes/SERP **and** captcha (`incrementSearchExtractCaptchaCount`/`SolvedCount`) before vs after, on both Super (FR) and SuperEN (EN). If captchas spiked, set `SCRAP_BLOCK_RESOURCES=false` to roll back.
-
 ## Development
 
 ```bash
 composer install
 composer test
-composer testf testCurlMobile # === vendor/bin/phpunit --filter testCurlMobile
+composer testf testCurlMobile
+composer stan
+composer format
 ```
+
+The default suite excludes live Google tests. Text, hreflang and HTTP authentication
+use controlled fixtures; other integration tests still require network access.
+Scrutinizer runs the default suite and analysis on PHP 8.5. No external coverage
+upload is configured.
+
+SeoStatus maintains its production SERP pipeline in its own `src/Google/` and
+`assets/puppeteer/`, documented in `docs/SerpExtractor.md` in that repository.
 
 ## Credits
 
