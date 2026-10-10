@@ -97,7 +97,9 @@ final class GlobalTest extends TestCase
 
     public function testTextDataExtractor(): void
     {
-        $rawHtml = $this->getPage('https://piedweb.com/');
+        $rawHtml = '<html><head><title>Web content</title></head><body>'
+            .'<h1>A readable web page</h1><p>This web page contains useful text for readers '
+            .'and enough words to exercise content extraction and text analysis.</p></body></html>';
         $crawler = new Crawler($rawHtml);
 
         $textData = new TextData($rawHtml, $crawler);
@@ -105,7 +107,6 @@ final class GlobalTest extends TestCase
         $this->assertSame('title', array_values($textData->getFlatContent())[0]);
         $this->assertGreaterThan(10, $textData->getWordCount());
         $this->assertGreaterThan(7, $textData->getRatioTxtCode());
-        // dump($textData->getTextAnalysis()->getExpressions(2));
         $this->assertArrayHasKey('web', $textData->getTextAnalysis()->getExpressions());
     }
 
@@ -125,12 +126,15 @@ final class GlobalTest extends TestCase
 
     public function testHrefLangExtractor(): void
     {
-        $rawHtml = $this->getPage('https://altimood.com/');
+        $rawHtml = '<html><head>'
+            .'<link rel="alternate" hreflang="fr" href="https://example.com/">'
+            .'<link rel="alternate" hreflang="de" href="https://example.com/de/">'
+            .'</head><body></body></html>';
 
         $extractor = new HrefLangExtractor(new Crawler($rawHtml));
         $list = $extractor->getHrefLangList();
 
-        $this->assertContains('https://de.altimood.com/', $list);
+        $this->assertSame(['fr' => 'https://example.com/', 'de' => 'https://example.com/de/'], $list);
     }
 
     public function testLinkExtractor(): void

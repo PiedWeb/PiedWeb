@@ -95,15 +95,46 @@ class CrawlerTest extends \PHPUnit\Framework\TestCase
 
     public function testHttpAuth(): void
     {
-        $crawler = new Crawler(
-            (new CrawlerConfig(
-                userPassword: 'test:test'
-            ))->setStartUrl(
-                'https://lab.piedweb.com/auth/test.html'
-            )
+        $socket = stream_socket_server('tcp://127.0.0.1:0');
+        $this->assertIsResource($socket);
+        $address = stream_socket_get_name($socket, false);
+        fclose($socket);
+        $this->assertIsString($address);
+        $server = proc_open(
+            [\PHP_BINARY, '-S', $address, __DIR__.'/fixtures/http-auth.php'],
+            [0 => ['pipe', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']],
+            $pipes,
         );
-        $crawler->config->recordConfig();
-        $crawler->crawl();
-        $this->assertSame('Hello Test', $crawler->firstUrl()->getH1());
+        $this->assertIsResource($server);
+
+        try {
+            for ($attempt = 0; $attempt < 100; ++$attempt) {
+                $connection = @stream_socket_client('tcp://'.$address, timeout: 0.1);
+                if (false !== $connection) {
+                    fclose($connection);
+
+                    break;
+                }
+                usleep(10000);
+            }
+            $this->assertLessThan(100, $attempt, 'HTTP fixture server did not start.');
+            foreach (['', 'wrong:test', 'test:wrong'] as $credentials) {
+                $request = new \PiedWeb\Curl\ExtendedClient('http://'.$address.'/');
+                if ('' !== $credentials) {
+                    $request->setOpt(\CURLOPT_USERPWD, $credentials);
+                }
+                $request->request();
+                $this->assertSame(401, $request->getResponse()->getStatusCode());
+            }
+
+            $crawler = new Crawler((new CrawlerConfig(userPassword: 'test:test'))->setStartUrl('http://'.$address.'/'));
+            $crawler->config->recordConfig();
+            $crawler->crawl();
+            $this->assertSame('Hello Test', $crawler->firstUrl()->getH1());
+        } finally {
+            fclose($pipes[0]);
+            proc_terminate($server);
+            proc_close($server);
+        }
     }
 }
