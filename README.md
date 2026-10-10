@@ -31,6 +31,7 @@ The default suite excludes live Google tests. Text, hreflang and HTTP authentica
 use controlled fixtures; other integration tests still require network access.
 Scrutinizer runs the default suite and analysis on PHP 8.5. No external coverage
 upload is configured.
+GitHub Actions runs PHPStan and the default suite on PHP 8.4 and 8.5.
 
 SeoStatus maintains its production SERP pipeline in its own `src/Google/` and
 `assets/puppeteer/`, documented in `docs/SerpExtractor.md` in that repository.
