@@ -18,7 +18,6 @@
   ],
   "require": {
     "php": ">=8.4",
-    "fylax/forceutf8": "^4.0",
     "symfony/dom-crawler": "^7|^8",
     "symfony/css-selector": "^7|^8",
     "league/uri": "^7.3",

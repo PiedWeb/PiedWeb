@@ -2,8 +2,6 @@
 
 namespace PiedWeb\Extractor;
 
-use ForceUTF8\Encoding;
-
 class Helper
 {
     // public static function clean(string $source): string

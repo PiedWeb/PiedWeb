@@ -4,24 +4,24 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3d2ab2b224c237f8bdd0a21a01629a3a",
+    "content-hash": "a8b16b67175c5d524b8b3dfb74b5e273",
     "packages": [
         {
             "name": "fylax/forceutf8",
-            "version": "v4.1.0",
+            "version": "v5.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Fylax/forceutf8.git",
-                "reference": "186b314c9ecb513d82b76f31ab4601caa6440ba8"
+                "reference": "50a972c353601e71df562693596e38227f59ff61"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Fylax/forceutf8/zipball/186b314c9ecb513d82b76f31ab4601caa6440ba8",
-                "reference": "186b314c9ecb513d82b76f31ab4601caa6440ba8",
+                "url": "https://api.github.com/repos/Fylax/forceutf8/zipball/50a972c353601e71df562693596e38227f59ff61",
+                "reference": "50a972c353601e71df562693596e38227f59ff61",
                 "shasum": ""
             },
             "require": {
-                "php": "^8.1"
+                "php": "^8.2"
             },
             "require-dev": {
                 "ext-dom": "*",
@@ -62,9 +62,9 @@
             "homepage": "https://github.com/Fylax/forceutf8",
             "support": {
                 "issues": "https://github.com/Fylax/forceutf8/issues",
-                "source": "https://github.com/Fylax/forceutf8/tree/v4.1.0"
+                "source": "https://github.com/Fylax/forceutf8/tree/v5.0.0"
             },
-            "time": "2026-01-05T11:15:52+00:00"
+            "time": "2026-10-25T10:07:10+00:00"
         },
         {
             "name": "jeremykendall/php-domain-parser",
