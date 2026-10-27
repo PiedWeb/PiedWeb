@@ -2,8 +2,6 @@
 
 namespace PiedWeb\TextAnalyzer;
 
-use PiedWeb\Extractor\Helper;
-
 /**
  * @see Test\AnalyzerTest
  */
@@ -171,7 +169,7 @@ class Analyzer
         }
 
         // Last Clean
-        $expression = trim(Helper::preg_replace_str('/\s+/', ' ', $expression));
+        $expression = trim(preg_replace('/\s+/', ' ', $expression) ?? throw new \Exception(preg_last_error_msg()));
         if ('' === htmlentities($expression)) { // Avoid �
             return '';
         }

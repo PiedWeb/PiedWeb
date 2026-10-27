@@ -24,6 +24,21 @@ class CleanTextTest extends \PHPUnit\Framework\TestCase
         $this->assertSame('5 €', CleanText::fixEncoding("5 \x80"));
         // Mixed: valid UTF-8 and lone Latin-1 bytes in the same string
         $this->assertSame('été à Genève', CleanText::fixEncoding("\xC3\xA9t\xE9 \xC3\xA0 Gen\xE8ve"));
+        // A Latin-1 no-break space separates words instead of gluing them
+        $this->assertSame('caf bar', CleanText::fixEncoding("caf\xA0bar"));
+    }
+
+    public function testFixEncodingRepairsDoubleEncodedUtf8(): void
+    {
+        // UTF-8 read as Windows-1252 then encoded again; à ends with a no-break space
+        $this->assertSame("café crème à l'été", CleanText::fixEncoding("cafÃ© crÃ¨me Ã\u{A0} lâ€™Ã©tÃ©"));
+        // Other scripts are not downgraded to Latin-1
+        $this->assertSame('Привет 日本語 🙂', CleanText::fixEncoding('Привет 日本語 🙂'));
+        // A capital A tilde alone is legitimate text
+        $this->assertSame('SÃO PAULO', CleanText::fixEncoding('SÃO PAULO'));
+        // Legitimate a-circumflex before letters, and capitals followed by capitals
+        $this->assertSame('lâcher prise', CleanText::fixEncoding('lâcher prise'));
+        $this->assertSame('ÉTÉ À ÂGE', CleanText::fixEncoding('ÉTÉ À ÂGE'));
     }
 
     public function testSimpleSentences(): void
@@ -63,5 +78,23 @@ class CleanTextTest extends \PHPUnit\Framework\TestCase
 
         $this->assertSame('Icone menu burger Menu', CleanText::stripHtmlTags($text));
         $this->assertSame('Icone menu burger Menu', CleanText::stripHtmlTagsOldWay(str_replace('<', ' <', $text)));
+    }
+
+    public function testRemovePunctuation(): void
+    {
+        $this->assertSame('a b c', CleanText::removePunctuation('a, b ; c'));
+        $this->assertSame('', CleanText::removePunctuation(''));
+    }
+
+    public function testRemoveEmail(): void
+    {
+        $this->assertSame('write to   now', CleanText::removeEmail('write to jo@x.fr now'));
+        $this->assertSame('no email here', CleanText::removeEmail('no email here'));
+    }
+
+    public function testRemoveDate(): void
+    {
+        $this->assertSame('rdv le   ok', CleanText::removeDate('rdv le 12 octobre 2026 ok'));
+        $this->assertSame('rien à voir', CleanText::removeDate('rien à voir'));
     }
 }

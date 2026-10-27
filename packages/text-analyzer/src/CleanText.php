@@ -3,7 +3,6 @@
 namespace PiedWeb\TextAnalyzer;
 
 use ForceUTF8\Encoding;
-use PiedWeb\Extractor\Helper;
 use Symfony\Component\DomCrawler\Crawler;
 
 class CleanText
@@ -65,11 +64,12 @@ class CleanText
 
     public static function fixEncoding(string $text): string
     {
-        // fix encoding
-        $text = str_replace(['&nbsp;', "\xC2\xA0"], ' ', $text);
-        $text = str_replace('’', "'", $text);
+        // fix encoding, before the replacements below: a double-encoded à ends with a no-break space
         /** @var string $text */
         $text = Encoding::toUTF8($text);
+        $text = self::fixDoubleEncoding($text);
+        $text = str_replace(['&nbsp;', "\xC2\xA0"], ' ', $text);
+        $text = str_replace('’', "'", $text);
         $text = html_entity_decode(htmlentities($text), 0, 'UTF-8');
         $text = preg_replace('#[\x00-\x1F\x7F\xA0]#u', '', $text) ?? throw new \Exception();
         // ENT_XML1 (16) and ENT_HTML5 (48) are mutually exclusive doctypes, not combinable flags, and
@@ -90,6 +90,32 @@ class CleanText
         $text = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
 
         return trim($text);
+    }
+
+    /**
+     * Repairs UTF-8 that was read as Windows-1252 and encoded again (`Ã©` for `é`, `â€™` for `’`).
+     * Only the sequences produced by Latin-1 letters and common punctuation are converted back,
+     * so other scripts survive, unlike Encoding::fixUTF8() which downgrades the whole text to Latin-1.
+     */
+    private static function fixDoubleEncoding(string $text): string
+    {
+        $continuation = '[\x{A0}-\x{BF}€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ]';
+        $pattern = '/[ÂÃ]'.$continuation.'|â'.$continuation.'{2}/u';
+
+        return preg_replace_callback(
+            $pattern,
+            static function (array $match): string {
+                $repaired = mb_convert_encoding($match[0], 'Windows-1252', 'UTF-8');
+
+                return mb_check_encoding($repaired, 'UTF-8') ? $repaired : $match[0];
+            },
+            $text,
+        ) ?? throw new \Exception(preg_last_error_msg());
+    }
+
+    private static function pregReplace(string $pattern, string $replacement, string $subject): string
+    {
+        return preg_replace($pattern, $replacement, $subject) ?? throw new \Exception(preg_last_error_msg());
     }
 
     /**
@@ -116,12 +142,12 @@ class CleanText
 
     public static function removePunctuation(string $text): string
     {
-        return Helper::preg_replace_str('/ ?(,|\.|\(|\[|\]|\)|!|\?|;|\{|\}|"|:|\*|\/|\||>|<|-|\+) ?/', ' ', $text);
+        return self::pregReplace('/ ?(,|\.|\(|\[|\]|\)|!|\?|;|\{|\}|"|:|\*|\/|\||>|<|-|\+) ?/', ' ', $text);
     }
 
     public static function removeEmail(string $text): string
     {
-        return Helper::preg_replace_str('/([a-zA-Z0-9._-]+(@|.at.)[a-zA-Z0-9._-] ?+\. ?[a-zA-Z0-9_-]+)/i', ' ', $text);
+        return self::pregReplace('/([a-zA-Z0-9._-]+(@|.at.)[a-zA-Z0-9._-] ?+\. ?[a-zA-Z0-9_-]+)/i', ' ', $text);
     }
 
     public static function removeDate(string $text): string
@@ -131,7 +157,7 @@ class CleanText
                 .'|jun|juil|jul|aoû|aug|aout|aou|sept|oct|nov|dec|decembre)';
 
         // french format
-        $text = Helper::preg_replace_str('/([0-3]?[0-9]\s+)?'.$month.'\s+(20)?[0-3][0-9]/i', ' ', $text);
+        $text = self::pregReplace('/([0-3]?[0-9]\s+)?'.$month.'\s+(20)?[0-3][0-9]/i', ' ', $text);
 
         return $text;
     }
@@ -148,8 +174,8 @@ class CleanText
     {
         $text = trim($text);
         $text = str_replace("'", ' ', $text);
-        $text = Helper::preg_replace_str('@^'.implode(' |^', self::STOP_WORDS).' @', '', $text);
-        $text = Helper::preg_replace_str('@'.implode('$| ', self::STOP_WORDS).'$@', '', $text);
+        $text = self::pregReplace('@^'.implode(' |^', self::STOP_WORDS).' @', '', $text);
+        $text = self::pregReplace('@'.implode('$| ', self::STOP_WORDS).'$@', '', $text);
 
         return trim($text);
     }
@@ -158,19 +184,19 @@ class CleanText
     {
         // Often error because of limitation of JIT
         $regex = '@<(script|style|head|iframe|noframe|noscript|object|embed|noembed)[^>]*?>((?!<\1).)*<\/\1>@si';
-        $textWithoutInvisible = Helper::preg_replace_str($regex, ' ', $html);
+        $textWithoutInvisible = self::pregReplace($regex, ' ', $html);
         if (\PREG_NO_ERROR === preg_last_error()) {
             // var_dump(array_flip(get_defined_constants(true)['pcre'])[preg_last_error()]); die();
             $html = $textWithoutInvisible;
         }
 
-        $html = Helper::preg_replace_str('/\s+/', ' ', $html);
-        $html = Helper::preg_replace_str('@</(div|p)>@si', "$0 \n\n", $html);
-        $html = Helper::preg_replace_str('@<br[^>]*>@si', "$0 \n", $html);
+        $html = self::pregReplace('/\s+/', ' ', $html);
+        $html = self::pregReplace('@</(div|p)>@si', "$0 \n\n", $html);
+        $html = self::pregReplace('@<br[^>]*>@si', "$0 \n", $html);
         $html = strip_tags($html);
-        $html = Helper::preg_replace_str("/[\t\n\r]+/", "\n", $html);
+        $html = self::pregReplace("/[\t\n\r]+/", "\n", $html);
 
-        return trim(implode("\n", array_map(trim(...), explode("\n", Helper::preg_replace_str('/\s+/', ' ', $html)))));
+        return trim(implode("\n", array_map(trim(...), explode("\n", self::pregReplace('/\s+/', ' ', $html)))));
     }
 
     public static function stripHtmlTags(string $html): string
@@ -194,6 +220,6 @@ class CleanText
     {
         $regex = '/<span[^>]+class="[^>]*(screen-reader-only|sr-only)[^>]*"[^>]*>[^<]*<\/span>/si';
 
-        return Helper::preg_replace_str($regex, ' ', $html);
+        return self::pregReplace($regex, ' ', $html);
     }
 }
