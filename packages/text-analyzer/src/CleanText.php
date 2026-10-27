@@ -147,7 +147,8 @@ class CleanText
 
     public static function removeEmail(string $text): string
     {
-        return self::pregReplace('/([a-zA-Z0-9._-]+(@|.at.)[a-zA-Z0-9._-] ?+\. ?[a-zA-Z0-9_-]+)/i', ' ', $text);
+        // `at` only between brackets: a bare `.at.` also matched words such as `achat`
+        return self::pregReplace('/[a-zA-Z0-9._-]+(@| ?[(\[] ?at ?[)\]] ?)[a-zA-Z0-9._-]+ ?\. ?[a-zA-Z]{2,}/i', ' ', $text);
     }
 
     public static function removeDate(string $text): string

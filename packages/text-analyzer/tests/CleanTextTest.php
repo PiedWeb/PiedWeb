@@ -89,7 +89,14 @@ class CleanTextTest extends \PHPUnit\Framework\TestCase
     public function testRemoveEmail(): void
     {
         $this->assertSame('write to   now', CleanText::removeEmail('write to jo@x.fr now'));
+        $this->assertSame('write to   now', CleanText::removeEmail('write to john.doe@example.com now'));
+        $this->assertSame('write to   now', CleanText::removeEmail('write to contact@sub.example.org now'));
+        // Obfuscated, as spaced out by fixEncoding()
+        $this->assertSame('write to   now', CleanText::removeEmail('write to jo ( at ) example . com now'));
         $this->assertSame('no email here', CleanText::removeEmail('no email here'));
+        // Words containing "at" before a full stop are not addresses
+        $this->assertSame('un achat rapide . Ensuite', CleanText::removeEmail('un achat rapide . Ensuite'));
+        $this->assertSame('version 2 . 5 at 10 . 30', CleanText::removeEmail('version 2 . 5 at 10 . 30'));
     }
 
     public function testRemoveDate(): void

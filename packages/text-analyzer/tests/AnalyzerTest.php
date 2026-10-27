@@ -41,4 +41,17 @@ class AnalyzerTest extends \PHPUnit\Framework\TestCase
 
         $this->assertTrue(true);
     }
+
+    public function testEmailIsNotHarvestedAsExpression(): void
+    {
+        $analyzer = new Analyzer('Contactez marie.dupont@example.com pour reserver votre sejour', false, 3);
+        $expressions = $analyzer->exec()->getExpressions();
+
+        foreach (array_keys($expressions) as $expression) {
+            $this->assertStringNotContainsString('example', (string) $expression);
+            $this->assertStringNotContainsString('@', (string) $expression);
+        }
+
+        $this->assertArrayHasKey('reserver', $expressions);
+    }
 }
