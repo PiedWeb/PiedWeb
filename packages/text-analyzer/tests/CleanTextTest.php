@@ -14,6 +14,18 @@ class CleanTextTest extends \PHPUnit\Framework\TestCase
         $this->assertSame('une gourde ou ?', CleanText::fixEncoding($text2));
     }
 
+    public function testFixEncodingConvertsLegacyEncodingsToUtf8(): void
+    {
+        // Latin-1 byte converted to UTF-8
+        $this->assertSame('café', CleanText::fixEncoding("caf\xE9"));
+        // Already valid UTF-8 is left untouched
+        $this->assertSame('café', CleanText::fixEncoding('café'));
+        // Windows-1252 only: 0x80 is the euro sign
+        $this->assertSame('5 €', CleanText::fixEncoding("5 \x80"));
+        // Mixed: valid UTF-8 and lone Latin-1 bytes in the same string
+        $this->assertSame('été à Genève', CleanText::fixEncoding("\xC3\xA9t\xE9 \xC3\xA0 Gen\xE8ve"));
+    }
+
     public function testSimpleSentences(): void
     {
         $loremIpsum = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
